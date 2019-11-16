@@ -1,0 +1,83 @@
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/pandas/core/indexing.py:543: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+  self.obj[item] = s
+===== Printing Start! =====
+._Fz_Gal80_s24r1_summary.csv
+Fz_Gal80_s26r1_summary.csv
+Fz_Gal80_s23r1_summary.csv
+Nic_Gal80_s12r1_summary.csv
+Nic_Gal80_s9r1_summary.csv
+Fz_Gal80_s24r1_summary.csv
+Nic_Gal80_s2r1_summary.csv
+Fz_Gal80_s2r1_summary.csv
+._Fz_Gal80_s2r1_summary.csv
+._Fz_Gal80_s1r1_summary.csv
+._Nic_Gal80_s2r1_summary.csv
+._Nic_Gal80_s9r1_summary.csv
+Nic_Gal80_s8r1_summary.csv
+Fz_Gal80_s9r1_summary.csv
+Fz_Gal80_s1r1_summary.csv
+=====0=====
+N 2 1
+=====1=====
+Fz 2 1
+=====2=====
+Fz 24 1
+=====3=====
+N 8 1
+=====4=====
+N 12 1
+=====5=====
+N 9 1
+=====6=====
+Fz 23 1
+=====7=====
+Fz 9 1
+=====8=====
+Fz 26 1
+=====9=====
+Fz 1 1
+Data import finished!
+====== categoryID: N, sampleID: 2, regionID: 1 ======
+Traceback (most recent call last):
+  File "/awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/main_functions/Data_quantification_plotting.py", line 323, in <module>
+    main()
+  File "/awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/main_functions/Data_quantification_plotting.py", line 318, in main
+    print_data(annots_df, outputData, paths, analysisParams_general, matching_info)    
+  File "/awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/main_functions/Data_quantification_plotting.py", line 294, in print_data
+    ROI_df = pd.read_csv(os.path.join(dataPrefix, ROIPath))
+NameError: name 'dataPrefix' is not defined
+==============================================================
+job_number:                 8097421
+exec_file:                  job_scripts/8097421
+submission_time:            Tue Aug 13 02:05:26 2019
+owner:                      wji
+uid:                        33025
+group:                      awlab
+gid:                        33000
+sge_o_home:                 /netapp/home/wji
+sge_o_log_name:             wji
+sge_o_path:                 /netapp/home/wji/anaconda3/bin:/netapp/home/wji/anaconda3/condabin:/opt/sge/bin:/opt/sge/bin/lx-amd64:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/netapp/home/wji/bin
+sge_o_shell:                /bin/bash
+sge_o_workdir:              /awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/submissions_v0812
+sge_o_host:                 log1
+account:                    sge
+cwd:                        /awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/submissions_v0812
+merge:                      y
+hard resource_list:         mem_free=50G,scratch=50G,h_rt=21600
+mail_list:                  wji@log1
+notify:                     FALSE
+job_name:                   replot_figures.sh
+jobshare:                   0
+hard_queue_list:            !gpu.q
+env_list:                   TERM=NONE
+script_file:                replot_figures.sh
+project:                    altschulerwulab
+binding:                    NONE
+job_type:                   NONE
+usage         1:            cpu=00:00:00, mem=0.00000 GB s, io=0.00000 GB, vmem=N/A, maxvmem=N/A
+binding       1:            NONE
+scheduling info:            (Collecting of scheduler job information is turned off)

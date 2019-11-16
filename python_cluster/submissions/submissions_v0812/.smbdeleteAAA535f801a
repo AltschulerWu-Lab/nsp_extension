@@ -1,0 +1,164 @@
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/pandas/core/indexing.py:543: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame.
+Try using .loc[row_indexer,col_indexer] = value instead
+
+See the caveats in the documentation: http://pandas.pydata.org/pandas-docs/stable/indexing.html#indexing-view-versus-copy
+  self.obj[item] = s
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/pandas/core/frame.py:6692: FutureWarning: Sorting because non-concatenation axis is not aligned. A future version
+of pandas will change to not sort by default.
+
+To accept the future behavior, pass 'sort=False'.
+
+To retain the current behavior and silence the warning, pass 'sort=True'.
+
+  sort=sort)
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/skimage/filters/thresholding.py:596: RuntimeWarning: divide by zero encountered in log
+  (np.log(mean_back) - np.log(mean_fore)))
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/cbook/__init__.py:424: MatplotlibDeprecationWarning: 
+Passing one of 'on', 'true', 'off', 'false' as a boolean is deprecated; use an actual boolean (True/False) instead.
+  warn_deprecated("2.2", "Passing one of 'on', 'true', 'off', 'false' as a "
+===== Printing Start! =====
+._Fz_Gal80_s24r1_summary.csv
+Fz_Gal80_s26r1_summary.csv
+Fz_Gal80_s23r1_summary.csv
+Nic_Gal80_s12r1_summary.csv
+Nic_Gal80_s9r1_summary.csv
+Fz_Gal80_s24r1_summary.csv
+Nic_Gal80_s2r1_summary.csv
+Fz_Gal80_s2r1_summary.csv
+._Fz_Gal80_s2r1_summary.csv
+._Fz_Gal80_s1r1_summary.csv
+._Nic_Gal80_s2r1_summary.csv
+._Nic_Gal80_s9r1_summary.csv
+Nic_Gal80_s8r1_summary.csv
+Fz_Gal80_s9r1_summary.csv
+Fz_Gal80_s1r1_summary.csv
+=====0=====
+N 2 1
+=====1=====
+Fz 2 1
+=====2=====
+Fz 24 1
+=====3=====
+N 8 1
+=====4=====
+N 12 1
+=====5=====
+N 9 1
+=====6=====
+Fz 23 1
+=====7=====
+Fz 9 1
+=====8=====
+Fz 26 1
+=====9=====
+Fz 1 1
+Data import finished!
+====== categoryID: N, sampleID: 2, regionID: 1 ======
+---df_annot---
+1
+2
+12
+11
+17
+22
+25
+29
+35
+4 channels!
+gfp threshold!
+histogram matching!
+R3/R4 v1
+R3/R4 v2
+R3 v3
+Bundle No:  1
+Traceback (most recent call last):
+  File "/awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/main_functions/Data_quantification_plotting.py", line 325, in <module>
+    main()
+  File "/awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/main_functions/Data_quantification_plotting.py", line 320, in main
+    print_data(annots_df, outputData, paths, analysisParams_general, matching_info)    
+  File "/awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/main_functions/Data_quantification_plotting.py", line 308, in print_data
+    print_results(bundles_df, annot_bundles_df, intensity_matrix, params, rel_points, paths, analysisParams_general, matching_info, image_norm, imageName, thr_otsu, thr_li, thr_isodata)
+  File "/awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/main_functions/Data_quantification_plotting.py", line 252, in print_results
+    fig = my_plot.plotBundleVsMatrix_all(bundle_No, bundles_df, image_norm, matrix, figParams, tickParams, plotOptions, matching_info)
+  File "/awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/helper_functions/Data_quantification_function_plotting.py", line 496, in plotBundleVsMatrix_all
+    plt.savefig(os.path.join(figurePrefix, folder_name, subfolder1, subfolder2, figname), dpi=300, bbox_inches='tight')
+  File "/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/pyplot.py", line 689, in savefig
+    res = fig.savefig(*args, **kwargs)
+  File "/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/figure.py", line 2094, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/backend_bases.py", line 2006, in print_figure
+    canvas = self._get_output_canvas(format)
+  File "/netapp/home/wji/anaconda3/lib/python3.7/site-packages/matplotlib/backend_bases.py", line 1948, in _get_output_canvas
+    .format(fmt, ", ".join(sorted(self.get_supported_filetypes()))))
+ValueError: Format '0_bundle_no_1_0' is not supported (supported formats: eps, jpeg, jpg, pdf, pgf, png, ps, raw, rgba, svg, svgz, tif, tiff)
+==============================================================
+job_number:                 8098431
+exec_file:                  job_scripts/8098431
+submission_time:            Tue Aug 13 04:48:28 2019
+owner:                      wji
+uid:                        33025
+group:                      awlab
+gid:                        33000
+sge_o_home:                 /netapp/home/wji
+sge_o_log_name:             wji
+sge_o_path:                 /netapp/home/wji/anaconda3/bin:/netapp/home/wji/anaconda3/condabin:/opt/sge/bin:/opt/sge/bin/lx-amd64:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/netapp/home/wji/bin
+sge_o_shell:                /bin/bash
+sge_o_workdir:              /awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/submissions_v0812
+sge_o_host:                 log1
+account:                    sge
+cwd:                        /awlab/projects/2015_07_Neural_Superposition/Projects/Weiyue/Code/python_cluster/submissions_v0812
+merge:                      y
+hard resource_list:         mem_free=50G,scratch=50G,h_rt=21600
+mail_list:                  wji@log1
+notify:                     FALSE
+job_name:                   replot_figures.sh
+jobshare:                   0
+hard_queue_list:            !gpu.q
+env_list:                   TERM=NONE
+script_file:                replot_figures.sh
+project:                    altschulerwulab
+binding:                    NONE
+job_type:                   NONE
+usage         1:            cpu=00:07:18, mem=5472.87912 GB s, io=1.76379 GB, vmem=12.676G, maxvmem=17.091G
+binding       1:            NONE
+scheduling info:            (Collecting of scheduler job information is turned off)
