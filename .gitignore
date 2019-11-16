@@ -8,3 +8,6 @@
 # test files
 **/test
 test*
+
+# system files
+._*
