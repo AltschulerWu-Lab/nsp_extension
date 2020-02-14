@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   lily
-# @Last Modified time: 2020-02-11 11:20:00
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-02-13 19:10:25
 
 
 import io, os, sys, types
@@ -32,7 +32,12 @@ from sklearn import metrics
 import data_quantification_function_helper as my_help
 import data_quantification_settings as settings
 
-""" ============== Parsing bundle information =============="""
+### get bundles with good qc score
+"""
+Function: get bundles with good qc score
+Input: bundles_df
+Output: subset of bundles_df with good qc score
+"""
 def good_qc_df(bundles_df):
 	qc_cols = my_help.group_headers(bundles_df, 'is_', True)
 	conf_index = [False] * len(bundles_df.index)
@@ -40,7 +45,12 @@ def good_qc_df(bundles_df):
 		conf_index = conf_index | (bundles_df.loc[:,col] == 1)
 	return bundles_df[~conf_index]
 
-### bad quality bundles
+### get bundles with bad qc score
+"""
+Function: get bundles with bad qc score
+Input: bundles_df
+Output: subset of bundles_df with bad qc score
+"""
 def bad_qc_df(bundles_df):
 	qc_cols = my_help.group_headers(bundles_df, 'is_', True)
 	conf_index = [False] * len(bundles_df.index)
@@ -48,9 +58,14 @@ def bad_qc_df(bundles_df):
 		conf_index = conf_index | (bundles_df.loc[:,col] == 1)
 	return bundles_df[conf_index]
 
+### get bundle information Version 1: Center of bundle as last and target position as second to last.
 """
-Version 1:
-Center of bundle as last and target position as second to last.
+Function: consolidate bundle information.
+Input: 
+- roi_df, annot_df: dataframes contain ROI information from imageJ output and annotation information from csv file.
+- x_ratio, y_ratio: from microns to pixels
+- is_extended_target_list: only T2~T7 or T1~T7.
+Output: bundles_df: dataframe with bundle information.
 """
 def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_list):
 	### initialization
@@ -80,13 +95,14 @@ def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	### update bundle coordinates
 	# print("---bundles_df---")
 	for ind in roi_df_group.index:
-		# print(ind)
 		df_tmp = pd.DataFrame(columns = bundles_cols)
 		df_tmp.loc[0,'Bundle_No'] = int(ind+1)
 		df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
 		df_tmp.loc[0,'num_Rcells'] = int(df_bd.shape[0])
+		
+		# error: bundle annotation from imageJ doesn't have enough information
 		if(len(df_bd) != 8):
-			print('Bundle No. ' + str(ind+1) + 'ROI count inaccurate!')
+			print('Error! Bundle No. ' + str(ind+1) + 'ROI count inaccurate!')
 		
 		if(len(df_bd) == 8):
 			## R1- R6
@@ -115,8 +131,6 @@ def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	my_help.print_to_log("---annot_df---")
 
 	for ind, bundle_no in enumerate(annot_df.index):
-	# for ind in annot_df.index:
-		# bundle_no = annot_df.iloc[ind]['Bundle_No'].astype(int)
 		print(bundle_no)
 		my_help.print_to_log(str(bundle_no))
 
@@ -154,9 +168,14 @@ def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	
 	return bundles_df
 
+### get bundle information Version 2: Target position as last and center of bundle as second to last.
 """
-Version:
-Target position as last and center of bundle as second to last.
+Function: consolidate bundle information.
+Input: 
+- roi_df, annot_df: dataframes contain ROI information from imageJ output and annotation information from csv file.
+- x_ratio, y_ratio: from microns to pixels
+- is_extended_target_list: only T2~T7 or T1~T7.
+Output: bundles_df: dataframe with bundle information.
 """
 def get_bundles_info_v2(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_list):
 	### initialization
@@ -184,14 +203,13 @@ def get_bundles_info_v2(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	roi_df_group.reset_index(inplace=True)
 	
 	### update bundle coordinates
-	# print("---bundles_df---")
 	for ind in roi_df_group.index:
-		# print(ind)
 		df_tmp = pd.DataFrame(columns = bundles_cols)
 		df_tmp.loc[0,'Bundle_No'] = int(ind+1)
 		df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
 		df_tmp.loc[0,'num_Rcells'] = int(df_bd.shape[0])
-		# print(len(df_bd))
+		
+		# error: bundle annotation from imageJ doesn't have enough information
 		if(len(df_bd) != 8):
 			print('Bundle No. ' + str(ind+1) + 'ROI count inaccurate!')
 		
@@ -214,7 +232,7 @@ def get_bundles_info_v2(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 		
 		bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
 		
-	# set bundle no as index
+	## set Bundle_No as index
 	bundles_df = bundles_df.set_index('Bundle_No')  
 	
 	
@@ -246,6 +264,7 @@ def get_bundles_info_v2(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 			bundles_df.loc[bundle_no, 'TargetNo_T5'] = annot_df.loc[ind,'T5'].astype(int)
 			bundles_df.loc[bundle_no, 'TargetNo_T2'] = annot_df.loc[ind,'T2'].astype(int)
 			bundles_df.loc[bundle_no, 'TargetNo_T7'] = annot_df.loc[ind,'T7'].astype(int)
+		
 		### quality control and flag info
 		bundles_df.loc[bundle_no, orient_col_names] = annot_df.loc[ind, orient_col_names]    
 		bundles_df.loc[bundle_no, qc_col_names] = annot_df.loc[ind, qc_col_names].astype(int)

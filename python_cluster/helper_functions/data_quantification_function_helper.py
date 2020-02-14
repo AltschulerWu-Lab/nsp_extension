@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   lily
-# @Last Modified time: 2020-02-11 11:18:50
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-02-13 17:54:20
 
 
 
@@ -67,7 +67,6 @@ def check_dir(path):
 	Output: lists of folders and files
 """
 def parse_folder_info(path):
-	
 	folders = [f for f in os.listdir(path) if not os.path.isfile(os.path.join(path, f))]
 	files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 	if('.DS_Store' in files):
@@ -133,12 +132,7 @@ def get_bundle_center(bundle_no, bundles_df):
 	center_coord = np.zeros((1,2))
 	
 	center_coord[0,:] = np.array([ bundles_df.loc[bundle_no,'coord_X_Center'], bundles_df.loc[bundle_no,'coord_Y_Center'] ])
-	# target_inds.append(bundle_no)
 	
-	# for i in range(1,len(target_coords)):
-	#   target_inds.append(int(bundles_df.loc[bundle_no,'TargetNo_T' + str(targetIndexMatch[i])]))
-	#   target_coords[i,:] = np.array([ bundles_df.loc[target_inds[i],'coord_X_Center'], bundles_df.loc[target_inds[i],'coord_Y_Center'] ])
-
 	return center_coord
 
 def get_heel_coords(bundle_no, bundles_df):

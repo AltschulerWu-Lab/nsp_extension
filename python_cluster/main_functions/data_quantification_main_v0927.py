@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
-# @Last Modified by:   lily
-# @Last Modified time: 2020-02-12 17:07:50
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-02-13 19:12:17
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -28,9 +28,10 @@ from skimage import exposure, img_as_float, filters, morphology, transform
 from sklearn import linear_model, metrics
 
 ### include folders with additional functions
-# sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/python_cluster/helper_functions')
+sys.path.insert(0, '/Volumes/Project/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
+# sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
 # sys.path.insert(0, '/wynton/home/awlab/wji/code/helper_functions')
-sys.path.insert(0, '/Users/lily/Lily/Academic/AW_Lab/code/python_cluster/helper_functions')
+# sys.path.insert(0, '/Users/lily/Lily/Academic/AW_Lab/code/python_cluster/helper_functions')
 
 import data_quantification_settings as settings
 import data_quantification_function_helper as my_help
@@ -197,66 +198,61 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 	my_help.print_to_log("total time: " + str(time_dur))
 
 	### process
-	for ind, bundle_no in enumerate(annot_bundles_df.index):
-		print("Bundle No: " + str(bundle_no))
-		my_help.print_to_log("Bundle No: " + str(bundle_no))
+	# for ind, bundle_no in enumerate(annot_bundles_df.index):
+	ind = 0
+	bundle_no = 1
+	print("Bundle No: " + str(bundle_no))
+	my_help.print_to_log("Bundle No: " + str(bundle_no))
 
-		### targets info
-		ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
-		coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
-		coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
-		coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
-		coord_rcells = np.concatenate((coord_r4s, coord_r3s))
+	### targets info
+	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+	coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
+	coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
+	coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
+	coord_rcells = np.concatenate((coord_r4s, coord_r3s))
 
-		### slice info
-		slice_zero_point = coord_targets[matching_info.target_id_to_index[7],:] # T3'
-		slice_one_point = coord_targets[matching_info.target_id_to_index[3],:] # T3
+	### slice info
+	slice_zero_point = coord_targets[matching_info.target_id_to_index[7],:] # T3'
+	slice_one_point = coord_targets[matching_info.target_id_to_index[3],:] # T3
 
-		length_one_point = coord_targets[matching_info.target_id_to_index[4],:]
+	length_one_point = coord_targets[matching_info.target_id_to_index[4],:]
 
-		center_points = [coord_targets[0,:], coord_center[0,:]]
+	center_points = [coord_targets[0,:], coord_center[0,:]]
 
-		r_cell_nos = [4,4]
+	r_cell_nos = [4,4]
 
-		# printing_params = [False, False]
 
-		### get slicing params and calculate matrix
-		center_type = settings.analysis_params_general.center_type
-		slice_type = settings.analysis_params_general.slice_type
-		analysis_params = [
-			analysis_params_general.num_angle_section, 
-			analysis_params_general.num_outside_angle, 
-			analysis_params_general.num_x_section, 
-			analysis_params_general.z_offset, 
-			analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
-		]
-		bundle_params = [
-			bundle_no, 
-			ind_targets, 
-			coord_targets, 
-			coord_center, 
-			slice_zero_point, 
-			slice_one_point, 
-			length_one_point, 
-			center_points[analysis_params_general.center_type], 
-			r_cell_nos[analysis_params_general.center_type]
-		]
-		if(slice_type == 0):
-			pp_i, rel_points_i = my_int.get_slice_params_v1(bundles_df, analysis_params, bundle_params, matching_info.target_id_to_index, is_print = False, is_plot = False)
-		elif(slice_type == 1):
-			pp_i, rel_points_i = my_int.get_slice_params_v3(bundles_df, analysis_params, bundle_params, matching_info.target_id_to_index, is_print = False, is_plot = False)
-		params.append(pp_i)
-		rel_points[ind, :] = rel_points_i
+	### get slicing params and calculate matrix
+	center_type = settings.analysis_params_general.center_type
+	slice_type = settings.analysis_params_general.slice_type
 
-		# calculate matrix
-		time_start = time.time()
-		for channel_no in range(num_norm_channels):
-			my_help.print_to_log("Channle No: " + str(channel_no))
-			# intensity_matrix[ind, channel_no,:,:,:] = my_int.get_intensity_matrix_new(pp_i, image_norm, matching_info.channel_mapping[channel_no], matching_info.channel_mapping)
-			intensity_matrix[ind, channel_no,:,:,:] = np.random.randn(intensity_matrix[ind, channel_no,:,:,:].shape[0], intensity_matrix[ind, channel_no,:,:,:].shape[1], intensity_matrix[ind, channel_no,:,:,:].shape[2])
-		time_end = time.time()
-		time_dur = time_end - time_start
-		my_help.print_to_log("total time: " + str(time_dur))
+	bundle_params = [
+		bundle_no, 
+		ind_targets, 
+		coord_targets, 
+		coord_center, 
+		slice_zero_point, 
+		slice_one_point, 
+		length_one_point, 
+		center_points[analysis_params_general.center_type], 
+		r_cell_nos[analysis_params_general.center_type]
+	]
+	if(slice_type == 0):
+		pp_i, rel_points_i = my_int.get_slice_params_v1(bundles_df, bundle_params, is_print = False, is_plot = False)
+	elif(slice_type == 1):
+		pp_i, rel_points_i = my_int.get_slice_params_v3(bundles_df, bundle_params, is_print = False, is_plot = False)
+	params.append(pp_i)
+	rel_points[ind, :] = rel_points_i
+
+	# calculate matrix
+	time_start = time.time()
+	for channel_no in range(num_norm_channels):
+		my_help.print_to_log("Channle No: " + str(channel_no))
+		intensity_matrix[ind, channel_no,:,:,:] = my_int.get_intensity_matrix_new(pp_i, image_norm[:,:,:,channel_no])
+		# intensity_matrix[ind, channel_no,:,:,:] = np.random.randn(intensity_matrix[ind, channel_no,:,:,:].shape[0], intensity_matrix[ind, channel_no,:,:,:].shape[1], intensity_matrix[ind, channel_no,:,:,:].shape[2])
+	time_end = time.time()
+	time_dur = time_end - time_start
+	my_help.print_to_log("total time: " + str(time_dur))
 
 	return intensity_matrix, params, rel_points, thr_otsu, thr_li, thr_isodata
 
@@ -271,10 +267,6 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 	paths = settings.paths
 	analysis_params_general = settings.analysis_params_general
 	matching_info = settings.matching_info
-	# image_path, roi_path, annot_path, log_path, fig_out_prefix, data_out_prefix = paths
-	# num_angleSection, num_outsideAngle, num_Xsection, z_offset, analysis_params_general.radius_expanse_ratio, slice_type, analysis_params_general.center_type = analysisParams_general
-	# targetIndexMatch, ColorCode, channel_mapping, channel_cmap, targetIndexMatch_rev = matching_info
-
 	num_norm_channels = image_norm.shape[-1]
 	
 	# for ind, bundle_no in enumerate(annot_bundles_df.index):
@@ -321,7 +313,6 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 			fig_name = f'{category_id}_s{sample_id}r{region_id}_bundle_no_{bundle_no}_{thr_function_ids}.png'
 			fig_params = [pp_i, img_name, fig_name]
 			plot_options = [thrs, thr_function_ids, num_norm_channels]
-			# plot_options = [True, True, True, True, False, thrs, thr_function_ids, num_norm_channels] ### isPlotLine, isLabelOff, isSave, isTrueXTick, isOriTick, thr_function_ids            
 			fig = my_plot.plot_bundle_vs_matrix_all(bundle_no, bundles_df, image_norm, matrix, fig_params, tick_params, plot_options, is_label_off = True, is_save = True, is_true_x_tick = True, is_ori_tick = False)
 			plt.close(fig)
 
@@ -329,7 +320,6 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 		fig_params = [pp_i, img_name]
 		# plot_options = [True, True] # isLabelOff, isSave
 		for channel_no in range(num_norm_channels):
-			# analysis_params = [analysisParams_general[0], analysisParams_general[1], analysisParams_general[2], analysisParams_general[3], analysisParams_general[4][analysis_params_general.center_type]]
 			fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
 			plt.close(fig)
 
@@ -376,6 +366,10 @@ def save_results(annot_bundles_df, intensity_matrix, params, rel_points):
 	pickle.dump(output_data, pickle_out)
 	pickle_out.close()
 
+
+"""
+main function
+"""
 def main():
 	analysis_params_general = settings.analysis_params_general
 	paths = settings.paths
