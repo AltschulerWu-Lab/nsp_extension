@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   sf942274
-# @Last Modified time: 2019-10-17 21:24:16
+# @Last Modified by:   lily
+# @Last Modified time: 2020-02-11 11:17:18
 
 
 import io, os, sys, types
@@ -157,16 +157,16 @@ def get_phis(phi_start, phi_end, numOfSlices):
 def get_slice_params_v1(bundles_df, analysis_params, bundle_params, target_id_to_index, **kwarg):
 	### decomposite parameters.
 	num_angle_section, num_outside_angle, num_x_section, z_offset, radius_expanse_ratio = analysis_params
-	bundle_No, target_inds, target_coords, coord_center, slice_zero_point, slice_one_point, length_one_point, center_point, r_no = bundle_params
+	bundle_no, target_inds, target_coords, coord_center, slice_zero_point, slice_one_point, length_one_point, center_point, r_no = bundle_params
 	# is_print, is_plot = printing_params
 	# target_id_to_index = matching_info[3]
 
 
 	### R heels info
-	r_z = int(bundles_df.loc[bundle_No,'coord_Z_R' + str(r_no)]) - 1
+	r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
 	
-	r3_coord = my_help.get_rx_coords(bundle_No, bundles_df, target_inds, 3)[0,:]
-	r4_coord = my_help.get_rx_coords(bundle_No, bundles_df, target_inds, 4)[0,:]
+	r3_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 3)[0,:]
+	r4_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 4)[0,:]
 
 	### slice radius calculation
 	r_unit = np.linalg.norm( center_point - length_one_point )
@@ -246,7 +246,7 @@ def get_slice_params_v1(bundles_df, analysis_params, bundle_params, target_id_to
 def getSliceParams_v3(bundles_df, analysis_params, bundle_params, target_id_to_index, **kwarg):
 	### decomposite parameters.
 	num_angle_section, num_outside_angle, num_x_section, z_offset, radius_expanse_ratio = analysis_params
-	bundle_No, target_inds, target_coords, coord_center, SliceNegOnePoint, slice_one_point, length_one_point, center_point, r_no = bundle_params
+	bundle_no, target_inds, target_coords, coord_center, SliceNegOnePoint, slice_one_point, length_one_point, center_point, r_no = bundle_params
 	# is_print, is_plot = printing_params
 	# target_id_to_index = matching_info[3]
 
@@ -254,9 +254,9 @@ def getSliceParams_v3(bundles_df, analysis_params, bundle_params, target_id_to_i
 	num_outside_angle = num_outside_angle
 	
 	### R heels info
-	r_z = int(bundles_df.loc[bundle_No,'coord_Z_R' + str(r_no)]) - 1
-	r3_coord = my_help.getRxCoords(bundle_No, bundles_df, target_inds, 3)[0,:]
-	r4_coord = my_help.getRxCoords(bundle_No, bundles_df, target_inds, 4)[0,:]
+	r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
+	r3_coord = my_help.getRxCoords(bundle_no, bundles_df, target_inds, 3)[0,:]
+	r4_coord = my_help.getRxCoords(bundle_no, bundles_df, target_inds, 4)[0,:]
 
 	### slice radius calculation
 	r_unit = np.linalg.norm( center_point - length_one_point )
@@ -441,13 +441,13 @@ def get_intensity_matrix_new(params, image, channel, channel_mapping):
 # def getSliceParams_v2(analysis_params, bundles_df, bundle_params, target_id_to_index):
 #     ### decomposite parameters.
 #     num_angle_section, num_outside_angle, num_x_section, z_offset, radius_expanse_ratio = analysis_params
-#     bundle_No, target_inds, target_coords, SliceNegOnePoint, slice_one_point, CutOffPoint, center_point, r_no = bundle_params
+#     bundle_no, target_inds, target_coords, SliceNegOnePoint, slice_one_point, CutOffPoint, center_point, r_no = bundle_params
 	
 #     angle_sel_num = num_angle_section / 2
 #     num_outside_angle = num_outside_angle
 	
 #     ### R heels info
-#     r_z = int(bundles_df.loc[bundle_No,'coord_Z_R' + str(r_no)]) - 1
+#     r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
 
 #     ## slice radius calculation
 #     radius = np.linalg.norm( center_point - CutOffPoint )

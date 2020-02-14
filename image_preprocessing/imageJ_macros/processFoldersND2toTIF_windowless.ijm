@@ -2,7 +2,7 @@
 * @Author: sf942274
 * @Date:   2019-11-15 17:42:26
 * @Last Modified by:   sf942274
-* @Last Modified time: 2019-11-15 18:17:24
+* @Last Modified time: 2020-01-29 09:58:01
 */
 
  /*
@@ -25,13 +25,15 @@ suffix = ".nd2";
 
 inputSupPath = "/awlab/projects/2019_09_NSP_Extension/data/Imaging_Data_Original/Nikon_A1RsiConfocalImages" + File.separator;
 outputSupPath = "/awlab/projects/2019_09_NSP_Extension/data/Format_converted" + File.separator;
-logSupPath = "/awlab/projects/2019_09_NSP_Extension/code/image_preprocessing/logs" + File.separator;
+logSupPath = "/awlab/projects/2019_09_NSP_Extension/code/NSP_codes/image_preprocessing/logs" + File.separator;
 
 /* get input folders and folder inexes*/
 // for folder index, ND-acquisition = 1; Jobs = 2;
 
 inputFolders = split(input_str[0], ', ');
+print(inputFolders[0]);
 folderIndexes = split(input_str[1], ', ');
+print(folderIndexes[0]);
 log_name = input_str[2]
 logFile = File.open(logSupPath+log_name);
 
@@ -52,7 +54,7 @@ else{
 function processFolders(inputFolders, folderIndexes, suffix, logFile) {
 	for (i = 0; i < (inputFolders.length); i++){
 		print(logFile, "===============" + inputFolders[i] + "===============");
-
+		print("===============" + inputFolders[i] + "===============");
 		// individual input and output folder
 		inputPath = inputSupPath + inputFolders[i] + File.separator;
 		outputDir = outputSupPath + inputFolders[i];
@@ -91,6 +93,8 @@ function processND2(inputPath, outputDir, suffix, fileName, expName, index, logF
 	/// get output image's name
 	outputName = getOutputName(fileName, suffix, expName, index, outputDir + File.separator);
 	print(logFile, "### " + outputName + " start! ###");
+	print("### " + outputName + " start! ###");
+	
 	/// get output directory
 	if (!File.exists(outputDir))
 		File.makeDirectory(outputDir);
@@ -170,6 +174,7 @@ function processND2(inputPath, outputDir, suffix, fileName, expName, index, logF
 	/// free unused memory
 	freeMemory();
 	print(logFile, "### " + outputName + " done! ###");
+	print("### " + outputName + " done! ###");
 }
 
 
@@ -209,12 +214,12 @@ function getOutputName(fileName, suffix, expName, index, outputPath) {
 
 	// data collected using ND acquisition
 	else {
-		ID1 = indexOf(fileName, "00");
+		//ID1 = indexOf(fileName, "00");
 		ID2 = indexOf(fileName, suffix);
-		if(ID1 != -1)
-			tempName = substring(fileName, 0, ID1) ;
-		else
-			tempName = substring(fileName, 0, ID2);
+		//if(ID1 != -1)
+		//	tempName = substring(fileName, 0, ID1) ;
+		//else
+		tempName = substring(fileName, 0, ID2);
 		// loop to give unique name to each file
 		isExist = 1;
 		i = 0;

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   sf942274
-# @Last Modified time: 2019-09-26 16:48:54
+# @Last Modified by:   lily
+# @Last Modified time: 2020-02-11 11:20:00
 
 
 import io, os, sys, types
@@ -67,7 +67,7 @@ def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	orient_col_names = my_help.group_headers(annot_df, 'Orientation_', True)
 	img_col_names = my_help.group_headers(annot_df, 'ID', True)
 	flag_col_names = my_help.group_headers(annot_df, 'if_', True)
-	bundles_cols = ['bundle_no', 'num_Rcells'] + r_coords_list + center_coords_list + qc_col_names + orient_col_names + img_col_names + flag_col_names
+	bundles_cols = ['Bundle_No', 'num_Rcells'] + r_coords_list + center_coords_list + qc_col_names + orient_col_names + img_col_names + flag_col_names
 	
 	### create new dataframe
 	bundles_df = pd.DataFrame(columns = bundles_cols)
@@ -82,7 +82,7 @@ def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	for ind in roi_df_group.index:
 		# print(ind)
 		df_tmp = pd.DataFrame(columns = bundles_cols)
-		df_tmp.loc[0,'bundle_no'] = int(ind+1)
+		df_tmp.loc[0,'Bundle_No'] = int(ind+1)
 		df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
 		df_tmp.loc[0,'num_Rcells'] = int(df_bd.shape[0])
 		if(len(df_bd) != 8):
@@ -104,10 +104,10 @@ def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 			df_tmp.loc[0,'coord_X_Center'] = float(df_bd.loc[df_bd.index[7], 'X'])
 			df_tmp.loc[0,'coord_Y_Center'] = float(df_bd.loc[df_bd.index[7], 'Y'])
 			df_tmp.loc[0,'coord_Z_Center'] = float(df_bd.loc[df_bd.index[7], 'Slice'])
-		bundles_df = bundles_df.append(df_tmp, ignore_index=True)
+		bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
 		
 	# set bundle no as index
-	bundles_df = bundles_df.set_index('bundle_no')  
+	bundles_df = bundles_df.set_index('Bundle_No')  
 	
 	
 	### update target & quality-control info
@@ -116,7 +116,7 @@ def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 
 	for ind, bundle_no in enumerate(annot_df.index):
 	# for ind in annot_df.index:
-		# bundle_no = annot_df.iloc[ind]['bundle_no'].astype(int)
+		# bundle_no = annot_df.iloc[ind]['Bundle_No'].astype(int)
 		print(bundle_no)
 		my_help.print_to_log(str(bundle_no))
 
@@ -173,7 +173,7 @@ def get_bundles_info_v2(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	orient_col_names = my_help.group_headers(annot_df, 'Orientation_', True)
 	img_col_names = my_help.group_headers(annot_df, 'ID', True)
 	flag_col_names = my_help.group_headers(annot_df, 'if_', True)
-	bundles_cols = ['bundle_no', 'num_Rcells'] + r_coords_list + center_coords_list + qc_col_names + orient_col_names + img_col_names + flag_col_names
+	bundles_cols = ['Bundle_No', 'num_Rcells'] + r_coords_list + center_coords_list + qc_col_names + orient_col_names + img_col_names + flag_col_names
 	
 	### create new dataframe
 	bundles_df = pd.DataFrame(columns = bundles_cols)
@@ -188,10 +188,10 @@ def get_bundles_info_v2(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	for ind in roi_df_group.index:
 		# print(ind)
 		df_tmp = pd.DataFrame(columns = bundles_cols)
-		df_tmp.loc[0,'bundle_no'] = int(ind+1)
+		df_tmp.loc[0,'Bundle_No'] = int(ind+1)
 		df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
 		df_tmp.loc[0,'num_Rcells'] = int(df_bd.shape[0])
-		print(len(df_bd))
+		# print(len(df_bd))
 		if(len(df_bd) != 8):
 			print('Bundle No. ' + str(ind+1) + 'ROI count inaccurate!')
 		
@@ -212,10 +212,10 @@ def get_bundles_info_v2(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 			df_tmp.loc[0,'coord_Y_Center'] = float(df_bd.loc[df_bd.index[6], 'Y'])
 			df_tmp.loc[0,'coord_Z_Center'] = float(df_bd.loc[df_bd.index[6], 'Slice'])
 		
-		bundles_df = bundles_df.append(df_tmp, ignore_index=True)
+		bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
 		
 	# set bundle no as index
-	bundles_df = bundles_df.set_index('bundle_no')  
+	bundles_df = bundles_df.set_index('Bundle_No')  
 	
 	
 	### update target & quality-control info
@@ -224,7 +224,7 @@ def get_bundles_info_v2(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 
 	for ind in annot_df.index:
 		
-		bundle_no = annot_df.iloc[ind]['bundle_no'].astype(int)
+		bundle_no = annot_df.iloc[ind]['Bundle_No'].astype(int)
 		print(bundle_no)
 		my_help.print_to_log(str(bundle_no))
 		

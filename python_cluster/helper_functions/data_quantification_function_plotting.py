@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   sf942274
-# @Last Modified time: 2019-10-18 00:17:26
+# @Last Modified by:   lily
+# @Last Modified time: 2020-02-12 20:47:49
 
 
 import io, os, sys, types
@@ -54,61 +54,65 @@ def draw_circle(center, radius):
 ### reduce x and y axis labels.
 ### type 1: specify number of labels remained.
 ### type 2: specify which label should be kept.
-def get_tick_list(tickType, ori_tick, arg2):
-	if(tickType == 1):
-		numOfLabels = arg2
-		k = np.ceil((len(ori_tick) - 1)/(numOfLabels)).astype(int)
+def get_tick_list(tick_type, ori_tick, arg2):
+	# print(tick_type)
+	# print(ori_tick)
+	# print(arg2)
+	if(tick_type == 1):
+		num_of_labels = arg2
+		k = np.ceil((len(ori_tick) - 1)/(num_of_labels)).astype(int)
 		nk = np.floor(len(ori_tick)/k).astype(int)
 
-		trueLabelList = []
+		true_label_list = []
 		i = 0
 		ti = 0 + i*k
 		while ti < len(ori_tick):
-			trueLabelList.append(0 + i*k)
+			true_label_list.append(0 + i*k)
 			i += 1
 			ti = 0 + i*k
 			
-	elif(tickType == 2):
+	elif(tick_type == 2):
 		must_lists = arg2
-		trueLabelList = np.where(np.isin(ori_tick,must_lists))[0]
+		true_label_list = np.where(np.isin(ori_tick, must_lists))[0]
 		
-	TickList = []
+	tick_list = []
 	for i in range(len(ori_tick)):
-		if i in trueLabelList:
-			TickList.append(ori_tick[i].astype(str))
+		if i in true_label_list:
+			tick_list.append(ori_tick[i].astype(str))
 		else:
-			TickList.append('')            
-	
-	return TickList
+			tick_list.append('')
+	# print(len(tick_list))        
+	# print(tick_list)
+	return tick_list
 
-def get_slice_params_for_polar_plot(analysis_params, slicingParams):
-	num_angleSection, num_outsideAngle, num_x_section, z_offset, radius_expanse_ratio = analysis_params
-	SliceZeroPoint, SliceOnePoint, CutOffPoint, center_point = slicingParams
+def get_slice_params_for_polar_plot(analysis_params, slicing_params):
+	num_angle_section, num_outside_angle, num_x_section, z_offset, radius_expanse_ratio = analysis_params
+	slice_zero_point, slice_one_point, cut_off_point, center_point = slicing_params
 	
-	radius = np.linalg.norm( center_point - CutOffPoint )
-	angStart2R = np.arctan2( SliceZeroPoint[1] - center_point[1], SliceZeroPoint[0] - center_point[0] )
-	angEnd2R = np.arctan2( SliceOnePoint[1] - center_point[1], SliceOnePoint[0] - center_point[0])
+	radius = np.linalg.norm( center_point - cut_off_point )
+	angle_start_to_r = np.arctan2( slice_zero_point[1] - center_point[1], slice_zero_point[0] - center_point[0] )
+	angle_end_to_r = np.arctan2( slice_one_point[1] - center_point[1], slice_one_point[0] - center_point[0])
 	
-	phiRange = my_int.inner_angle(SliceOnePoint - center_point, SliceZeroPoint - center_point, True)
-	phi_unit = phiRange/num_angleSection
+	phi_range = my_int.inner_angle(slice_one_point - center_point, slice_zero_point - center_point, True)
+	phi_unit = phi_range/num_angle_section
 	
-	if(((-np.pi <= angStart2R <= -0.5*np.pi) | (-np.pi <= angEnd2R <= -0.5*np.pi)) & (angStart2R*angEnd2R < 1) ):
-		if((-np.pi <= angStart2R <= -0.5*np.pi) & (-np.pi <= angEnd2R <= -0.5*np.pi)):
-			phi_start = min(angStart2R, angEnd2R) - num_outsideAngle * phi_unit
-			phi_end = max(angStart2R, angEnd2R) + num_outsideAngle * phi_unit
+	if(((-np.pi <= angle_start_to_r <= -0.5*np.pi) | (-np.pi <= angle_end_to_r <= -0.5*np.pi)) & (angle_start_to_r*angle_end_to_r < 1) ):
+		if((-np.pi <= angle_start_to_r <= -0.5*np.pi) & (-np.pi <= angle_end_to_r <= -0.5*np.pi)):
+			phi_start = min(angle_start_to_r, angle_end_to_r) - num_outside_angle * phi_unit
+			phi_end = max(angle_start_to_r, angle_end_to_r) + num_outside_angle * phi_unit
 		else:
-			phi_start = max(angStart2R, angEnd2R) - num_outsideAngle * phi_unit
-			phi_end = min(angStart2R, angEnd2R) + num_outsideAngle * phi_unit
+			phi_start = max(angle_start_to_r, angle_end_to_r) - num_outside_angle * phi_unit
+			phi_end = min(angle_start_to_r, angle_end_to_r) + num_outside_angle * phi_unit
 	else:
-		phi_start = min(angStart2R, angEnd2R) - num_outsideAngle * phi_unit
-		phi_end = max(angStart2R, angEnd2R) + num_outsideAngle * phi_unit
+		phi_start = min(angle_start_to_r, angle_end_to_r) - num_outside_angle * phi_unit
+		phi_end = max(angle_start_to_r, angle_end_to_r) + num_outside_angle * phi_unit
 
 	phi_start = my_int.angle_normalization(phi_start)
 	phi_end = my_int.angle_normalization(phi_end)
 
-	phis = my_int.getPhis(phi_start, phi_end, num_angleSection + num_outsideAngle*2 + 2)
+	phis = my_int.get_phis(phi_start, phi_end, num_angle_section + num_outside_angle*2 + 2)
 
-	if(my_int.smallest_angle(angStart2R, phis[-1]) < my_int.smallest_angle(angStart2R, phis[0])):
+	if(my_int.smallest_angle(angle_start_to_r, phis[-1]) < my_int.smallest_angle(angle_start_to_r, phis[0])):
 		phis = np.flip(phis, axis = 0)
 	
 	rs = np.linspace(0, radius_expanse_ratio, num_x_section + 2)
@@ -202,12 +206,15 @@ def get_target_grid_polar_new(rel_points):
 	return target_grid_polar
 
 
-def get_polar_plot_values(analysis_params, channel_no, matrix, cmap, radius_expanse_ratio, rel_points):
+def get_polar_plot_values(analysis_params, channel_no, matrix, cmap, rel_points):
 	matching_info = settings.matching_info
+	analysis_params_general = settings.analysis_params_general
+	radius_expanse_ratio = analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
+
 	target_grid_polar = get_target_grid_polar_new(rel_points)
 	targetGridPos = get_target_grid()
-	CutOffPoint = 1 * radius_expanse_ratio
-	bundleParams = targetGridPos[matching_info.target_id_to_index[7]], targetGridPos[matching_info.target_id_to_index[3]], CutOffPoint, targetGridPos[matching_info.target_id_to_index[0]] 
+	cut_off_point = 1 * analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
+	bundleParams = targetGridPos[matching_info.target_id_to_index[7]], targetGridPos[matching_info.target_id_to_index[3]], cut_off_point, targetGridPos[matching_info.target_id_to_index[0]] 
 
 	rs, phis = get_slice_params_for_polar_plot(analysis_params, bundleParams)
 	thetav, rv = np.meshgrid(phis, rs)
@@ -226,8 +233,8 @@ def get_imshow_values(bundles_df, bundle_no, image, r_z, z_offset, channel_no):
 	r_heel_coords[:,1] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_Y_R', True)])
 
 	### targets info
-	ind_targets, coord_targets = my_help.getTargetCoords(bundle_no, bundles_df, matching_info.index_to_target_id)
-	coord_rs = my_help.getRxCoords(bundle_no, bundles_df, ind_targets, 4)       
+	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+	coord_rs = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)       
 	coords = np.concatenate((coord_targets, coord_rs))
 
 	### image boundary
@@ -257,8 +264,8 @@ def plotIndividualBundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, z_o
 	r_heel_coords[:,1] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_Y_R', True)])
 
 	### targets info
-	ind_targets, coord_targets = my_help.getTargetCoords(bundle_no, bundles_df, matching_info.index_to_target_id)
-	coordR4s = my_help.getRxCoords(bundle_no, bundles_df, ind_targets, 4)
+	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+	coordR4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
 	coords = np.concatenate((coord_targets, coordR4s))
 
 	### image boundary
@@ -323,11 +330,16 @@ def plotIndividualBundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, z_o
 
 
 def plot_bundle_vs_matrix_all(bundle_no, bundles_df, image, intensity_matrix, fig_params, tick_params, plot_options, **kwarg):
+	## parameters from settings
+	paths = settings.paths
+	analysis_params_general = settings.analysis_params_general
+	matching_info = settings.matching_info
+
 	## unravel parameters
-	analysis_params_general.center_type, params, figure_prefix, folder_name, figure_name, slice_type, radius_expanse_ratio = fig_params
+	params, folder_name, figure_name = fig_params
 	thrs, thr_function, num_norm_channels = plot_options
 	tick_type_x, tick_type_y, tick_arg2_x, tick_arg2_y = tick_params
-	matching_info = settings.matching_info
+	
 	# matching_info.index_to_target_id, matching_info.color_code, matching_info.channel_mapping, matching_info.channel_cmap, matching_info.target_id_to_index = matching_info
 
 	## setting seaborn parameters
@@ -343,7 +355,7 @@ def plot_bundle_vs_matrix_all(bundle_no, bundles_df, image, intensity_matrix, fi
 	### X and Y tick settings
 	if(kwarg['is_ori_tick']):
 		if(kwarg['is_true_x_tick']):
-			ori_x_ticks = np.round(np.linspace(0, radius_expanse_ratio, intensity_matrix.shape[2]), 2)
+			ori_x_ticks = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], intensity_matrix.shape[2]), 2)
 			# print(ori_x_ticks)
 			x_ticks = ori_x_ticks
 		else:
@@ -352,7 +364,7 @@ def plot_bundle_vs_matrix_all(bundle_no, bundles_df, image, intensity_matrix, fi
 		y_ticks = ori_y_ticks
 	else:
 		if(kwarg['is_true_x_tick']):
-			ori_x_ticks = np.round(np.linspace(0, radius_expanse_ratio, intensity_matrix.shape[2]), 2)
+			ori_x_ticks = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], intensity_matrix.shape[2]), 2)
 			# print(ori_x_ticks)
 			x_ticks = get_tick_list(tick_type_x, ori_x_ticks, tick_arg2_x)
 		else:
@@ -371,8 +383,8 @@ def plot_bundle_vs_matrix_all(bundle_no, bundles_df, image, intensity_matrix, fi
 	r_heel_coords[:,1] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_Y_R', True)])
 
 	### targets info
-	ind_targets, coord_targets = my_help.getTargetCoords(bundle_no, bundles_df, matching_info.index_to_target_id)
-	coord_rs = my_help.getRxCoords(bundle_no, bundles_df, ind_targets, 4)        
+	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+	coord_rs = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)        
 	coords = np.concatenate((coord_targets, coord_rs))
 
 	### image boundary
@@ -458,6 +470,7 @@ def plot_bundle_vs_matrix_all(bundle_no, bundles_df, image, intensity_matrix, fi
 				with sns.axes_style("dark"):
 					sns.heatmap(matrix1, cmap = colormap, yticklabels = y_ticks, xticklabels = x_ticks, ax = ax, mask = mask1, vmax = vmax)
 			else:
+				# print(x_ticks)
 				sns.heatmap(matrix1, cmap = colormap, yticklabels = y_ticks, xticklabels = x_ticks, ax = ax, vmax = vmax)
 			ax.set_ylabel('Angle', fontsize=20)
 			ax.set_xlabel('length from R-heel', fontsize=20)
@@ -490,27 +503,27 @@ def plot_bundle_vs_matrix_all(bundle_no, bundles_df, image, intensity_matrix, fi
 	if(kwarg['is_save']):
 		plt.ioff()
 		subfolder1 = 'HeatMap'
-		subfolder2 = 'slice_type_' + str(slice_type) + '_analysis_params_general.center_type' + str(analysis_params_general.center_type) + '_ThrType' + str(thr_function)
+		subfolder2 = 'slice_type_' + str(analysis_params_general.slice_type) + 'center_type' + str(analysis_params_general.center_type) + '_ThrType' + str(thr_function)
 		# figure_name = 'bundle_no_' + str(bundle_no) + '_' + str(thr_function)
 		
-		my_help.check_dir(os.path.join(figure_prefix))
-		my_help.check_dir(os.path.join(figure_prefix, folder_name))
-		my_help.check_dir(os.path.join(figure_prefix, folder_name, subfolder1))
-		my_help.check_dir(os.path.join(figure_prefix, folder_name, subfolder1, subfolder2))
+		my_help.check_dir(os.path.join(paths.fig_out_prefix))
+		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
+		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
+		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
 		
-		plt.savefig(os.path.join(figure_prefix, folder_name, subfolder1, subfolder2, figure_name), dpi=300, bbox_inches='tight')
+		plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), dpi=300, bbox_inches='tight')
 	
 	return fig
 
-def plot_polar(bundle_no, bundles_df, image, channel_no, matrix, fig_params, matching_info, rel_points, **kwarg):
+def plot_polar(bundle_no, bundles_df, image, channel_no, matrix, fig_params, rel_points, **kwarg):
 
 	##### decompose parameters
-	params, figure_prefix, img_name, radius_expanse_ratio, analysis_params_general.center_type, slice_type = fig_params
+	params, img_name = fig_params
 
 	z_offset, num_x_section, r_z, phis, center_point, ori_y_ticks, radius = params
 	
 	# is_label_off, isSave = plot_options
-
+	paths = settings.paths
 	matching_info = settings.matching_info
 	analysis_params_general = settings.analysis_params_general
 	# matching_info.index_to_target_id, matching_info.color_code, matching_info.channel_mapping, matching_info.channel_cmap, matching_info.target_id_to_index = matching_info
@@ -527,10 +540,10 @@ def plot_polar(bundle_no, bundles_df, image, channel_no, matrix, fig_params, mat
 	r_heel_coords, coord_targets, bundle_img, xlim, ylim = get_imshow_values(bundles_df, bundle_no, image, r_z, analysis_params_general.z_offset, channel_no)
 	#### subfigure2: max projection of z
 	mm = np.max(matrix[channel_no, :, :, :], axis = 2)
-	thetav, rv, z1, norm1, target_grid_polar = get_polar_plot_values(analysis_params, channel_no, mm, colormap, matching_info.target_id_to_index, radius_expanse_ratio, rel_points)
+	thetav, rv, z1, norm1, target_grid_polar = get_polar_plot_values(analysis_params, channel_no, mm, colormap, rel_points)
 	#### subfigure3: mean over z
 	mm = np.mean(matrix[channel_no, :, :, :], axis = 2)
-	thetav, rv, z2, norm2, target_grid_polar = get_polar_plot_values(analysis_params, channel_no, mm, colormap, matching_info.target_id_to_index, radius_expanse_ratio, rel_points)
+	thetav, rv, z2, norm2, target_grid_polar = get_polar_plot_values(analysis_params, channel_no, mm, colormap, rel_points)
 
 	##### plotting
 	fig = plt.figure(figsize = (18,6))
@@ -654,26 +667,26 @@ def plot_polar(bundle_no, bundles_df, image, channel_no, matrix, fig_params, mat
 
 	
 	#### saving figure
-	if(**kwarg['is_save']):
+	if(kwarg['is_save']):
 		plt.ioff()
 		folder_name = img_name
 		subfolder1 = 'PolarPlot'
-		subfolder2 = f'slice_type_{slice_type}_analysis_params_general.center_type_{analysis_params_general.center_type}'
-		# subfolder2 = 'slice_type_' + str(slice_type) + '_analysis_params_general.center_type' + str(analysis_params_general.center_type)
+		subfolder2 = f'analysis_params_general.slice_type_{analysis_params_general.slice_type}_analysis_params_general.center_type_{analysis_params_general.center_type}'
+		# subfolder2 = 'slice_type_' + str(analysis_params_general.slice_type) + 'center_type' + str(analysis_params_general.center_type)
 		# figure_name = 'bundle_no_' + str(bundle_no) + '_' + 'channel_' + matching_info.channel_mapping[channel_no] + '.tif'
 		figure_name = f'bundle_no_{bundle_no}_channel_{matching_info.channel_mapping[channel_no]}.tif'
 
-		my_help.check_dir(os.path.join(figure_prefix))
-		my_help.check_dir(os.path.join(figure_prefix, folder_name))
-		my_help.check_dir(os.path.join(figure_prefix, folder_name, subfolder1))
-		my_help.check_dir(os.path.join(figure_prefix, folder_name, subfolder1, subfolder2))
-		plt.savefig(os.path.join(figure_prefix, folder_name, subfolder1, subfolder2, figure_name), dpi=300, bbox_inches='tight')
+		my_help.check_dir(os.path.join(paths.fig_out_prefix))
+		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
+		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
+		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
+		plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), dpi=300, bbox_inches='tight')
 	
 	return fig
 
 
 
-def plotMatrix(bundle_no, bundles_df, image, intensity_matrix, params, channel, figure_prefix, mind, is_plot_line, is_label_off, isSave, kwarg['is_true_x_tick']):
+def plotMatrix(bundle_no, bundles_df, image, intensity_matrix, params, channel, fig_out_prefix, mind, is_plot_line, is_label_off, isSave, **kwarg):
 					   
 	z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius = params
 	
@@ -681,7 +694,7 @@ def plotMatrix(bundle_no, bundles_df, image, intensity_matrix, params, channel, 
 	phi_end = phis[-1]
 					   
 	### plot settings
-	if(kwarg['is_true_x_tick']):
+	if(is_true_x_tick == True):
 		x_ticks = np.linspace(0, 1, intensity_matrix.shape[1])
 	else:
 		x_ticks = np.arange(intensity_matrix.shape[1])
@@ -702,7 +715,7 @@ def plotMatrix(bundle_no, bundles_df, image, intensity_matrix, params, channel, 
 	r_heel_coords[:,1] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_Y_R', True)])
 
 	### targets info
-	ind_targets, coord_targets = my_help.getTargetCoords(bundle_no, bundles_df)
+	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df)
 	if(channel == 'GFP'):
 		coord_rs = getR4Coords(bundle_no, bundles_df, ind_targets)
 	elif(channel == 'R3'):
@@ -769,7 +782,7 @@ def plotMatrix(bundle_no, bundles_df, image, intensity_matrix, params, channel, 
 	if(isSave):
 		subfolder = 'bundles_' + channel
 		figure_name = 'bundle_no_' + str(bundle_no) + '_' + channel + '_' + str(mind)
-		plt.savefig(os.path.join(figure_prefix, subfolder, figure_name), dpi=300, bbox_inches='tight')
+		plt.savefig(os.path.join(paths.fig_out_prefix, subfolder, figure_name), dpi=300, bbox_inches='tight')
 
 
 def plotSummaryMatrix(matrix, cmap, vmax, tick_params, labelParams):
@@ -788,7 +801,7 @@ def plotSummaryMatrix(matrix, cmap, vmax, tick_params, labelParams):
 
 # def plotBundleVsMatrix(bundle_no, bundles_df, image, intensity_matrix, fig_params, tick_params, plot_options, matching_info):
 #     ## unravel parameters
-#     channel, mind, params, figure_prefix, img_name, slice_type, radius_expanse_ratio = fig_params
+#     channel, mind, params, paths.fig_out_prefix, img_name, analysis_params_general.slice_type, analysis_params_general.radius_expanse_ratio = fig_params
 #     is_plot_line, is_label_off, isSave, kwarg['is_true_x_tick'] = plot_options
 #     tick_type_x, tick_type_y, tick_arg2_x, tick_arg2_y = tick_params
 #     matching_info.index_to_target_id, matching_info.color_code, matching_info.channel_mapping, matching_info.target_id_to_index = matching_info
@@ -804,7 +817,7 @@ def plotSummaryMatrix(matrix, cmap, vmax, tick_params, labelParams):
 					   
 #     ### X and Y tick settings
 #     if(kwarg['is_true_x_tick']):
-#         ori_x_ticks = np.round(np.linspace(0, radius_expanse_ratio, intensity_matrix.shape[1]), 2)
+#         ori_x_ticks = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio, intensity_matrix.shape[1]), 2)
 # #         print(ori_x_ticks)
 #         x_ticks = get_tick_list(tick_type_x, ori_x_ticks, tick_arg2_x)
 #     else:
@@ -831,7 +844,7 @@ def plotSummaryMatrix(matrix, cmap, vmax, tick_params, labelParams):
 #     r_heel_coords[:,1] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_Y_R', True)])
 
 #     ### targets info
-#     ind_targets, coord_targets = my_help.getTargetCoords(bundle_no, bundles_df, matching_info.index_to_target_id)
+#     ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
 #     if(channel == 'GFP'):
 #         coord_rs = getR4Coords(bundle_no, bundles_df, ind_targets)
 #     elif(channel == 'R3'):
@@ -936,14 +949,14 @@ def plotSummaryMatrix(matrix, cmap, vmax, tick_params, labelParams):
 	
 #     if(isSave):
 #         plt.ioff()
-#         subfolder = 'slice_type' + str(slice_type) + '_' + channel
+#         subfolder = 'analysis_params_general.slice_type' + str(analysis_params_general.slice_type) + '_' + channel
 #         figure_name = 'bundle_no_' + str(bundle_no) + '_' + channel + '_' + str(mind)
 		
-#         my_help.check_dir(os.path.join(figure_prefix))
-#         my_help.check_dir(os.path.join(figure_prefix, img_name))
-#         my_help.check_dir(os.path.join(figure_prefix, img_name, subfolder))
+#         my_help.check_dir(os.path.join(paths.fig_out_prefix))
+#         my_help.check_dir(os.path.join(paths.fig_out_prefix, img_name))
+#         my_help.check_dir(os.path.join(paths.fig_out_prefix, img_name, subfolder))
 		
-#         plt.savefig(os.path.join(figure_prefix, img_name, subfolder, figure_name))
+#         plt.savefig(os.path.join(paths.fig_out_prefix, img_name, subfolder, figure_name))
 	
 #     return fig
 
@@ -957,8 +970,8 @@ def plotSummaryMatrix(matrix, cmap, vmax, tick_params, labelParams):
 #     r_heel_coords = get_all_rcell_coords(bundle_no, bundles_df)
 	
 #     ### targets info
-#     ind_targets, coord_targets = my_plot.my_help.getTargetCoords(bundle_no, bundles_df, matching_info.index_to_target_id)
-#     coordR4s = my_plot.my_help.getRxCoords(bundle_no, bundles_df, ind_targets, 4)
+#     ind_targets, coord_targets = my_plot.my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+#     coordR4s = my_plot.my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
 #     coords = np.concatenate((coord_targets, coordR4s))
 #     print(coord_targets)
 
@@ -1032,7 +1045,7 @@ def plotSummaryMatrix(matrix, cmap, vmax, tick_params, labelParams):
 #     else:
 #         return [col for col in df.columns.values if header_tag not in col]
 
-# def my_help.getTargetCoords(bundle_no, bundles_df, matching_info.index_to_target_id):
+# def my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id):
 #     ind_targets = []
 #     coord_targets = np.zeros((len(matching_info.index_to_target_id),2))
 	
@@ -1045,7 +1058,7 @@ def plotSummaryMatrix(matrix, cmap, vmax, tick_params, labelParams):
 
 #     return ind_targets, coord_targets
 
-# def my_help.getRxCoords(bundle_no, bundles_df, ind_targets, Rtype):
+# def my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, Rtype):
 #     coordRxs = np.zeros((len(ind_targets), 2))
 #     coordHeaders = ['coord_X_R' + str(Rtype), 'coord_Y_R' + str(Rtype)]
 	

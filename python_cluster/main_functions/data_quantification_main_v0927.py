@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
-# @Last Modified by:   sf942274
-# @Last Modified time: 2019-10-17 20:32:50
+# @Last Modified by:   lily
+# @Last Modified time: 2020-02-12 17:07:50
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -27,14 +27,16 @@ from skimage import exposure, img_as_float, filters, morphology, transform
 
 from sklearn import linear_model, metrics
 
-sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/python_cluster/helper_functions')
+### include folders with additional functions
+# sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/python_cluster/helper_functions')
+# sys.path.insert(0, '/wynton/home/awlab/wji/code/helper_functions')
+sys.path.insert(0, '/Users/lily/Lily/Academic/AW_Lab/code/python_cluster/helper_functions')
 
 import data_quantification_settings as settings
 import data_quantification_function_helper as my_help
 import data_quantification_function_intensity_calculation as my_int
 import data_quantification_function_parse_bundle as my_pb
 import data_quantification_function_plotting as my_plot
-
 
 """
 Function: Import data.
@@ -46,7 +48,6 @@ Outputs:
 - image_info: list. contains: image_name, image_shape, m2p_ratio(um to pixel info)
 """
 def import_data():
-
 	paths = settings.paths
 
 	summary_df = pd.read_csv(paths.annot_path)
@@ -108,43 +109,52 @@ def process_image(image, image_shape):
 	image_norm = np.empty(image_shape + (num_norm_channels,), dtype=image[:,:,:,1].dtype, order='C')
 	thr = np.zeros((2))
 	
-	# RFP_norm
-	image_norm[:,:,:,0] = exposure.rescale_intensity(image[:,:,:,0], in_range = 'image', out_range='dtype')
-	# GFP_norm
-	image_norm[:,:,:,1] = exposure.rescale_intensity(image[:,:,:,1], in_range = 'image', out_range='dtype')    
+	# # RFP_norm
+	# image_norm[:,:,:,0] = exposure.rescale_intensity(image[:,:,:,0], in_range = 'image', out_range='dtype')
+	# # GFP_norm
+	# image_norm[:,:,:,1] = exposure.rescale_intensity(image[:,:,:,1], in_range = 'image', out_range='dtype')    
+
+	image_norm[:,:,:,0] = image[:,:,:,0]
+	image_norm[:,:,:,1] = image[:,:,:,1]
 
 	del image
 	
 	print("gfp threshold!")
 	my_help.print_to_log("gfp threshold!")
-	thr[0] = filters.threshold_isodata(image_norm[:,:,:,1])
-	thr[1] = filters.threshold_mean(image_norm[:,:,:,1])
+	# thr[0] = filters.threshold_isodata(image_norm[:,:,:,1])
+	# thr[1] = filters.threshold_mean(image_norm[:,:,:,1])
 
 	print("histogram matching!")
 	my_help.print_to_log("histogram matching!")
-	gfp = transform.match_histograms(image_norm[:,:,:,1], image_norm[:,:,:,0])
+	# gfp = transform.match_histograms(image_norm[:,:,:,1], image_norm[:,:,:,0])
 	
 	print("R3/R4 v1")
 	my_help.print_to_log("R3/R4 v1")
-	r3_img = image_norm[:,:,:,0] - gfp
-	r3_img[r3_img<0] = 0
-	image_norm[:,:,:,2] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
-	r4_img = image_norm[:,:,:,0] * gfp
-	image_norm[:,:,:,3] = exposure.rescale_intensity(r4_img, in_range = 'image', out_range='dtype')
+	# r3_img = image_norm[:,:,:,0] - gfp
+	# r3_img[r3_img<0] = 0
+	# image_norm[:,:,:,2] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
+	# r4_img = image_norm[:,:,:,0] * gfp
+	# image_norm[:,:,:,3] = exposure.rescale_intensity(r4_img, in_range = 'image', out_range='dtype')
+	image_norm[:,:,:,2] = image_norm[:,:,:,0]
+	image_norm[:,:,:,3] = image_norm[:,:,:,1]
 	
 	print("R3/R4 v2")
 	my_help.print_to_log("R3/R4 v2")
-	gfp_thr = morphology.binary_opening((image_norm[:,:,:,1]>thr[0])*1)
-	image_norm[:,:,:,4] = exposure.rescale_intensity(image_norm[:,:,:,0] * (1-gfp_thr), in_range = 'image', out_range='dtype')
-	image_norm[:,:,:,5] = exposure.rescale_intensity(morphology.closing(image_norm[:,:,:,1]*((image_norm[:,:,:,1]>((thr[0] + thr[1])/2))*1)))
+	# gfp_thr = morphology.binary_opening((image_norm[:,:,:,1]>thr[0])*1)
+	# image_norm[:,:,:,4] = exposure.rescale_intensity(image_norm[:,:,:,0] * (1-gfp_thr), in_range = 'image', out_range='dtype')
+	# image_norm[:,:,:,5] = exposure.rescale_intensity(morphology.closing(image_norm[:,:,:,1]*((image_norm[:,:,:,1]>((thr[0] + thr[1])/2))*1)))
+	image_norm[:,:,:,4] = image_norm[:,:,:,0]
+	image_norm[:,:,:,5] = image_norm[:,:,:,1]
+
 
 	print("R3 v3")
-	my_help.print_to_log("R3 v3")
-	r3_img = image_norm[:,:,:,0] - gfp*settings.scale_factor
-	r3_img[r3_img<0] = 0
-	image_norm[:,:,:,6] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
-
-	del r3_img, r4_img, gfp, gfp_thr
+	# my_help.print_to_log("R3 v3")
+	# r3_img = image_norm[:,:,:,0] - gfp*settings.matching_info.scale_factor
+	# r3_img[r3_img<0] = 0
+	# image_norm[:,:,:,6] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
+	image_norm[:,:,:,6] = image_norm[:,:,:,0]
+	
+	# del r3_img, r4_img, gfp, gfp_thr
 
 	return image_norm
 
@@ -178,32 +188,31 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 	thr_li = np.zeros((num_norm_channels))
 	thr_isodata = np.zeros((num_norm_channels))
 	time_start = time.time()
-	for channel_no in range(num_norm_channels):
-		thr_otsu[channel_no] = filters.threshold_otsu(image_norm[:,:,:,channel_no])
-		thr_li[channel_no] = filters.threshold_li(image_norm[:,:,:,channel_no])
-		thr_isodata[channel_no] = filters.threshold_isodata(image_norm[:,:,:,channel_no])
+	# for channel_no in range(num_norm_channels):
+	# 	thr_otsu[channel_no] = filters.threshold_otsu(image_norm[:,:,:,channel_no])
+	# 	thr_li[channel_no] = filters.threshold_li(image_norm[:,:,:,channel_no])
+	# 	thr_isodata[channel_no] = filters.threshold_isodata(image_norm[:,:,:,channel_no])
 	time_end = time.time()
 	time_dur = time_end - time_start
 	my_help.print_to_log("total time: " + str(time_dur))
 
 	### process
 	for ind, bundle_no in enumerate(annot_bundles_df.index):
-		bundle_no = int(annot_bundles_df.loc[bundle_no,'coord_Z_R' + str(3)]) - 1
 		print("Bundle No: " + str(bundle_no))
 		my_help.print_to_log("Bundle No: " + str(bundle_no))
 
 		### targets info
-		ind_targets, coord_targets = my_help.get_coord_targets(bundle_no, bundles_df, targetIndexMatch)
+		ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
 		coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
 		coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
 		coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
 		coord_rcells = np.concatenate((coord_r4s, coord_r3s))
 
 		### slice info
-		slice_zero_point = coord_targets[targetIndexMatch_rev[7],:] # T3'
-		slice_one_point = coord_targets[targetIndexMatch_rev[3],:] # T3
+		slice_zero_point = coord_targets[matching_info.target_id_to_index[7],:] # T3'
+		slice_one_point = coord_targets[matching_info.target_id_to_index[3],:] # T3
 
-		length_one_point = coord_targets[targetIndexMatch_rev[4],:]
+		length_one_point = coord_targets[matching_info.target_id_to_index[4],:]
 
 		center_points = [coord_targets[0,:], coord_center[0,:]]
 
@@ -212,14 +221,14 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 		# printing_params = [False, False]
 
 		### get slicing params and calculate matrix
-		analysis_params_general.center_type = settings.analysis_params_general.analysis_params_general.center_type
+		center_type = settings.analysis_params_general.center_type
 		slice_type = settings.analysis_params_general.slice_type
 		analysis_params = [
 			analysis_params_general.num_angle_section, 
 			analysis_params_general.num_outside_angle, 
 			analysis_params_general.num_x_section, 
 			analysis_params_general.z_offset, 
-			analysis_params_general.analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
+			analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
 		]
 		bundle_params = [
 			bundle_no, 
@@ -243,8 +252,8 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 		time_start = time.time()
 		for channel_no in range(num_norm_channels):
 			my_help.print_to_log("Channle No: " + str(channel_no))
-			intensity_matrix[ind, channel_no,:,:,:] = my_int.get_intensity_matrix_new(pp_i, image_norm, matching_info.channel_mapping[channel_no], matching_info.channel_mapping)
-			# intensity_matrix[ind, channel_no,:,:,:] = np.random.randn(intensity_matrix[ind, channel_no,:,:,:].shape[0], intensity_matrix[ind, channel_no,:,:,:].shape[1], intensity_matrix[ind, channel_no,:,:,:].shape[2])
+			# intensity_matrix[ind, channel_no,:,:,:] = my_int.get_intensity_matrix_new(pp_i, image_norm, matching_info.channel_mapping[channel_no], matching_info.channel_mapping)
+			intensity_matrix[ind, channel_no,:,:,:] = np.random.randn(intensity_matrix[ind, channel_no,:,:,:].shape[0], intensity_matrix[ind, channel_no,:,:,:].shape[1], intensity_matrix[ind, channel_no,:,:,:].shape[2])
 		time_end = time.time()
 		time_dur = time_end - time_start
 		my_help.print_to_log("total time: " + str(time_dur))
@@ -268,62 +277,64 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 
 	num_norm_channels = image_norm.shape[-1]
 	
-	for ind, bundle_no in enumerate(annot_bundles_df.index):
-		bundle_no = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(3)]) - 1
-		print("Bundle No: ", bundle_no)
-		print_to_log(log_path, "Bundle No: " + str(bundle_no))
+	# for ind, bundle_no in enumerate(annot_bundles_df.index):
+	ind = 0
+	bundle_no = 1
+	print("Bundle No: ", bundle_no)
+	my_help.print_to_log("Bundle No: " + str(bundle_no))
 
-		category_id = annot_bundles_df.iloc[0]['category_id']
-		sample_id = annot_bundles_df.iloc[0]['sample_id']
-		region_id = annot_bundles_df.iloc[0]['region_id']
+	category_id = annot_bundles_df.iloc[0]['CategoryID']
+	sample_id = annot_bundles_df.iloc[0]['SampleID']
+	region_id = annot_bundles_df.iloc[0]['RegionID']
 
 
 
-		### targets info
-		ind_targets, coord_targets = my_help.getTargetCoords(bundle_no, bundles_df, targetIndexMatch)
-		coord_center = my_help.getBundleCenter(bundle_no, bundles_df)
-		coord_r4s = my_help.getRxCoords(bundle_no, bundles_df, ind_targets, 4)
-		coord_r3s = my_help.getRxCoords(bundle_no, bundles_df, ind_targets, 3)
-		coord_rs = np.concatenate((coord_r4s, coord_r3s))
+	### targets info
+	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+	coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
+	coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
+	coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
+	coord_rs = np.concatenate((coord_r4s, coord_r3s))
 
-		### parameters
-		pp_i = params[ind]
-		rel_points_i = rel_points[ind, :]
+	### parameters
+	pp_i = params[ind]
+	rel_points_i = rel_points[ind, :]
 
-		matrix = my_help.delete_zero_columns(intensity_matrix[ind, :, :, :, :], -100, 3)
-		if(len(matrix.flatten()) > 0):
+	matrix = my_help.delete_zero_columns(intensity_matrix[ind, :, :, :, :], -100, 3)
+	if(len(matrix.flatten()) > 0):
 
-			## heat map
-			plt.ioff()
-			ori_x = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], matrix.shape[2]), 2)
-			tick_params = [2, 1, ori_x, 21] ### tickTypeX, tickTypeY, tickArg2_X, tickArg2_Y
-			for thr_function_ids in [0, 1, 2, 3]: # different thresholding methods
-				if(thr_function_ids == 0):
-					thrs = np.zeros((num_norm_channels))
-				elif(thr_function_ids == 1):
-					thrs = thr_otsu
-				elif(thr_function_ids == 2):
-					thrs = thr_li
-				elif(thr_function_ids == 3):
-					thrs = thr_isodata
+		## heat map
+		plt.ioff()
+		ori_x = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], matrix.shape[2]), 2)
+		tick_params = [2, 1, ori_x, 21] ### tickTypeX, tickTypeY, tickArg2_X, tickArg2_Y
+		for thr_function_ids in [0, 1, 2, 3]: # different thresholding methods
+			thrs = np.zeros((num_norm_channels))
+			# if(thr_function_ids == 0):
+			# 	thrs = np.zeros((num_norm_channels))
+			# elif(thr_function_ids == 1):
+			# 	thrs = thr_otsu
+			# elif(thr_function_ids == 2):
+			# 	thrs = thr_li
+			# elif(thr_function_ids == 3):
+			# 	thrs = thr_isodata
 
-				fig_name = f'{category_id}_s{sample_id}r{region_id}_bundle_no_{bundle_no}_{thr_function_ids}.png'
-				fig_params = [analysis_params_general.center_type, pp_i, fig_out_prefix, img_name, fig_name, slice_type, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]]
-				plot_options = [thrs, thr_function_ids, num_norm_channels]
-				# plot_options = [True, True, True, True, False, thrs, thr_function_ids, num_norm_channels] ### isPlotLine, isLabelOff, isSave, isTrueXTick, isOriTick, thr_function_ids            
-				fig = my_plot.plot_bundle_vs_matrix_all(bundle_no, bundles_df, image_norm, matrix, fig_params, tick_params, plot_options, is_label_off = True, is_save = True, is_true_x_tick = True, is_ori_tick = False)
-				plt.close(fig)
+			fig_name = f'{category_id}_s{sample_id}r{region_id}_bundle_no_{bundle_no}_{thr_function_ids}.png'
+			fig_params = [pp_i, img_name, fig_name]
+			plot_options = [thrs, thr_function_ids, num_norm_channels]
+			# plot_options = [True, True, True, True, False, thrs, thr_function_ids, num_norm_channels] ### isPlotLine, isLabelOff, isSave, isTrueXTick, isOriTick, thr_function_ids            
+			fig = my_plot.plot_bundle_vs_matrix_all(bundle_no, bundles_df, image_norm, matrix, fig_params, tick_params, plot_options, is_label_off = True, is_save = True, is_true_x_tick = True, is_ori_tick = False)
+			plt.close(fig)
 
-			## polar plot
-			fig_params = pp_i, fig_out_prefix, img_name, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], analysis_params_general.center_type, slice_type
-			# plot_options = [True, True] # isLabelOff, isSave
-			for channel_no in range(num_norm_channels):
-				# analysis_params = [analysisParams_general[0], analysisParams_general[1], analysisParams_general[2], analysisParams_general[3], analysisParams_general[4][analysis_params_general.center_type]]
-				fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
-				plt.close(fig)
+		## polar plot
+		fig_params = [pp_i, img_name]
+		# plot_options = [True, True] # isLabelOff, isSave
+		for channel_no in range(num_norm_channels):
+			# analysis_params = [analysisParams_general[0], analysisParams_general[1], analysisParams_general[2], analysisParams_general[3], analysisParams_general[4][analysis_params_general.center_type]]
+			fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
+			plt.close(fig)
 
-		else:
-			print("error! No intensity matrix calculated!")
+	else:
+		print("error! No intensity matrix calculated!")
 
 
 """
@@ -333,59 +344,66 @@ Outputs: output_data saved in output folder
 - component of output_data: category_id, sample_id, region_id, slice_type, center_type, intensity_matrix, parameter, relative_positions
 """
 def save_results(annot_bundles_df, intensity_matrix, params, rel_points):
-    analysis_params_general = settings.analysis_params_general
-    paths = settings.paths
-    # image_path, roi_path, annot_path, log_path, fig_out_prefix, data_out_prefix = paths
+	analysis_params_general = settings.analysis_params_general
+	paths = settings.paths
+	# image_path, roi_path, annot_path, log_path, fig_out_prefix, data_out_prefix = paths
+	print(annot_bundles_df.columns)
+	category_id = annot_bundles_df.iloc[0]['CategoryID']
+	sample_id = annot_bundles_df.iloc[0]['SampleID']
+	region_id = annot_bundles_df.iloc[0]['RegionID']
 
-    category_id = annot_bundles_df.iloc[0]['category_id']
-    sample_id = annot_bundles_df.iloc[0]['sample_id']
-    region_id = annot_bundles_df.iloc[0]['region_id']
+	output_data = {
+		'category_ID' : category_id,
+		'sample_ID' : sample_id,
+		'region_ID': region_id,
+		'slice_type': analysis_params_general.slice_type,
+		'center_type': analysis_params_general.center_type,
+		'intensity_matrix': intensity_matrix,
+		'parameter': params,
+		'relativePositions': rel_points
+	}
 
-    output_data = {
-        'category_id' : category_id,
-        'sample_id' : sample_id,
-        'region_id': region_id,
-        'slice_type': analysis_params_general.slice_type,
-        'center_type': analysis_params_general.center_type,
-        'intensity_matrix': intensity_matrix,
-        'parameter': params,
-        'relativePositions': rel_points
-    }
+	now = datetime.datetime.now()
+	date_info = str(now.year)+str(now.month)+str(now.day)
+	output_name = f'{category_id}_sample{sample_id}_region{region_id}_slice{analysis_params_general.slice_type}_center{analysis_params_general.center_type}_v{date_info}.pickle'
 
-    now = datetime.datetime.now()
-    date_info = str(now.year)+str(now.month)+str(now.day)
-    output_name = f'{category_id}_sample{sample_id}_region{region_id}_slice{analysis_params_general.slice_type}_center{analysis_params_general.center_type}_v{date_info}.pickle'
-
-    output_dir = os.path.join(data_out_prefix)
-    my_help.check_dir(output_dir)
-    output_dir = os.path.join(output_dir,category_id)
-    my_help.check_dir(output_dir)
-    output_name = os.path.join(output_dir, output_name)
-    pickle_out = open(output_name,"wb")
-    pickle.dump(output_data, pickle_out)
-    pickle_out.close()
+	output_dir = os.path.join(paths.data_out_prefix)
+	my_help.check_dir(output_dir)
+	output_dir = os.path.join(output_dir,category_id)
+	my_help.check_dir(output_dir)
+	output_name = os.path.join(output_dir, output_name)
+	pickle_out = open(output_name,"wb")
+	pickle.dump(output_data, pickle_out)
+	pickle_out.close()
 
 def main():
-	print("=====" +annot_name + " Analysis Start! =====")
-	my_help.print_to_log("=====" + annot_name + " Analysis Start! =====")
+	analysis_params_general = settings.analysis_params_general
+	paths = settings.paths
+	matching_info = settings.matching_info
+
+	print("=====" + paths.annot_name + " Analysis Start! =====")
+	my_help.print_to_log("=====" + paths.annot_name + " Analysis Start! =====")
 
 	roi_df, annot_df, image, image_info = import_data()
 	print("Data import finished!")
 	my_help.print_to_log("Data import finished!")
-	
+
+	print(analysis_params_general.center_type)
+	print(matching_info.color_code)
+
 	bundles_df, annot_bundles_df = process_annotation(roi_df, annot_df, image_info[2])
 	print("annot_bundles_df done!")
 	my_help.print_to_log("annot_bundles_df done!")
-	
+
 	time_start = time.time()
 	image_norm = process_image(image, image_info[1])
 	time_end = time.time()
 	time_dur = time_end - time_start
 	print("image processed! total time: ", time_dur)
 	my_help.print_to_log("image processed! total time: " + str(time_dur))
+	
 	intensity_matrix, params, rel_points, thr_otsu, thr_li, thr_isodata = analyze_image(bundles_df, annot_bundles_df, image_norm, image_info[0])
 	print("image analyzed!")
-	my_help.print_to_log("image analyzed!")
 
 	save_results(annot_bundles_df,intensity_matrix, params, rel_points)
 	print("data saved!")
@@ -396,4 +414,5 @@ def main():
 	my_help.print_to_log("image results generated!")
 
 if __name__ == "__main__":
+
 	main()

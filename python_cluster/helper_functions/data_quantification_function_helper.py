@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   sf942274
-# @Last Modified time: 2019-10-17 21:19:50
+# @Last Modified by:   lily
+# @Last Modified time: 2020-02-11 11:18:50
 
 
 
@@ -114,46 +114,47 @@ def group_headers(df, header_tag, isContain):
 
 
 # ================= task specific functions =================
-def get_target_coords(bundle_No, bundles_df, targetIndexMatch):
-	indTs = []
-	coordTs = np.zeros((len(targetIndexMatch),2))
+def get_target_coords(bundle_no, bundles_df, index_to_target_id):
+	target_inds = []
+	target_coords = np.zeros((len(index_to_target_id),2))
 	
-	coordTs[0,:] = np.array([ bundles_df.loc[bundle_No,'coord_X_T0'], bundles_df.loc[bundle_No,'coord_Y_T0'] ])
-	indTs.append(bundle_No)
+	target_coords[0,:] = np.array([ bundles_df.loc[bundle_no,'coord_X_T0'], bundles_df.loc[bundle_no,'coord_Y_T0'] ])
+	target_inds.append(bundle_no)
 	
-	for i in range(1,len(coordTs)):
-		indTs.append(int(bundles_df.loc[bundle_No,'TargetNo_T' + str(targetIndexMatch[i])]))
-		coordTs[i,:] = np.array([ bundles_df.loc[indTs[i],'coord_X_T0'], bundles_df.loc[indTs[i],'coord_Y_T0'] ])
+	for i in range(1,len(target_coords)):
+		# print(index_to_target_id[i])
+		target_inds.append(int(bundles_df.loc[bundle_no,'TargetNo_T' + str(index_to_target_id[i])]))
+		target_coords[i,:] = np.array([ bundles_df.loc[target_inds[i],'coord_X_T0'], bundles_df.loc[target_inds[i],'coord_Y_T0'] ])
 
-	return indTs, coordTs
+	return target_inds, target_coords
 
-def get_bundle_center(bundle_No, bundles_df):
-	indTs = []
-	coord_Center = np.zeros((1,2))
+def get_bundle_center(bundle_no, bundles_df):
+	target_inds = []
+	center_coord = np.zeros((1,2))
 	
-	coord_Center[0,:] = np.array([ bundles_df.loc[bundle_No,'coord_X_Center'], bundles_df.loc[bundle_No,'coord_Y_Center'] ])
-	# indTs.append(bundle_No)
+	center_coord[0,:] = np.array([ bundles_df.loc[bundle_no,'coord_X_Center'], bundles_df.loc[bundle_no,'coord_Y_Center'] ])
+	# target_inds.append(bundle_no)
 	
-	# for i in range(1,len(coordTs)):
-	#   indTs.append(int(bundles_df.loc[bundle_No,'TargetNo_T' + str(targetIndexMatch[i])]))
-	#   coordTs[i,:] = np.array([ bundles_df.loc[indTs[i],'coord_X_Center'], bundles_df.loc[indTs[i],'coord_Y_Center'] ])
+	# for i in range(1,len(target_coords)):
+	#   target_inds.append(int(bundles_df.loc[bundle_no,'TargetNo_T' + str(targetIndexMatch[i])]))
+	#   target_coords[i,:] = np.array([ bundles_df.loc[target_inds[i],'coord_X_Center'], bundles_df.loc[target_inds[i],'coord_Y_Center'] ])
 
-	return coord_Center
+	return center_coord
 
-def get_heel_coords(bundle_No, bundles_df):
-	HeelCoords = np.zeros((6,2))
-	HeelCoords[:,0] = list(bundles_df.loc[bundle_No, my_help.group_headers(bundles_df, 'coord_X_R', True)])
-	HeelCoords[:,1] = list(bundles_df.loc[bundle_No, my_help.group_headers(bundles_df, 'coord_Y_R', True)])
-	return HeelCoords
+def get_heel_coords(bundle_no, bundles_df):
+	heel_coords = np.zeros((6,2))
+	heel_coords[:,0] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_X_R', True)])
+	heel_coords[:,1] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_Y_R', True)])
+	return heel_coords
 
-def get_rx_coords(bundle_No, bundles_df, indTs, Rtype):
-	coordRxs = np.zeros((len(indTs), 2))
-	coordHeaders = ['coord_X_R' + str(Rtype), 'coord_Y_R' + str(Rtype)]
+def get_rx_coords(bundle_no, bundles_df, target_inds, Rtype):
+	rx_coords = np.zeros((len(target_inds), 2))
+	coord_headers = ['coord_X_R' + str(Rtype), 'coord_Y_R' + str(Rtype)]
 	
-	for i in range(len(indTs)):
-		coordRxs[i,:] = np.array([ bundles_df.loc[ indTs[i], coordHeaders[0]], bundles_df.loc[ indTs[i], coordHeaders[1]]])
+	for i in range(len(target_inds)):
+		rx_coords[i,:] = np.array([ bundles_df.loc[ target_inds[i], coord_headers[0]], bundles_df.loc[ target_inds[i], coord_headers[1]]])
 
-	return coordRxs
+	return rx_coords
 	
 def delete_zero_columns(matrix, factor, axis):
 	z_columns = np.unique(np.where(matrix == factor)[axis])

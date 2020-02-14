@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: sf942274
 # @Date:   2019-07-28 16:51:03
-# @Last Modified by:   sf942274
-# @Last Modified time: 2019-11-14 08:25:09
+# @Last Modified by:   lily
+# @Last Modified time: 2020-02-11 11:19:58
 
 import io, os, sys, types, datetime, pickle, warnings
 
@@ -246,7 +246,7 @@ def process_sum_df(sum_df, annots_df, outputData):
             r4_heel = rel_pos_list[ind_annot,8]
             t3_pos = rel_pos_list[ind_annot,2]
             t7_pos = rel_pos_list[ind_annot,5]
-            inds_sum =  sum_df_current.index[(sum_df_current['bundle_no'] == bundle_no)]
+            inds_sum =  sum_df_current.index[(sum_df_current['Bundle_No'] == bundle_no)]
             # print(inds_sum)
             
             if(len(inds_sum) > 0):
@@ -342,7 +342,7 @@ def get_summary_matrices(sum_df, annots_df, outputData):
 
         for ind, bundle_no in enumerate(annots_df_current.index):
     #         print(ind, bundle_no)
-            sumdf_inds =  sum_df_current.index[(sum_df_current.loc[:,'bundle_no'] == bundle_no)]
+            sumdf_inds =  sum_df_current.index[(sum_df_current.loc[:,'Bundle_No'] == bundle_no)]
             matrix = np.expand_dims(outputData[iData]['intensityMatrix'][ind,:,:,:,:], axis = 0)
             if(len(sumdf_inds) > 0):
                 type_bundle = sum_df_current.loc[sumdf_inds,'type_bundle'].values[0]
