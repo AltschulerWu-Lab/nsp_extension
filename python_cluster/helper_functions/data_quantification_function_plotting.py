@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   sf942274
-# @Last Modified time: 2020-02-13 18:38:43
+# @Last Modified time: 2020-02-14 19:05:32
 
 
 import io, os, sys, types
@@ -231,8 +231,9 @@ def get_imshow_values(bundles_df, bundle_no, image, r_z, z_offset, channel_no):
 	### targets info
 	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
 	coord_rs = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)       
-	coords = np.concatenate((coord_targets, coord_rs))
-
+	# coords = np.concatenate((coord_targets, coord_rs))
+	coords = coord_targets
+	
 	### image boundary
 	image_bd = (image.shape[2], image.shape[1])
 	xlim = [max(np.floor(coords.min(axis = 0))[0] - 21, 0), min(np.ceil(coords.max(axis = 0))[0] + 21, image_bd[0])]
@@ -246,15 +247,17 @@ def get_imshow_values(bundles_df, bundle_no, image, r_z, z_offset, channel_no):
 	return r_heel_coords, coord_targets, bundle_img, xlim, ylim
 
 """ ========================= Plotting =========================== """
-def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, z_offset, plotSettings, matching_info):
-	
+def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, **kwarg):
+	## parameters from settings
+	z_offset = settings.analysis_params_general.z_offset
+	matching_info = settings.matching_info
+
 	### Unravel plot settings
-	isPlotR3Line, isPlotR4Line, isPlotR4s, is_label_off = plotSettings
-	matching_info.index_to_target_id, matching_info.color_code, matching_info.channel_mapping, matching_info.channel_cmap, matching_info.target_id_to_index = matching_info
+	# is_plot_r3_line, is_plot_r4_line, is_plot_r4, is_label_off = plotSettings
 	
 	### R heels info
-	R4_Z = int(bundles_df.loc[bundle_no,'coord_Z_R4']) - 1
-	print(R4_Z)
+	r_z = int(bundles_df.loc[bundle_no,'coord_Z_R4']) - 1
+	# print(r_z)
 	r_heel_coords = np.zeros((6,2))
 	r_heel_coords[:,0] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_X_R', True)])
 	r_heel_coords[:,1] = list(bundles_df.loc[bundle_no, my_help.group_headers(bundles_df, 'coord_Y_R', True)])
@@ -262,20 +265,22 @@ def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, z
 	### targets info
 	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
 	coordR4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
-	coords = np.concatenate((coord_targets, coordR4s))
-
+	# coords = np.concatenate((coord_targets, coordR4s))
+	coords = coord_targets
+	# print(coords)
+	
 	### image boundary
 	image_bd = (image_norm.shape[2], image_norm.shape[1])
 	xlim = [max(np.floor(coords.min(axis = 0))[0] - 50, 0), min(np.ceil(coords.max(axis = 0))[0] + 50, image_bd[0])]
 	ylim = [max(np.floor(coords.min(axis = 0))[1] - 50, 0), min(np.ceil(coords.max(axis = 0))[1] + 50, image_bd[1])]
 	# print(xlim, ylim)
-
-	image_xy = image_norm[R4_Z, int(ylim[0]):int(ylim[1]), int(xlim[0]):int(xlim[1]), 0].shape
+	# print(xlim, ylim)
+	image_xy = image_norm[r_z, int(ylim[0]):int(ylim[1]), int(xlim[0]):int(xlim[1]), 0].shape
 
 	### get image crops for plot
 	bundle_img = np.empty(image_xy + (image_norm.shape[-1],), dtype=image_norm.dtype, order='C')
 	for i in range(image_norm.shape[-1]):
-		img_crop = image_norm[R4_Z-z_offset : R4_Z+z_offset+1, int(ylim[0]):int(ylim[1]), int(xlim[0]):int(xlim[1]), i]
+		img_crop = image_norm[r_z-z_offset : r_z+z_offset+1, int(ylim[0]):int(ylim[1]), int(xlim[0]):int(xlim[1]), i]
 		bundle_img[:,:,i] = exposure.rescale_intensity(np.max(img_crop, axis = 0), in_range = 'image', out_range='dtype')
 
 	### plot
@@ -294,18 +299,18 @@ def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, z
 			ax.plot(coord_targets[i,0]-xlim[0], coord_targets[i,1]-ylim[0],'o', mec = matching_info.color_code[matching_info.index_to_target_id[i]], markersize=8, mew = 2.0, mfc = 'none')
 
 		# plot R4s
-		if(isPlotR4s):
+		if(kwarg['is_plot_r4']):
 			for i in range(1,len(coordR4s)):
 				ax.plot(coordR4s[i,0]-xlim[0], coordR4s[i,1]-ylim[0], color = matching_info.color_code[4], marker = 'o', markersize=7)
 
 		# plot lines
-		if(isPlotR3Line):
+		if(kwarg['is_plot_r3_line']):
 			# lines associated with R3 & R4
 			# R3-T3
 			ax.plot([r_heel_coords[2,0]-xlim[0], coord_targets[2,0]-xlim[0]], [r_heel_coords[2,1]-ylim[0], coord_targets[2,1]-ylim[0]], '--', alpha = 0.5, color = matching_info.color_code[3])
 			# R3-T7
 			ax.plot([r_heel_coords[2,0]-xlim[0], coord_targets[5,0]-xlim[0]], [r_heel_coords[2,1]-ylim[0], coord_targets[5,1]-ylim[0]], '--', alpha = 0.5, color = matching_info.color_code[3])
-		if(isPlotR4Line):
+		if(kwarg['is_plot_r4_line']):
 			# R4-T3
 			ax.plot([r_heel_coords[3,0]-xlim[0], coord_targets[2,0]-xlim[0]], [r_heel_coords[3,1]-ylim[0], coord_targets[2,1]-ylim[0]], '--', alpha = 0.5, color = matching_info.color_code[4])
 			# R4-T7
@@ -317,9 +322,7 @@ def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, z
 		# plot axis
 		ax.set_title(matching_info.channel_mapping[plt_i], fontsize=16)
 
-	#         plt_i += 1
-
-		if(is_label_off):
+		if(kwarg['is_label_off']):
 			ax.tick_params(axis='both', which='both', labelbottom='off', labelleft = 'off')
 		else:
 			ax.tick_params(axis = 'both', labelsize = 12)
@@ -381,7 +384,8 @@ def plot_bundle_vs_matrix_all(bundle_no, bundles_df, image, intensity_matrix, fi
 	### targets info
 	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
 	coord_rs = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)        
-	coords = np.concatenate((coord_targets, coord_rs))
+	# coords = np.concatenate((coord_targets, coord_rs))
+	coords = coord_targets
 
 	### image boundary
 	image_bd = (image.shape[2], image.shape[1])

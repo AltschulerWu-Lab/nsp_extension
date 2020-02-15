@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# @Author: lily
-# @Date:   2020-02-11 04:40:57
-# @Last Modified by:   lily
-# @Last Modified time: 2020-02-11 16:50:10
+# Author: lily
+# Date:   2020-02-11 04:40:57
+# Last Modified by:   sf942274
+# Last Modified time: 2020-02-14 17:26:29
 import io, os, sys, types, pickle, datetime, time
 
 global paths, analysis_params_general, matching_info
@@ -42,6 +42,12 @@ class Paths:
 			log_prefix = '/wynton/home/awlab/wji/code/logs'
 			self.code_path = '/wynton/home/awlab/wji/code/helper_functions'
 		
+		elif(env == 'Windows'):
+			data_prefix = 'W:\\2019_09_NSP_Extension\\results\\Fate_Switching_Experiments\\Gal80_temporal\\Data'
+			output_prefix = 'W:\\2019_09_NSP_Extension\\results\\Fate_Switching_Experiments\\Gal80_temporal\\Output'
+			log_prefix = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\logs'
+			self.code_path = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\helper_functions'
+
 		### paths
 		log_name = f'{annot_name_sub}_s{input_list[1]}c{input_list[2]}_log_v{date_info}.txt'
 		
@@ -79,7 +85,7 @@ class MatchingInfo:
 			4: '#CFCF1C', 
 			5: '#FF00FF', 
 			6: '#FFAE01', 
-			7: '#983535', 
+			7: '#FF7C80', 
 			0: '#FFFFFF'
 		} # dic{color code for each R and target ID}
 		self.channel_mapping = {
@@ -121,6 +127,19 @@ class GeneralParams:
 		self.radius_expanse_ratio = [2.5, 3]
 
 ### get input
+# inputs:
+# env = input_list[0]
+# fig_out_folder = input_list[1]
+# data_out_folder = input_list[2]
+# annot_name = input_list[3]
+# slice_type = input_list[4]
+# center_type = input_list[5]
+# num_angle_section = input_list[6]
+# num_outside_angle = input_list[7]
+# num_x_section = input_list[8]
+# z_offset = input_list[9]
+# scale_factor = int(input_list[10])
+# example of an input: Windows, Data_Output, Figure_Output, Fz_26hrs_s5r1_annotation.csv, 0, 1, 10, 5, 10, 10, 1
 input_str = input()
 input_list = input_str.split(', ')
 print(input_str)
