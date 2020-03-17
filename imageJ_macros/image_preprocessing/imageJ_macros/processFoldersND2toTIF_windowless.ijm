@@ -2,7 +2,7 @@
 * @Author: sf942274
 * @Date:   2019-11-15 17:42:26
 * @Last Modified by:   sf942274
-* @Last Modified time: 2020-01-29 09:58:01
+* @Last Modified time: 2020-02-18 20:58:36
 */
 
  /*
@@ -25,7 +25,7 @@ suffix = ".nd2";
 
 inputSupPath = "/awlab/projects/2019_09_NSP_Extension/data/Imaging_Data_Original/Nikon_A1RsiConfocalImages" + File.separator;
 outputSupPath = "/awlab/projects/2019_09_NSP_Extension/data/Format_converted" + File.separator;
-logSupPath = "/awlab/projects/2019_09_NSP_Extension/code/NSP_codes/image_preprocessing/logs" + File.separator;
+logSupPath = "/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/imageJ_macros/image_preprocessing/logs" + File.separator;
 
 /* get input folders and folder inexes*/
 // for folder index, ND-acquisition = 1; Jobs = 2;
