@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
-# @Last Modified by:   sf942274
-# @Last Modified time: 2020-02-13 19:12:17
+# @Last Modified by:   Weiyue Ji
+# @Last Modified time: 2020-03-26 06:20:43
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -29,10 +29,7 @@ from sklearn import linear_model, metrics
 
 ### include folders with additional functions
 sys.path.insert(0, '/Volumes/Project/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
-# sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
-# sys.path.insert(0, '/wynton/home/awlab/wji/code/helper_functions')
-# sys.path.insert(0, '/Users/lily/Lily/Academic/AW_Lab/code/python_cluster/helper_functions')
-
+sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/helper_functions')
 import data_quantification_settings as settings
 import data_quantification_function_helper as my_help
 import data_quantification_function_intensity_calculation as my_int
@@ -110,10 +107,10 @@ def process_image(image, image_shape):
 	image_norm = np.empty(image_shape + (num_norm_channels,), dtype=image[:,:,:,1].dtype, order='C')
 	thr = np.zeros((2))
 	
-	# # RFP_norm
-	# image_norm[:,:,:,0] = exposure.rescale_intensity(image[:,:,:,0], in_range = 'image', out_range='dtype')
-	# # GFP_norm
-	# image_norm[:,:,:,1] = exposure.rescale_intensity(image[:,:,:,1], in_range = 'image', out_range='dtype')    
+	# RFP_norm
+	image_norm[:,:,:,0] = exposure.rescale_intensity(image[:,:,:,0], in_range = 'image', out_range='dtype')
+	# GFP_norm
+	image_norm[:,:,:,1] = exposure.rescale_intensity(image[:,:,:,1], in_range = 'image', out_range='dtype')    
 
 	image_norm[:,:,:,0] = image[:,:,:,0]
 	image_norm[:,:,:,1] = image[:,:,:,1]
@@ -122,40 +119,40 @@ def process_image(image, image_shape):
 	
 	print("gfp threshold!")
 	my_help.print_to_log("gfp threshold!")
-	# thr[0] = filters.threshold_isodata(image_norm[:,:,:,1])
-	# thr[1] = filters.threshold_mean(image_norm[:,:,:,1])
+	thr[0] = filters.threshold_isodata(image_norm[:,:,:,1])
+	thr[1] = filters.threshold_mean(image_norm[:,:,:,1])
 
 	print("histogram matching!")
 	my_help.print_to_log("histogram matching!")
-	# gfp = transform.match_histograms(image_norm[:,:,:,1], image_norm[:,:,:,0])
+	gfp = transform.match_histograms(image_norm[:,:,:,1], image_norm[:,:,:,0])
 	
 	print("R3/R4 v1")
 	my_help.print_to_log("R3/R4 v1")
-	# r3_img = image_norm[:,:,:,0] - gfp
-	# r3_img[r3_img<0] = 0
-	# image_norm[:,:,:,2] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
-	# r4_img = image_norm[:,:,:,0] * gfp
-	# image_norm[:,:,:,3] = exposure.rescale_intensity(r4_img, in_range = 'image', out_range='dtype')
+	r3_img = image_norm[:,:,:,0] - gfp
+	r3_img[r3_img<0] = 0
+	image_norm[:,:,:,2] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
+	r4_img = image_norm[:,:,:,0] * gfp
+	image_norm[:,:,:,3] = exposure.rescale_intensity(r4_img, in_range = 'image', out_range='dtype')
 	image_norm[:,:,:,2] = image_norm[:,:,:,0]
 	image_norm[:,:,:,3] = image_norm[:,:,:,1]
 	
 	print("R3/R4 v2")
 	my_help.print_to_log("R3/R4 v2")
-	# gfp_thr = morphology.binary_opening((image_norm[:,:,:,1]>thr[0])*1)
-	# image_norm[:,:,:,4] = exposure.rescale_intensity(image_norm[:,:,:,0] * (1-gfp_thr), in_range = 'image', out_range='dtype')
-	# image_norm[:,:,:,5] = exposure.rescale_intensity(morphology.closing(image_norm[:,:,:,1]*((image_norm[:,:,:,1]>((thr[0] + thr[1])/2))*1)))
+	gfp_thr = morphology.binary_opening((image_norm[:,:,:,1]>thr[0])*1)
+	image_norm[:,:,:,4] = exposure.rescale_intensity(image_norm[:,:,:,0] * (1-gfp_thr), in_range = 'image', out_range='dtype')
+	image_norm[:,:,:,5] = exposure.rescale_intensity(morphology.closing(image_norm[:,:,:,1]*((image_norm[:,:,:,1]>((thr[0] + thr[1])/2))*1)))
 	image_norm[:,:,:,4] = image_norm[:,:,:,0]
 	image_norm[:,:,:,5] = image_norm[:,:,:,1]
 
 
 	print("R3 v3")
-	# my_help.print_to_log("R3 v3")
-	# r3_img = image_norm[:,:,:,0] - gfp*settings.matching_info.scale_factor
-	# r3_img[r3_img<0] = 0
-	# image_norm[:,:,:,6] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
+	my_help.print_to_log("R3 v3")
+	r3_img = image_norm[:,:,:,0] - gfp*settings.matching_info.scale_factor
+	r3_img[r3_img<0] = 0
+	image_norm[:,:,:,6] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
 	image_norm[:,:,:,6] = image_norm[:,:,:,0]
 	
-	# del r3_img, r4_img, gfp, gfp_thr
+	del r3_img, r4_img, gfp, gfp_thr
 
 	return image_norm
 
@@ -189,10 +186,10 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 	thr_li = np.zeros((num_norm_channels))
 	thr_isodata = np.zeros((num_norm_channels))
 	time_start = time.time()
-	# for channel_no in range(num_norm_channels):
-	# 	thr_otsu[channel_no] = filters.threshold_otsu(image_norm[:,:,:,channel_no])
-	# 	thr_li[channel_no] = filters.threshold_li(image_norm[:,:,:,channel_no])
-	# 	thr_isodata[channel_no] = filters.threshold_isodata(image_norm[:,:,:,channel_no])
+	for channel_no in range(num_norm_channels):
+		thr_otsu[channel_no] = filters.threshold_otsu(image_norm[:,:,:,channel_no])
+		thr_li[channel_no] = filters.threshold_li(image_norm[:,:,:,channel_no])
+		thr_isodata[channel_no] = filters.threshold_isodata(image_norm[:,:,:,channel_no])
 	time_end = time.time()
 	time_dur = time_end - time_start
 	my_help.print_to_log("total time: " + str(time_dur))

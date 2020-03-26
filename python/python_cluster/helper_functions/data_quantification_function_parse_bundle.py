@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-02-15 01:03:12
+# @Last Modified time: 2020-03-25 13:18:28
 
 
 import io, os, sys, types
@@ -140,7 +140,8 @@ def get_bundles_info_v1(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_l
 	print("---annot_df---")
 	my_help.print_to_log("---annot_df---")
 
-	for ind, bundle_no in enumerate(annot_df.index):
+	for ind in annot_df.index:
+		bundle_no = annot_df.iloc[ind]['Bundle_No'].astype(int)
 		print(bundle_no)
 		my_help.print_to_log(str(bundle_no))
 

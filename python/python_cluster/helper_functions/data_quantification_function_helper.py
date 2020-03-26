@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   sf942274
-# @Last Modified time: 2020-02-13 17:54:20
+# @Last Modified by:   Weiyue Ji
+# @Last Modified time: 2020-03-25 11:40:14
 
 
 
@@ -124,6 +124,24 @@ def get_target_coords(bundle_no, bundles_df, index_to_target_id):
 		# print(index_to_target_id[i])
 		target_inds.append(int(bundles_df.loc[bundle_no,'TargetNo_T' + str(index_to_target_id[i])]))
 		target_coords[i,:] = np.array([ bundles_df.loc[target_inds[i],'coord_X_T0'], bundles_df.loc[target_inds[i],'coord_Y_T0'] ])
+
+	return target_inds, target_coords
+
+def get_3d_target_coords(bundle_no, bundles_df, index_to_target_id):
+	target_inds = []
+	target_coords = np.zeros((len(index_to_target_id),3))
+	
+	target_coords[0,:] = np.array([ bundles_df.loc[bundle_no,'coord_X_T0'], 
+		bundles_df.loc[bundle_no,'coord_Y_T0'],
+		bundles_df.loc[bundle_no,'coord_Z_T0'], ])
+	target_inds.append(bundle_no)
+	
+	for i in range(1,len(target_coords)):
+		# print(index_to_target_id[i])
+		target_inds.append(int(bundles_df.loc[bundle_no,'TargetNo_T' + str(index_to_target_id[i])]))
+		target_coords[i,:] = np.array([ bundles_df.loc[target_inds[i],'coord_X_T0'], 
+			bundles_df.loc[target_inds[i],'coord_Y_T0'],
+			bundles_df.loc[target_inds[i],'coord_Z_T0'] ])
 
 	return target_inds, target_coords
 

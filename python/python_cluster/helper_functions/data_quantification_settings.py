@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+# @Author: Weiyue Ji
+# @Date:   2020-03-17 16:47:06
+# @Last Modified by:   Weiyue Ji
+# @Last Modified time: 2020-03-26 04:36:43
+# -*- coding: utf-8 -*-
 # Author: lily
 # Date:   2020-02-11 04:40:57
 # Last Modified by:   sf942274
@@ -23,40 +28,48 @@ class Paths:
 
 		### paths depends on where the code is running
 		if(env == 'Mac'):
-			data_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/Gal80_data'
-			output_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/Gal80_output'
-			log_prefix = '/Users/lily/Lily/Academic/AW_Lab/code/python_cluster/logs'
-			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/python_cluster/helper_functions'
+			self.data_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/Gal80_data'
+			self.output_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/Gal80_output'
+			self.log_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/logs'
+			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/NSP_extension/python/python_cluster/helper_functions'
+
+		elif(env == 'Mac_HD'):
+			self.data_prefix = '/Volumes/WJI_Lab/NSP_analysis/Data_Gal80'
+			self.output_prefix = '/Volumes/WJI_Lab/NSP_analysis/Output'
+			self.log_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/logs'
+			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/NSP_extension/python/python_cluster/helper_functions'
 		
 		elif(env == 'Euclid'):
 			# euclid with cluster
-			data_prefix = '/awlab/projects/2019_09_NSP_Extension/figure/analysis/Fate_Switching_experiments/Data_Gal80'
-			output_prefix = '/awlab/projects/2019_09_NSP_Extension/figure/analysis/Fate_Switching_experiments/Output_Gal80/'
-			log_prefix = '/awlab/projects/2019_09_NSP_Extension/code/python_cluster/logs'
+			self.data_prefix = '/awlab/projects/2019_09_NSP_Extension/figure/analysis/Fate_Switching_experiments/Data_Gal80'
+			self.output_prefix = '/awlab/projects/2019_09_NSP_Extension/figure/analysis/Fate_Switching_experiments/Output_Gal80/'
+			self.log_prefix = '/awlab/projects/2019_09_NSP_Extension/code/python_cluster/logs'
 			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/python_cluster/helper_functions'
 		
 		elif(env == 'Wynton'): 
 			# home directory of Wynton cluster
-			data_prefix = '/wynton/home/awlab/wji/data'
-			output_prefix = '/wynton/home/awlab/wji/output'
-			log_prefix = '/wynton/home/awlab/wji/code/logs'
+			self.data_prefix = '/wynton/home/awlab/wji/data'
+			self.output_prefix = '/wynton/home/awlab/wji/output'
+			self.log_prefix = '/wynton/home/awlab/wji/code/logs'
 			self.code_path = '/wynton/home/awlab/wji/code/helper_functions'
 		
 		elif(env == 'Windows'):
-			data_prefix = 'W:\\2019_09_NSP_Extension\\results\\Fate_Switching_Experiments\\Gal80_temporal\\Data'
-			output_prefix = 'W:\\2019_09_NSP_Extension\\results\\Fate_Switching_Experiments\\Gal80_temporal\\Output'
-			log_prefix = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\logs'
+			self.data_prefix = 'W:\\2019_09_NSP_Extension\\results\\Fate_Switching_Experiments\\Gal80_temporal\\Data'
+			self.output_prefix = 'W:\\2019_09_NSP_Extension\\results\\Fate_Switching_Experiments\\Gal80_temporal\\Output'
+			self.log_prefix = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\logs'
 			self.code_path = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\helper_functions'
 
 		### paths
-		log_name = f'{annot_name_sub}_s{input_list[1]}c{input_list[2]}_log_v{date_info}.txt'
-		
-		self.log_path = os.path.join(log_prefix, log_name)
-		self.image_path = os.path.join(data_prefix, image_folder)
-		self.roi_path = os.path.join(data_prefix, roi_folder)
-		self.annot_path = os.path.join(data_prefix, annot_folder, annot_name)
-		self.fig_out_prefix = os.path.join(output_prefix, fig_out_folder)
-		self.data_out_prefix = os.path.join(output_prefix, data_out_folder)
+		log_name = f'{annot_name_sub}_s{input_list[4]}c{input_list[5]}_log_v{date_info}.txt'
+		cat_name = annot_name_sub.split('_')[0]
+		time_name = annot_name_sub.split('_')[1][:2]
+
+		self.log_path = os.path.join(self.log_prefix, log_name)
+		self.image_path = os.path.join(self.data_prefix, image_folder)
+		self.roi_path = os.path.join(self.data_prefix, roi_folder)
+		self.annot_path = os.path.join(self.data_prefix, annot_folder, cat_name, time_name, annot_name)
+		self.fig_out_prefix = os.path.join(self.output_prefix, fig_out_folder)
+		self.data_out_prefix = os.path.join(self.output_prefix, data_out_folder)
 		self.annot_name = annot_name
 
 ### class that stores indexing and color coding set-ups that are universal.
@@ -126,6 +139,22 @@ class GeneralParams:
 		self.scale_factor = float(input_list[10])
 		self.radius_expanse_ratio = [2.5, 3]
 
+	def add_col_params(self, dic):
+		if not hasattr(self, 'col_params'):
+			self.col_params = {}
+			if dic:
+				for key in dic:
+					self.col_params[key] = dic[key]
+			else:
+				self.col_params = {}
+		else:
+			if dic:
+				for key in dic:
+					self.col_params[key] = dic[key]
+			else:
+				self.col_params = {}
+
+
 ### get input
 # inputs:
 # env = input_list[0]
@@ -139,7 +168,7 @@ class GeneralParams:
 # num_x_section = input_list[8]
 # z_offset = input_list[9]
 # scale_factor = int(input_list[10])
-# example of an input: Windows, Data_Output, Figure_Output, Fz_26hrs_s5r1_annotation.csv, 0, 1, 10, 5, 10, 10, 1
+# example of an input: Windows, Data_Output, Figure_Output, Fz_26hrs_Gal80_s5r1_annotation.csv, 0, 1, 10, 5, 10, 10, 1
 input_str = input()
 input_list = input_str.split(', ')
 print(input_str)
