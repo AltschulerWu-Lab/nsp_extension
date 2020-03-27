@@ -2,7 +2,7 @@
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-26 06:20:43
+# @Last Modified time: 2020-03-27 07:50:21
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -28,7 +28,7 @@ from skimage import exposure, img_as_float, filters, morphology, transform
 from sklearn import linear_model, metrics
 
 ### include folders with additional functions
-sys.path.insert(0, '/Volumes/Project/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
+# sys.path.insert(0, '/Volumes/Project/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
 sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/helper_functions')
 import data_quantification_settings as settings
 import data_quantification_function_helper as my_help
@@ -84,6 +84,8 @@ def process_annotation(roi_df, annot_df, m2p_ratio):
 		bundles_df = my_pb.get_bundles_info_v1(roi_df, annot_df, m2p_ratio[0], m2p_ratio[1], is_extended_target_list)
 	elif(annotation_type == 2): #new annotation: T0 at last 
 		bundles_df = my_pb.get_bundles_info_v2(roi_df, annot_df, m2p_ratio[0], m2p_ratio[1], is_extended_target_list)
+	elif(annotation_type == 3):
+		bundles_df = my_pb.get_bundles_info_v3(roi_df, annot_df, m2p_ratio[0], m2p_ratio[1], is_extended_target_list)
 	
 	annot_bundles_df = bundles_df.dropna(axis=0, how='any', inplace = False)
 
@@ -147,7 +149,7 @@ def process_image(image, image_shape):
 
 	print("R3 v3")
 	my_help.print_to_log("R3 v3")
-	r3_img = image_norm[:,:,:,0] - gfp*settings.matching_info.scale_factor
+	r3_img = image_norm[:,:,:,0] - gfp*settings.analysis_params_general.scale_factor
 	r3_img[r3_img<0] = 0
 	image_norm[:,:,:,6] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
 	image_norm[:,:,:,6] = image_norm[:,:,:,0]
@@ -195,61 +197,61 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 	my_help.print_to_log("total time: " + str(time_dur))
 
 	### process
-	# for ind, bundle_no in enumerate(annot_bundles_df.index):
-	ind = 0
-	bundle_no = 1
-	print("Bundle No: " + str(bundle_no))
-	my_help.print_to_log("Bundle No: " + str(bundle_no))
+	for ind, bundle_no in enumerate(annot_bundles_df.index):
+	# ind = 0
+	# bundle_no = 1
+		print("Bundle No: " + str(bundle_no))
+		my_help.print_to_log("Bundle No: " + str(bundle_no))
 
-	### targets info
-	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
-	coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
-	coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
-	coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
-	coord_rcells = np.concatenate((coord_r4s, coord_r3s))
+		### targets info
+		ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+		coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
+		coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
+		coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
+		coord_rcells = np.concatenate((coord_r4s, coord_r3s))
 
-	### slice info
-	slice_zero_point = coord_targets[matching_info.target_id_to_index[7],:] # T3'
-	slice_one_point = coord_targets[matching_info.target_id_to_index[3],:] # T3
+		### slice info
+		slice_zero_point = coord_targets[matching_info.target_id_to_index[7],:] # T3'
+		slice_one_point = coord_targets[matching_info.target_id_to_index[3],:] # T3
 
-	length_one_point = coord_targets[matching_info.target_id_to_index[4],:]
+		length_one_point = coord_targets[matching_info.target_id_to_index[4],:]
 
-	center_points = [coord_targets[0,:], coord_center[0,:]]
+		center_points = [coord_targets[0,:], coord_center[0,:]]
 
-	r_cell_nos = [4,4]
+		r_cell_nos = [4,4]
 
 
-	### get slicing params and calculate matrix
-	center_type = settings.analysis_params_general.center_type
-	slice_type = settings.analysis_params_general.slice_type
+		### get slicing params and calculate matrix
+		center_type = settings.analysis_params_general.center_type
+		slice_type = settings.analysis_params_general.slice_type
 
-	bundle_params = [
-		bundle_no, 
-		ind_targets, 
-		coord_targets, 
-		coord_center, 
-		slice_zero_point, 
-		slice_one_point, 
-		length_one_point, 
-		center_points[analysis_params_general.center_type], 
-		r_cell_nos[analysis_params_general.center_type]
-	]
-	if(slice_type == 0):
-		pp_i, rel_points_i = my_int.get_slice_params_v1(bundles_df, bundle_params, is_print = False, is_plot = False)
-	elif(slice_type == 1):
-		pp_i, rel_points_i = my_int.get_slice_params_v3(bundles_df, bundle_params, is_print = False, is_plot = False)
-	params.append(pp_i)
-	rel_points[ind, :] = rel_points_i
+		bundle_params = [
+			bundle_no, 
+			ind_targets, 
+			coord_targets, 
+			coord_center, 
+			slice_zero_point, 
+			slice_one_point, 
+			length_one_point, 
+			center_points[analysis_params_general.center_type], 
+			r_cell_nos[analysis_params_general.center_type]
+		]
+		if(slice_type == 0):
+			pp_i, rel_points_i = my_int.get_slice_params_v1(bundles_df, bundle_params, is_print = False, is_plot = False)
+		elif(slice_type == 1):
+			pp_i, rel_points_i = my_int.get_slice_params_v3(bundles_df, bundle_params, is_print = False, is_plot = False)
+		params.append(pp_i)
+		rel_points[ind, :] = rel_points_i
 
-	# calculate matrix
-	time_start = time.time()
-	for channel_no in range(num_norm_channels):
-		my_help.print_to_log("Channle No: " + str(channel_no))
-		intensity_matrix[ind, channel_no,:,:,:] = my_int.get_intensity_matrix_new(pp_i, image_norm[:,:,:,channel_no])
-		# intensity_matrix[ind, channel_no,:,:,:] = np.random.randn(intensity_matrix[ind, channel_no,:,:,:].shape[0], intensity_matrix[ind, channel_no,:,:,:].shape[1], intensity_matrix[ind, channel_no,:,:,:].shape[2])
-	time_end = time.time()
-	time_dur = time_end - time_start
-	my_help.print_to_log("total time: " + str(time_dur))
+		# calculate matrix
+		time_start = time.time()
+		for channel_no in range(num_norm_channels):
+			my_help.print_to_log("Channle No: " + str(channel_no))
+			intensity_matrix[ind, channel_no,:,:,:] = my_int.get_intensity_matrix_new(pp_i, image_norm[:,:,:,channel_no])
+			# intensity_matrix[ind, channel_no,:,:,:] = np.random.randn(intensity_matrix[ind, channel_no,:,:,:].shape[0], intensity_matrix[ind, channel_no,:,:,:].shape[1], intensity_matrix[ind, channel_no,:,:,:].shape[2])
+		time_end = time.time()
+		time_dur = time_end - time_start
+		my_help.print_to_log("total time: " + str(time_dur))
 
 	return intensity_matrix, params, rel_points, thr_otsu, thr_li, thr_isodata
 
@@ -266,62 +268,60 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 	matching_info = settings.matching_info
 	num_norm_channels = image_norm.shape[-1]
 	
-	# for ind, bundle_no in enumerate(annot_bundles_df.index):
-	ind = 0
-	bundle_no = 1
-	print("Bundle No: ", bundle_no)
-	my_help.print_to_log("Bundle No: " + str(bundle_no))
+	for ind, bundle_no in enumerate(annot_bundles_df.index):
+		print("Bundle No: ", bundle_no)
+		my_help.print_to_log("Bundle No: " + str(bundle_no))
 
-	category_id = annot_bundles_df.iloc[0]['CategoryID']
-	sample_id = annot_bundles_df.iloc[0]['SampleID']
-	region_id = annot_bundles_df.iloc[0]['RegionID']
+		category_id = annot_bundles_df.iloc[0]['CategoryID']
+		sample_id = annot_bundles_df.iloc[0]['SampleID']
+		region_id = annot_bundles_df.iloc[0]['RegionID']
 
 
 
-	### targets info
-	ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
-	coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
-	coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
-	coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
-	coord_rs = np.concatenate((coord_r4s, coord_r3s))
+		### targets info
+		ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+		coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
+		coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
+		coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
+		coord_rs = np.concatenate((coord_r4s, coord_r3s))
 
-	### parameters
-	pp_i = params[ind]
-	rel_points_i = rel_points[ind, :]
+		### parameters
+		pp_i = params[ind]
+		rel_points_i = rel_points[ind, :]
 
-	matrix = my_help.delete_zero_columns(intensity_matrix[ind, :, :, :, :], -100, 3)
-	if(len(matrix.flatten()) > 0):
+		matrix = my_help.delete_zero_columns(intensity_matrix[ind, :, :, :, :], -100, 3)
+		if(len(matrix.flatten()) > 0):
 
-		## heat map
-		plt.ioff()
-		ori_x = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], matrix.shape[2]), 2)
-		tick_params = [2, 1, ori_x, 21] ### tickTypeX, tickTypeY, tickArg2_X, tickArg2_Y
-		for thr_function_ids in [0, 1, 2, 3]: # different thresholding methods
-			thrs = np.zeros((num_norm_channels))
-			# if(thr_function_ids == 0):
-			# 	thrs = np.zeros((num_norm_channels))
-			# elif(thr_function_ids == 1):
-			# 	thrs = thr_otsu
-			# elif(thr_function_ids == 2):
-			# 	thrs = thr_li
-			# elif(thr_function_ids == 3):
-			# 	thrs = thr_isodata
+			## heat map
+			plt.ioff()
+			ori_x = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], matrix.shape[2]), 2)
+			tick_params = [2, 1, ori_x, 21] ### tickTypeX, tickTypeY, tickArg2_X, tickArg2_Y
+			for thr_function_ids in [0, 1, 2, 3]: # different thresholding methods
+				thrs = np.zeros((num_norm_channels))
+				if(thr_function_ids == 0):
+					thrs = np.zeros((num_norm_channels))
+				elif(thr_function_ids == 1):
+					thrs = thr_otsu
+				elif(thr_function_ids == 2):
+					thrs = thr_li
+				elif(thr_function_ids == 3):
+					thrs = thr_isodata
 
-			fig_name = f'{category_id}_s{sample_id}r{region_id}_bundle_no_{bundle_no}_{thr_function_ids}.png'
-			fig_params = [pp_i, img_name, fig_name]
-			plot_options = [thrs, thr_function_ids, num_norm_channels]
-			fig = my_plot.plot_bundle_vs_matrix_all(bundle_no, bundles_df, image_norm, matrix, fig_params, tick_params, plot_options, is_label_off = True, is_save = True, is_true_x_tick = True, is_ori_tick = False)
-			plt.close(fig)
+				fig_name = f'{category_id}_s{sample_id}r{region_id}_bundle_no_{bundle_no}_{thr_function_ids}.png'
+				fig_params = [pp_i, img_name, fig_name]
+				plot_options = [thrs, thr_function_ids, num_norm_channels]
+				fig = my_plot.plot_bundle_vs_matrix_all(bundle_no, bundles_df, image_norm, matrix, fig_params, tick_params, plot_options, is_label_off = True, is_save = True, is_true_x_tick = True, is_ori_tick = False)
+				plt.close(fig)
 
-		## polar plot
-		fig_params = [pp_i, img_name]
-		# plot_options = [True, True] # isLabelOff, isSave
-		for channel_no in range(num_norm_channels):
-			fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
-			plt.close(fig)
+			## polar plot
+			fig_params = [pp_i, img_name]
+			# plot_options = [True, True] # isLabelOff, isSave
+			for channel_no in range(num_norm_channels):
+				fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
+				plt.close(fig)
 
-	else:
-		print("error! No intensity matrix calculated!")
+		else:
+			print("error! No intensity matrix calculated!")
 
 
 """
