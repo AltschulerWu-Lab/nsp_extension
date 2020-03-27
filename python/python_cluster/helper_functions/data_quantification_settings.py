@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2020-03-17 16:47:06
+<<<<<<< HEAD
 # @Last Modified by:   Weiyue Ji
 # @Last Modified time: 2020-03-27 04:02:27
+=======
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-03-27 05:52:22
+>>>>>>> f1e6cabb54499fc6719fa4dd882cd8e837c01d14
 # -*- coding: utf-8 -*-
 # Author: lily
 # Date:   2020-02-11 04:40:57
@@ -41,10 +46,10 @@ class Paths:
 		
 		elif(env == 'Euclid'):
 			# euclid with cluster
-			self.data_prefix = '/awlab/projects/2019_09_NSP_Extension/figure/analysis/Fate_Switching_experiments/Data_Gal80'
-			self.output_prefix = '/awlab/projects/2019_09_NSP_Extension/figure/analysis/Fate_Switching_experiments/Output_Gal80/'
-			self.log_prefix = '/awlab/projects/2019_09_NSP_Extension/code/python_cluster/logs'
-			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/python_cluster/helper_functions'
+			self.data_prefix = '/awlab/projects/2019_09_NSP_Extension/results/Fate_Switching_Experiments/Gal80/Data_Gal80'
+			self.output_prefix = '/awlab/projects/2019_09_NSP_Extension/results/Fate_Switching_Experiments/Gal80/Output_Gal80/'
+			self.log_prefix = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/logs'
+			self.code_path = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/helper_functions'
 		
 		elif(env == 'Wynton'): 
 			# home directory of Wynton cluster
