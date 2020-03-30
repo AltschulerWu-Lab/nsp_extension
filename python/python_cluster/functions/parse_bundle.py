@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-25 13:18:28
+# @Last Modified time: 2020-03-27 15:07:39
 
 
 import io, os, sys, types
@@ -29,8 +29,8 @@ from sklearn import metrics
 
 # import cv2
 
-import data_quantification_function_helper as my_help
-import data_quantification_settings as settings
+import helper as my_help
+import settings as settings
 
 ### get bundles with good qc score
 """

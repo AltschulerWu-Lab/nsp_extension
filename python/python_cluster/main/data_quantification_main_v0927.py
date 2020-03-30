@@ -2,7 +2,7 @@
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-27 07:50:21
+# @Last Modified time: 2020-03-30 03:11:57
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -29,12 +29,15 @@ from sklearn import linear_model, metrics
 
 ### include folders with additional functions
 # sys.path.insert(0, '/Volumes/Project/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
-sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/helper_functions')
-import data_quantification_settings as settings
-import data_quantification_function_helper as my_help
-import data_quantification_function_intensity_calculation as my_int
-import data_quantification_function_parse_bundle as my_pb
-import data_quantification_function_plotting as my_plot
+module_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
+sys.path.insert(0, module_path)
+# sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions')
+
+import settings as settings
+import helper as my_help
+import intensity_calculation as my_int
+import parse_bundle as my_pb
+import plotting as my_plot
 
 """
 Function: Import data.
@@ -107,15 +110,16 @@ def process_image(image, image_shape):
 
 	### normalize channels
 	image_norm = np.empty(image_shape + (num_norm_channels,), dtype=image[:,:,:,1].dtype, order='C')
-	thr = np.zeros((2))
+	thr = np.zeros((3))
 	
 	# RFP_norm
 	image_norm[:,:,:,0] = exposure.rescale_intensity(image[:,:,:,0], in_range = 'image', out_range='dtype')
 	# GFP_norm
 	image_norm[:,:,:,1] = exposure.rescale_intensity(image[:,:,:,1], in_range = 'image', out_range='dtype')    
-
-	image_norm[:,:,:,0] = image[:,:,:,0]
-	image_norm[:,:,:,1] = image[:,:,:,1]
+	# FasII_norm
+	image_norm[:,:,:,7] = exposure.rescale_intensity(image[:,:,:,3], in_range = 'image', out_range='dtype')
+	# image_norm[:,:,:,0] = image[:,:,:,0]
+	# image_norm[:,:,:,1] = image[:,:,:,1]
 
 	del image
 	
@@ -135,16 +139,16 @@ def process_image(image, image_shape):
 	image_norm[:,:,:,2] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
 	r4_img = image_norm[:,:,:,0] * gfp
 	image_norm[:,:,:,3] = exposure.rescale_intensity(r4_img, in_range = 'image', out_range='dtype')
-	image_norm[:,:,:,2] = image_norm[:,:,:,0]
-	image_norm[:,:,:,3] = image_norm[:,:,:,1]
+	# image_norm[:,:,:,2] = image_norm[:,:,:,0]
+	# image_norm[:,:,:,3] = image_norm[:,:,:,1]
 	
 	print("R3/R4 v2")
 	my_help.print_to_log("R3/R4 v2")
 	gfp_thr = morphology.binary_opening((image_norm[:,:,:,1]>thr[0])*1)
 	image_norm[:,:,:,4] = exposure.rescale_intensity(image_norm[:,:,:,0] * (1-gfp_thr), in_range = 'image', out_range='dtype')
 	image_norm[:,:,:,5] = exposure.rescale_intensity(morphology.closing(image_norm[:,:,:,1]*((image_norm[:,:,:,1]>((thr[0] + thr[1])/2))*1)))
-	image_norm[:,:,:,4] = image_norm[:,:,:,0]
-	image_norm[:,:,:,5] = image_norm[:,:,:,1]
+	# image_norm[:,:,:,4] = image_norm[:,:,:,0]
+	# image_norm[:,:,:,5] = image_norm[:,:,:,1]
 
 
 	print("R3 v3")
@@ -152,7 +156,15 @@ def process_image(image, image_shape):
 	r3_img = image_norm[:,:,:,0] - gfp*settings.analysis_params_general.scale_factor
 	r3_img[r3_img<0] = 0
 	image_norm[:,:,:,6] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
-	image_norm[:,:,:,6] = image_norm[:,:,:,0]
+	# image_norm[:,:,:,6] = image_norm[:,:,:,0]
+
+	print("fasII threshold!")
+	thr[2] = filters.threshold_otsu(image_norm[:,:,:,7])
+
+	print("FasII intersection!")
+	fasii_thr = morphology.binary_opening((image_norm[:,:,:,7]>thr[2])*1)
+	image_norm[:,:,:,8] = exposure.rescale_intensity(image_norm[:,:,:,0] * fasii_thr, in_range = 'image', out_range='dtype')
+	image_norm[:,:,:,9] = exposure.rescale_intensity(image_norm[:,:,:,1] * fasii_thr, in_range = 'image', out_range='dtype')
 	
 	del r3_img, r4_img, gfp, gfp_thr
 
@@ -246,6 +258,7 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 		# calculate matrix
 		time_start = time.time()
 		for channel_no in range(num_norm_channels):
+			print(channel_no)
 			my_help.print_to_log("Channle No: " + str(channel_no))
 			intensity_matrix[ind, channel_no,:,:,:] = my_int.get_intensity_matrix_new(pp_i, image_norm[:,:,:,channel_no])
 			# intensity_matrix[ind, channel_no,:,:,:] = np.random.randn(intensity_matrix[ind, channel_no,:,:,:].shape[0], intensity_matrix[ind, channel_no,:,:,:].shape[1], intensity_matrix[ind, channel_no,:,:,:].shape[2])
@@ -296,7 +309,8 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 			plt.ioff()
 			ori_x = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], matrix.shape[2]), 2)
 			tick_params = [2, 1, ori_x, 21] ### tickTypeX, tickTypeY, tickArg2_X, tickArg2_Y
-			for thr_function_ids in [0, 1, 2, 3]: # different thresholding methods
+			# for thr_function_ids in [0, 1, 2, 3]: # different thresholding methods
+			for thr_function_ids in [0]: # different thresholding methods
 				thrs = np.zeros((num_norm_channels))
 				if(thr_function_ids == 0):
 					thrs = np.zeros((num_norm_channels))
@@ -314,11 +328,11 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 				plt.close(fig)
 
 			## polar plot
-			fig_params = [pp_i, img_name]
-			# plot_options = [True, True] # isLabelOff, isSave
-			for channel_no in range(num_norm_channels):
-				fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
-				plt.close(fig)
+			# fig_params = [pp_i, img_name]
+			# # plot_options = [True, True] # isLabelOff, isSave
+			# for channel_no in range(num_norm_channels):
+			# 	fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
+			# 	plt.close(fig)
 
 		else:
 			print("error! No intensity matrix calculated!")

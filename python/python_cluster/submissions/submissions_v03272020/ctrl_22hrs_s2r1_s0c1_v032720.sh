@@ -1,7 +1,7 @@
 # @Author: lily
 # @Date:   2019-07-16 04:09:06
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-27 07:47:35
+# @Last Modified time: 2020-03-30 03:23:22
 # @==========explanation========
 # @inputs:
 # @env = input_list[0]
@@ -19,6 +19,6 @@
 # @Windows, Data_Output, Figure_Output, Fz_26hrs_Gal80_s5r1_annotation.csv, 0, 1, 10, 5, 10, 10, 1
 
 #!/bin/sh
-echo "Euclid, FigureOutput_v032720, DataOutput_v032720, Ctrl_22hrs_Gal80_s2r1_annotation.csv, 0, 1, 24, 18, 40, 20, 0.62" | /wynton/home/awlab/wji/anaconda3/bin/python3 /awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/main_functions/data_quantification_main_v0927.py
+echo "Euclid, FigureOutput_v033020, DataOutput_v033020, Ctrl_22hrs_Gal80_s2r1_annotation.csv, 0, 1, 24, 18, 50, 20, 0.62" | /wynton/home/awlab/wji/anaconda3/bin/python3 /awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/main_functions/data_quantification_main_v0927.py
 
 qstat -j $JOB_ID

@@ -1,18 +1,9 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
-# @Date:   2020-03-17 16:47:06
-<<<<<<< HEAD
+# @Date:   2020-03-27 15:06:33
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-27 04:02:27
-=======
-# @Last Modified by:   sf942274
-# @Last Modified time: 2020-03-27 05:52:22
->>>>>>> f1e6cabb54499fc6719fa4dd882cd8e837c01d14
-# -*- coding: utf-8 -*-
-# Author: lily
-# Date:   2020-02-11 04:40:57
-# Last Modified by:   sf942274
-# Last Modified time: 2020-02-14 17:26:29
+# @Last Modified time: 2020-03-30 03:23:05
+
 import io, os, sys, types, pickle, datetime, time
 
 global paths, analysis_params_general, matching_info
@@ -36,33 +27,33 @@ class Paths:
 			self.data_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/Gal80_data'
 			self.output_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/Gal80_output'
 			self.log_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/logs'
-			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/NSP_extension/python/python_cluster/helper_functions'
+			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/NSP_extension/python/python_cluster/functions'
 
 		elif(env == 'Mac_HD'):
 			self.data_prefix = '/Volumes/WJI_Lab/NSP_analysis/Data_Gal80'
 			self.output_prefix = '/Volumes/WJI_Lab/NSP_analysis/Output'
 			self.log_prefix = '/Users/lily/Lily/Academic/AW_Lab/data/logs'
-			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/NSP_extension/python/python_cluster/helper_functions'
+			self.code_path = '/Users/lily/Lily/Academic/AW_Lab/code/NSP_extension/python/python_cluster/functions'
 		
 		elif(env == 'Euclid'):
 			# euclid with cluster
 			self.data_prefix = '/awlab/projects/2019_09_NSP_Extension/results/Fate_Switching_Experiments/Gal80/Data_Gal80'
 			self.output_prefix = '/awlab/projects/2019_09_NSP_Extension/results/Fate_Switching_Experiments/Gal80/Output_Gal80/'
 			self.log_prefix = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/logs'
-			self.code_path = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/helper_functions'
+			self.code_path = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions'
 		
 		elif(env == 'Wynton'): 
 			# home directory of Wynton cluster
 			self.data_prefix = '/wynton/home/awlab/wji/data'
 			self.output_prefix = '/wynton/home/awlab/wji/output'
 			self.log_prefix = '/wynton/home/awlab/wji/code/logs'
-			self.code_path = '/wynton/home/awlab/wji/code/helper_functions'
+			self.code_path = '/wynton/home/awlab/wji/code/functions'
 		
 		elif(env == 'Windows'):
 			self.data_prefix = 'W:\\2019_09_NSP_Extension\\results\\Fate_Switching_Experiments\\Gal80_temporal\\Data'
 			self.output_prefix = 'W:\\2019_09_NSP_Extension\\results\\Fate_Switching_Experiments\\Gal80_temporal\\Output'
 			self.log_prefix = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\logs'
-			self.code_path = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\helper_functions'
+			self.code_path = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\functions'
 
 		### paths
 		log_name = f'{annot_name_sub}_s{input_list[4]}c{input_list[5]}_log_v{date_info}.txt'
@@ -113,14 +104,20 @@ class MatchingInfo:
 			'R4_1':3, 
 			'R3_2':4, 
 			'R4_2':5, 
-			'R3_3': 6, 
+			'R3_3': 6,
+			'FasII': 7,
+			'R3_FasII':8,
+			'R4_FasII':9,
 			0:'RFP', 
 			1:'GFP', 
 			2:'R3_1', 
 			3:'R4_1', 
 			4:'R3_2', 
 			5:'R4_2', 
-			6:'R3_3'
+			6:'R3_3',
+			7:'FasII',
+			8:'R3_FasII',
+			9:'R4_FasII'
 		} # mapping between image matrix dimention and channels
 		self.channel_cmap = {
 			0:'Reds', 
@@ -129,8 +126,17 @@ class MatchingInfo:
 			3:'Greens', 
 			4:'Reds', 
 			5:'Greens', 
-			6:'Reds'
-		} # cmap used for plotting for each channel 
+			6:'Reds',
+			7:'Blues',
+			8:'Reds',
+			9:'Greens'
+		} # cmap used for plotting for each channel
+		self.channel_mapping_checking = {
+			0:'RFP',
+			1:'GFP',
+			2:'24b10',
+			3:'FasII'
+		}
 
 ### class that stores parameters for analysis
 class GeneralParams:
@@ -142,7 +148,7 @@ class GeneralParams:
 		self.num_x_section = int(input_list[8])
 		self.z_offset = int(input_list[9])
 		self.scale_factor = float(input_list[10])
-		self.radius_expanse_ratio = [2.5, 3]
+		self.radius_expanse_ratio = [3, 3.8]
 
 	def add_col_params(self, dic):
 		if not hasattr(self, 'col_params'):

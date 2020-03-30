@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-25 11:40:14
+# @Last Modified time: 2020-03-27 15:07:17
 
 
 
@@ -29,7 +29,7 @@ from skimage import exposure, img_as_float
 from sklearn import linear_model
 from sklearn import metrics
 
-import data_quantification_settings as settings
+import settings as settings
 
 
 """

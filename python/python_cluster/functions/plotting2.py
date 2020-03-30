@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   sf942274
-# @Last Modified time: 2020-02-14 19:05:32
+# @Last Modified by:   Weiyue Ji
+# @Last Modified time: 2020-03-30 02:09:34
 
 
 import io, os, sys, types
@@ -30,9 +30,9 @@ from sklearn import linear_model
 from sklearn import metrics
 
 
-import data_quantification_function_helper as my_help
-import data_quantification_function_intensity_calculation as my_int
-import data_quantification_settings as settings
+import helper as my_help
+import intensity_calculation as my_int
+import settings as settings
 
 
 
@@ -251,6 +251,8 @@ def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, *
 	## parameters from settings
 	z_offset = settings.analysis_params_general.z_offset
 	matching_info = settings.matching_info
+	if(kwarg['num_subplots']):
+		num_subplots = kwarg['num_subplots']
 
 	### Unravel plot settings
 	# is_plot_r3_line, is_plot_r4_line, is_plot_r4, is_label_off = plotSettings
@@ -284,7 +286,7 @@ def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, *
 		bundle_img[:,:,i] = exposure.rescale_intensity(np.max(img_crop, axis = 0), in_range = 'image', out_range='dtype')
 
 	### plot
-	fig, axes = plt.subplots(2, 4, figsize = (18,8))
+	fig, axes = plt.subplots(np.ceil(num_subplots/4), 4, figsize = (18,8))
 	fig.suptitle('Bundle No. ' + str(bundle_no), fontsize=18, fontweight='bold')
 
 	for plt_i in range(image_norm.shape[-1]):
@@ -320,7 +322,10 @@ def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, *
 		ax.imshow(bundle_img[:,:,plt_i], cmap=plt.cm.gray)
 
 		# plot axis
-		ax.set_title(matching_info.channel_mapping[plt_i], fontsize=16)
+		if(num_subplots == 4):
+			ax.set_title(matching_info.channel_mapping_checking[plt_i], fontsize=16)
+		elif(num_subplots == 8):
+			ax.set_title(matching_info.channel_mapping[plt_i], fontsize=16)
 
 		if(kwarg['is_label_off']):
 			ax.tick_params(axis='both', which='both', labelbottom='off', labelleft = 'off')
