@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
-# @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-30 03:11:57
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-03-30 03:29:40
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -196,6 +196,8 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 	rel_points = np.zeros((len(annot_bundles_df.index), 9))
 
 	### thresholds
+	print("Calculating thresholds...")
+	my_help.print_to_log("Calculating thresholds..." + str(time_dur))
 	thr_otsu = np.zeros((num_norm_channels))
 	thr_li = np.zeros((num_norm_channels))
 	thr_isodata = np.zeros((num_norm_channels))
@@ -206,6 +208,7 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 		thr_isodata[channel_no] = filters.threshold_isodata(image_norm[:,:,:,channel_no])
 	time_end = time.time()
 	time_dur = time_end - time_start
+	print("total time: " + str(time_dur))
 	my_help.print_to_log("total time: " + str(time_dur))
 
 	### process
@@ -327,12 +330,12 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 				fig = my_plot.plot_bundle_vs_matrix_all(bundle_no, bundles_df, image_norm, matrix, fig_params, tick_params, plot_options, is_label_off = True, is_save = True, is_true_x_tick = True, is_ori_tick = False)
 				plt.close(fig)
 
-			## polar plot
-			# fig_params = [pp_i, img_name]
+			# polar plot
+			fig_params = [pp_i, img_name]
 			# # plot_options = [True, True] # isLabelOff, isSave
-			# for channel_no in range(num_norm_channels):
-			# 	fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
-			# 	plt.close(fig)
+			for channel_no in range(num_norm_channels):
+				fig = my_plot.plot_polar(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True)
+				plt.close(fig)
 
 		else:
 			print("error! No intensity matrix calculated!")
