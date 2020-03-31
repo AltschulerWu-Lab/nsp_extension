@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-27 15:07:39
+# @Last Modified time: 2020-03-31 06:34:22
 
 
 import io, os, sys, types
@@ -323,120 +323,296 @@ Output: bundles_df: dataframe with bundle information.
 	   'TargetNo_T2', 'TargetNo_T7'
 """
 def get_bundles_info_v3(roi_df, annot_df, x_ratio, y_ratio, is_extended_target_list):
-    ### initialization
-    r_coords_list = []
-    for i in range(6):
-        for j in ['X', 'Y', 'Z']:
-            r_coords_list.append('coord' + '_' + j + '_R' + str(i+1))
-    center_coords_list = []
-    for j in ['X', 'Y', 'Z']:
-        center_coords_list.append('coord_' + j + '_Center')
+	### initialization
+	r_coords_list = []
+	for i in range(6):
+		for j in ['X', 'Y', 'Z']:
+			r_coords_list.append('coord' + '_' + j + '_R' + str(i+1))
+	center_coords_list = []
+	for j in ['X', 'Y', 'Z']:
+		center_coords_list.append('coord_' + j + '_Center')
 
-    ### get column names
-    qc_col_names = my_help.group_headers(annot_df, 'is_', True)
-    orient_col_names = my_help.group_headers(annot_df, 'Orientation_', True)
-    img_col_names = my_help.group_headers(annot_df, 'ID', True)
-    flag_col_names = my_help.group_headers(annot_df, 'if_', True)
-    bundles_cols = ['Bundle_No', 'num_Rcells'] + r_coords_list + center_coords_list + qc_col_names + orient_col_names + img_col_names + flag_col_names
+	### get column names
+	qc_col_names = my_help.group_headers(annot_df, 'is_', True)
+	orient_col_names = my_help.group_headers(annot_df, 'Orientation_', True)
+	img_col_names = my_help.group_headers(annot_df, 'ID', True)
+	flag_col_names = my_help.group_headers(annot_df, 'if_', True)
+	bundles_cols = ['Bundle_No', 'num_Rcells'] + r_coords_list + center_coords_list + qc_col_names + orient_col_names + img_col_names + flag_col_names
 
-    ### create new dataframe
-    bundles_df = pd.DataFrame(columns = bundles_cols)
+	### create new dataframe
+	bundles_df = pd.DataFrame(columns = bundles_cols)
 
-    ### group ROI.csv according to label -- grouping individual roi together
-    roi_df_group = roi_df.groupby('Label') \
-        .agg({'X':'size', 'No':'mean'}) \
-        .rename(columns={'X':'count','No':'order'})
-    roi_df_group.sort_values('order', inplace=True) #sort according to order of roi added, so that ind of roi_df_group = bundle_no - 1
-    roi_df_group.reset_index(inplace=True)
+	### group ROI.csv according to label -- grouping individual roi together
+	roi_df_group = roi_df.groupby('Label') \
+		.agg({'X':'size', 'No':'mean'}) \
+		.rename(columns={'X':'count','No':'order'})
+	roi_df_group.sort_values('order', inplace=True) #sort according to order of roi added, so that ind of roi_df_group = bundle_no - 1
+	roi_df_group.reset_index(inplace=True)
 
-    ### update bundle coordinates
-    for ind in roi_df_group.index:
+	### update bundle coordinates
+	for ind in roi_df_group.index:
 
-        ## this ROI is a bundle
-        if(roi_df_group.loc[ind, 'count'] == 7):
-            df_tmp = pd.DataFrame(columns = bundles_cols)
-            df_tmp.loc[0,'Bundle_No'] = int(ind+1)
-            df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
-            df_tmp.loc[0,'num_Rcells'] = int(df_bd.shape[0])
+		## this ROI is a bundle
+		if(roi_df_group.loc[ind, 'count'] == 7):
+			df_tmp = pd.DataFrame(columns = bundles_cols)
+			df_tmp.loc[0,'Bundle_No'] = int(ind+1)
+			df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
+			df_tmp.loc[0,'num_Rcells'] = int(df_bd.shape[0])
 
-            ## R1- R6 coordinates
-            for i in range(6):
-                df_tmp.loc[0,['coord_X_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'X'])
-                df_tmp.loc[0,['coord_Y_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'Y'])
-                df_tmp.loc[0,['coord_Z_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'Slice'])
+			## R1- R6 coordinates
+			for i in range(6):
+				df_tmp.loc[0,['coord_X_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'X'])
+				df_tmp.loc[0,['coord_Y_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'Y'])
+				df_tmp.loc[0,['coord_Z_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'Slice'])
 
-            ## center of bundle coordinates
-            df_tmp.loc[0,'coord_X_Center'] = float(df_bd.loc[df_bd.index[6], 'X'])
-            df_tmp.loc[0,'coord_Y_Center'] = float(df_bd.loc[df_bd.index[6], 'Y'])
-            df_tmp.loc[0,'coord_Z_Center'] = float(df_bd.loc[df_bd.index[6], 'Slice'])
+			## center of bundle coordinates
+			df_tmp.loc[0,'coord_X_Center'] = float(df_bd.loc[df_bd.index[6], 'X'])
+			df_tmp.loc[0,'coord_Y_Center'] = float(df_bd.loc[df_bd.index[6], 'Y'])
+			df_tmp.loc[0,'coord_Z_Center'] = float(df_bd.loc[df_bd.index[6], 'Slice'])
 
-            bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
+			bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
 
-        ## this ROI is a target
-        elif(roi_df_group.loc[ind, 'count'] == 1):
-            df_tmp = pd.DataFrame(columns = bundles_cols)
-            df_tmp.loc[0,'Bundle_No'] = int(ind+1)
-            df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
+		## this ROI is a target
+		elif(roi_df_group.loc[ind, 'count'] == 1):
+			df_tmp = pd.DataFrame(columns = bundles_cols)
+			df_tmp.loc[0,'Bundle_No'] = int(ind+1)
+			df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
 
-            ## target coordinates
-            df_tmp.loc[0,'coord_X_T0'] = float(df_bd.loc[df_bd.index[0], 'X'])
-            df_tmp.loc[0,'coord_Y_T0'] = float(df_bd.loc[df_bd.index[0], 'Y'])
-            df_tmp.loc[0,'coord_Z_T0'] = float(df_bd.loc[df_bd.index[0], 'Slice'])
+			## target coordinates
+			df_tmp.loc[0,'coord_X_T0'] = float(df_bd.loc[df_bd.index[0], 'X'])
+			df_tmp.loc[0,'coord_Y_T0'] = float(df_bd.loc[df_bd.index[0], 'Y'])
+			df_tmp.loc[0,'coord_Z_T0'] = float(df_bd.loc[df_bd.index[0], 'Slice'])
 
-            bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
+			bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
 
-        else:
-            print(f'ERROR! Bundle No. {ind+1} count incorrect!')
+		else:
+			print(f'ERROR! Bundle No. {ind+1} count incorrect!')
 
-    bundles_df = bundles_df.set_index('Bundle_No')
+	bundles_df = bundles_df.set_index('Bundle_No')
 
-    ### update target & quality-control info
-    print("---annot_df---")
-    my_help.print_to_log("---annot_df---")
+	### update target & quality-control info
+	print("---annot_df---")
+	my_help.print_to_log("---annot_df---")
 
-    for ind in annot_df.index:
+	for ind in annot_df.index:
 
-        bundle_no = annot_df.iloc[ind]['Bundle_No'].astype(int)
-        print(bundle_no)
-        my_help.print_to_log(str(bundle_no))
+		bundle_no = annot_df.iloc[ind]['Bundle_No'].astype(int)
+		print(bundle_no)
+		my_help.print_to_log(str(bundle_no))
 
-        ### target info
-        if(is_extended_target_list):
-            bundles_df.loc[bundle_no, 'TargetNo_T3'] = annot_df.loc[ind,'T3'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T4'] = annot_df.loc[ind,'T4'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T5'] = annot_df.loc[ind,'T5'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T2'] = annot_df.loc[ind,'T2'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T1'] = annot_df.loc[ind,'T1'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T6'] = annot_df.loc[ind,'T6'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T20'] = annot_df.loc[ind,'T20'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T50'] = annot_df.loc[ind,'T50'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T40'] = annot_df.loc[ind,'T40'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T30'] = annot_df.loc[ind,'T30'].astype(int)
-        else:
-            bundles_df.loc[bundle_no, 'TargetNo_T3'] = annot_df.loc[ind,'T3'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T4'] = annot_df.loc[ind,'T4'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T5'] = annot_df.loc[ind,'T5'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T2'] = annot_df.loc[ind,'T2'].astype(int)
-            bundles_df.loc[bundle_no, 'TargetNo_T7'] = annot_df.loc[ind,'T7'].astype(int)
+		### target info
+		if(is_extended_target_list):
+			bundles_df.loc[bundle_no, 'TargetNo_T3'] = annot_df.loc[ind,'T3'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T4'] = annot_df.loc[ind,'T4'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T5'] = annot_df.loc[ind,'T5'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T2'] = annot_df.loc[ind,'T2'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T1'] = annot_df.loc[ind,'T1'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T6'] = annot_df.loc[ind,'T6'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T20'] = annot_df.loc[ind,'T20'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T50'] = annot_df.loc[ind,'T50'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T40'] = annot_df.loc[ind,'T40'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T30'] = annot_df.loc[ind,'T30'].astype(int)
+		else:
+			bundles_df.loc[bundle_no, 'TargetNo_T0'] = annot_df.loc[ind,'T3'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T3'] = annot_df.loc[ind,'T3'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T4'] = annot_df.loc[ind,'T4'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T5'] = annot_df.loc[ind,'T5'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T2'] = annot_df.loc[ind,'T2'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T7'] = annot_df.loc[ind,'T7'].astype(int)
 
-        ### T0 coordinates
-        ind_t0 = annot_df.loc[ind,'T0'].astype(int)
-        bundles_df.loc[bundle_no, 'coord_X_T0'] = bundles_df.loc[ind_t0, 'coord_X_T0']
-        bundles_df.loc[bundle_no, 'coord_Y_T0'] = bundles_df.loc[ind_t0, 'coord_Y_T0']
-        bundles_df.loc[bundle_no, 'coord_Z_T0'] = bundles_df.loc[ind_t0, 'coord_Z_T0']
+		### T0 coordinates
+		ind_t0 = annot_df.loc[ind,'T0'].astype(int)
+		bundles_df.loc[bundle_no, 'coord_X_T0'] = bundles_df.loc[ind_t0, 'coord_X_T0']
+		bundles_df.loc[bundle_no, 'coord_Y_T0'] = bundles_df.loc[ind_t0, 'coord_Y_T0']
+		bundles_df.loc[bundle_no, 'coord_Z_T0'] = bundles_df.loc[ind_t0, 'coord_Z_T0']
 
-        ### quality control and flag info
-        bundles_df.loc[bundle_no, orient_col_names] = annot_df.loc[ind, orient_col_names]    
-        bundles_df.loc[bundle_no, qc_col_names] = annot_df.loc[ind, qc_col_names].astype(int)
-        bundles_df.loc[bundle_no, flag_col_names] = annot_df.loc[ind, flag_col_names].astype(int)
+		### quality control and flag info
+		bundles_df.loc[bundle_no, orient_col_names] = annot_df.loc[ind, orient_col_names]    
+		bundles_df.loc[bundle_no, qc_col_names] = annot_df.loc[ind, qc_col_names].astype(int)
+		bundles_df.loc[bundle_no, flag_col_names] = annot_df.loc[ind, flag_col_names].astype(int)
 
-        ### category, sample and region info.
-        bundles_df.loc[bundle_no, img_col_names] = annot_df.loc[ind, img_col_names] 
+		### category, sample and region info.
+		bundles_df.loc[bundle_no, img_col_names] = annot_df.loc[ind, img_col_names] 
 
-    ### X,Y coordinates from microns to pixels
-    x_coord_cols = my_help.group_headers(bundles_df, 'coord_X', True)
-    bundles_df.loc[:,x_coord_cols] = bundles_df.loc[:,x_coord_cols] * x_ratio
-    y_coord_cols = my_help.group_headers(bundles_df, 'coord_Y', True)
-    bundles_df.loc[:,y_coord_cols] = bundles_df.loc[:,y_coord_cols] * y_ratio
-    
-    return bundles_df
+	### X,Y coordinates from microns to pixels
+	x_coord_cols = my_help.group_headers(bundles_df, 'coord_X', True)
+	bundles_df.loc[:,x_coord_cols] = bundles_df.loc[:,x_coord_cols] * x_ratio
+	y_coord_cols = my_help.group_headers(bundles_df, 'coord_Y', True)
+	bundles_df.loc[:,y_coord_cols] = bundles_df.loc[:,y_coord_cols] * y_ratio
+	
+	return bundles_df
+
+### get bundle information Version 3: 7 or 1 or 2 point(s) per ROI. 
+### - 7 points: Heel bundle w/ R1-R6 and bundle center
+### - 1 point: T0 target of heels
+### - 2 points: other targets.
+def get_bundles_info_v4(roi_df, annot_df, x_ratio, y_ratio, **kwarg):
+	### unravel kwarg
+	if('is_print' in kwarg.keys()):
+		is_print = kwarg['is_print']
+	else:
+		is_print = False
+	if('is_extended_target_list' in kwarg.keys()):
+		is_extended_target_list = kwarg['is_extended_target_list']
+	else:
+		is_extended_target_list = False
+
+	### initialization
+	r_coords_list = []
+	for i in range(6):
+		for j in ['X', 'Y', 'Z']:
+			r_coords_list.append('coord' + '_' + j + '_R' + str(i+1))
+	center_coords_list = []
+	for j in ['X', 'Y', 'Z']:
+		center_coords_list.append('coord_' + j + '_Center')
+
+	### get column names
+	qc_col_names = my_help.group_headers(annot_df, 'is_', True)
+	orient_col_names = my_help.group_headers(annot_df, 'Orientation_', True)
+	img_col_names = my_help.group_headers(annot_df, 'ID', True)
+	flag_col_names = my_help.group_headers(annot_df, 'if_', True)
+	bundles_cols = ['Bundle_No', 'num_Rcells'] + r_coords_list + center_coords_list + qc_col_names + orient_col_names + img_col_names + flag_col_names
+	
+	### heel-T0 map
+	t0_to_bundle_map = {}
+	for ind in annot_df.index:
+		t0_to_bundle_map[annot_df.loc[ind, 'T0']] = annot_df.loc[ind, 'Bundle_No']
+	
+	### create new dataframe
+	bundles_df = pd.DataFrame(columns = bundles_cols)
+
+	### group ROI.csv according to label -- grouping individual roi together
+	roi_df_group = roi_df.groupby('Label') \
+		.agg({'X':'size', 'No':'mean'}) \
+		.rename(columns={'X':'count','No':'order'})
+	roi_df_group.sort_values('order', inplace=True) #sort according to order of roi added, so that ind of roi_df_group = bundle_no - 1
+	roi_df_group.reset_index(inplace=True)
+
+	### update bundle coordinates
+	for ind in roi_df_group.index:
+		bundle_no = ind+1
+		if(is_print):
+			print(bundle_no, roi_df_group.loc[ind, 'count'])
+
+		## this ROI is a bundle
+		if(roi_df_group.loc[ind, 'count'] == 7):
+			if(is_print):
+				print(f'{bundle_no}: bundle!')
+			df_tmp = pd.DataFrame(columns = bundles_cols)
+			df_tmp.loc[0,'Bundle_No'] = int(ind+1)
+			df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
+			df_tmp.loc[0,'num_Rcells'] = int(df_bd.shape[0])
+
+			## R1- R6 coordinates
+			for i in range(6):
+				df_tmp.loc[0,['coord_X_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'X'])
+				df_tmp.loc[0,['coord_Y_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'Y'])
+				df_tmp.loc[0,['coord_Z_R' + str(i+1)]] = float(df_bd.loc[df_bd.index[i], 'Slice'])
+
+			## center of bundle coordinates
+			df_tmp.loc[0,'coord_X_Center'] = float(df_bd.loc[df_bd.index[6], 'X'])
+			df_tmp.loc[0,'coord_Y_Center'] = float(df_bd.loc[df_bd.index[6], 'Y'])
+			df_tmp.loc[0,'coord_Z_Center'] = float(df_bd.loc[df_bd.index[6], 'Slice'])
+
+			bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
+
+		## this ROI is a target of an annotated bundle
+		elif(roi_df_group.loc[ind, 'count'] == 1 and bundle_no in t0_to_bundle_map.keys()):
+			if(is_print):
+				print(f'{bundle_no}: T0 of {t0_to_bundle_map[ind+1]}!')
+			df_tmp = pd.DataFrame(columns = bundles_cols)
+			df_tmp.loc[0,'Bundle_No'] = int(ind+1)
+			df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
+						
+			## target coordinates
+			df_tmp.loc[0,'coord_X_T0'] = float(df_bd.loc[df_bd.index[0], 'X'])
+			df_tmp.loc[0,'coord_Y_T0'] = float(df_bd.loc[df_bd.index[0], 'Y'])
+			df_tmp.loc[0,'coord_Z_T0'] = float(df_bd.loc[df_bd.index[0], 'Slice'])
+#             print(df_tmp.loc[0,'coord_X_T0'])
+
+			bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
+		
+		## this ROI is a target on its own
+		elif(roi_df_group.loc[ind, 'count'] == 2):
+			if(is_print):
+				print(f'{bundle_no}: Target!')
+			df_tmp = pd.DataFrame(columns = bundles_cols)
+			df_tmp.loc[0,'Bundle_No'] = int(ind+1)
+			df_bd = roi_df.loc[roi_df['Label'] == list(roi_df_group.Label)[ind]]
+						
+			## target coordinates
+			df_tmp.loc[0,'coord_X_T0'] = float(df_bd.loc[df_bd.index[0], 'X'])
+			df_tmp.loc[0,'coord_Y_T0'] = float(df_bd.loc[df_bd.index[0], 'Y'])
+			df_tmp.loc[0,'coord_Z_T0'] = float(df_bd.loc[df_bd.index[0], 'Slice'])
+			
+			### center coordinates
+			df_tmp.loc[0,'coord_X_Center'] = float(df_bd.loc[df_bd.index[1], 'X'])
+			df_tmp.loc[0,'coord_Y_Center'] = float(df_bd.loc[df_bd.index[1], 'Y'])
+			df_tmp.loc[0,'coord_Z_Center'] = float(df_bd.loc[df_bd.index[1], 'Slice'])
+			
+			bundles_df = bundles_df.append(df_tmp, ignore_index=True, sort=True)
+
+		else:
+			print(f'ERROR! Bundle No. {bundle_no} count incorrect!')
+	
+	bundles_df = bundles_df.set_index('Bundle_No')
+	
+	### get center for target Ts:
+	for ind in t0_to_bundle_map.keys():
+		if(is_print):
+			print(ind, t0_to_bundle_map[ind])
+		bundles_df.loc[ind,'coord_X_Center'] = bundles_df.loc[t0_to_bundle_map[ind],'coord_X_Center']
+		bundles_df.loc[ind,'coord_Y_Center'] = bundles_df.loc[t0_to_bundle_map[ind],'coord_Y_Center']
+		bundles_df.loc[ind,'coord_Z_Center'] = bundles_df.loc[t0_to_bundle_map[ind],'coord_Z_Center']
+
+	## update target & quality-control info
+	print("---annot_df---")
+	my_help.print_to_log("---annot_df---")
+
+	for ind in annot_df.index:
+
+		bundle_no = annot_df.iloc[ind]['Bundle_No'].astype(int)
+		print(bundle_no)
+		my_help.print_to_log(str(bundle_no))
+
+		### target info
+		if(is_extended_target_list): 
+			bundles_df.loc[bundle_no, 'TargetNo_T3'] = annot_df.loc[ind,'T3'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T4'] = annot_df.loc[ind,'T4'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T5'] = annot_df.loc[ind,'T5'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T2'] = annot_df.loc[ind,'T2'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T1'] = annot_df.loc[ind,'T1'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T6'] = annot_df.loc[ind,'T6'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T20'] = annot_df.loc[ind,'T20'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T50'] = annot_df.loc[ind,'T50'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T40'] = annot_df.loc[ind,'T40'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T30'] = annot_df.loc[ind,'T30'].astype(int)
+		else:
+			bundles_df.loc[bundle_no, 'TargetNo_T0'] = annot_df.loc[ind,'T3'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T3'] = annot_df.loc[ind,'T3'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T4'] = annot_df.loc[ind,'T4'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T5'] = annot_df.loc[ind,'T5'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T2'] = annot_df.loc[ind,'T2'].astype(int)
+			bundles_df.loc[bundle_no, 'TargetNo_T7'] = annot_df.loc[ind,'T7'].astype(int)
+
+		### T0 coordinates
+		ind_t0 = annot_df.loc[ind,'T0'].astype(int)
+		bundles_df.loc[bundle_no, 'coord_X_T0'] = bundles_df.loc[ind_t0, 'coord_X_T0']
+		bundles_df.loc[bundle_no, 'coord_Y_T0'] = bundles_df.loc[ind_t0, 'coord_Y_T0']
+		bundles_df.loc[bundle_no, 'coord_Z_T0'] = bundles_df.loc[ind_t0, 'coord_Z_T0']
+
+		### quality control and flag info
+		bundles_df.loc[bundle_no, orient_col_names] = annot_df.loc[ind, orient_col_names]    
+		bundles_df.loc[bundle_no, qc_col_names] = annot_df.loc[ind, qc_col_names].astype(int)
+		bundles_df.loc[bundle_no, flag_col_names] = annot_df.loc[ind, flag_col_names].astype(int)
+
+		### category, sample and region info.
+		bundles_df.loc[bundle_no, img_col_names] = annot_df.loc[ind, img_col_names] 
+
+	### X,Y coordinates from microns to pixels
+	x_coord_cols = my_help.group_headers(bundles_df, 'coord_X', True)
+	bundles_df.loc[:,x_coord_cols] = bundles_df.loc[:,x_coord_cols] * x_ratio
+	y_coord_cols = my_help.group_headers(bundles_df, 'coord_Y', True)
+	bundles_df.loc[:,y_coord_cols] = bundles_df.loc[:,y_coord_cols] * y_ratio
+	
+	return bundles_df

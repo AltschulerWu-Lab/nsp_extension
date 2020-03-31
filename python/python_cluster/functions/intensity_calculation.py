@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-27 15:07:30
+# @Last Modified time: 2020-03-31 04:52:34
 
 
 import io, os, sys, types
@@ -31,7 +31,7 @@ from sklearn import metrics
 
 import helper as my_help
 import settings as settings
-
+import plotting as my_plot
 
 # ================= angle calculation functions =================
 ### Inner angle calculation
@@ -95,27 +95,50 @@ Input:
 - phis: array of angles that should start from "start" and end at "end"
 Output: figure
 """
-def plot_angles(start, end, phis):
-	pselect = list(range(phis.size))
-	y_s = 1*np.tan(start)
-	y_n = 1*np.tan(end)
-	y_phis = 1*np.tan(phis[pselect])
+def plot_angles(start, end, phis, img_name, bundle_no, **kwarg):
+    ### params
+    paths = settings.paths
+    matching_info = settings.matching_info
+    analysis_params_general = settings.analysis_params_general
+    if('is_save' in kwarg.keys()):
+        is_save = kwarg['is_save']
+    else:
+        is_save = False
 
-	xs = np.ones((phis.size + 2))
+    pselect = list(range(phis.size))
+    y_s = 1*np.tan(start)
+    y_n = 1*np.tan(end)
+    y_phis = 1*np.tan(phis[pselect])
 
-	number = len(y_phis)
-	cmap = plt.get_cmap('Wistia')
-	colors = [cmap(i) for i in np.linspace(0, 1, number)]
+    xs = np.ones((phis.size + 2))
 
-	fig = plt.figure()
-	for i, color in enumerate(colors, start=0):
-		plt.plot([0,1], [0,y_phis[i]], color=color)
-	# for i in y_phis:
-	#     plt.plot(, '-')
-	plt.plot([0,1], [0,y_s], '-', linewidth = 2.0, color = 'b')
-	plt.plot([0,1], [0,y_n], '-', linewidth = 2.0, color = 'k')
+    number = len(y_phis)
+    cmap = plt.get_cmap('Wistia')
+    colors = [cmap(i) for i in np.linspace(0, 1, number)]
 
-	plt.show()
+    fig = plt.figure()
+    for i, color in enumerate(colors, start=0):
+        plt.plot([0,1], [0,y_phis[i]], color=color)
+
+    plt.plot([0,1], [0,y_s], '-', linewidth = 2.0, color = 'b')
+    plt.plot([0,1], [0,y_n], '-', linewidth = 2.0, color = 'k')
+
+    if(is_save):
+        plt.ioff()
+        folder_name = img_name
+        subfolder1 = 'Angle_Plot'
+        subfolder2 = f'slice_type_{analysis_params_general.slice_type}_center_type_{analysis_params_general.center_type}'
+        figure_name = f'bundle_no_{bundle_no}_s{analysis_params_general.slice_type}c{analysis_params_general.slice_type}.tif'
+
+        my_help.check_dir(os.path.join(paths.fig_out_prefix))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
+        plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), bbox_inches='tight')
+    else:
+    	plt.show()
+    
+    return fig
 
 """
 Function: plog slicing of angles.
@@ -124,30 +147,54 @@ Input:
 - phis: array of angles that should start from "start", mid-point at "zero" and end at "end"
 Output: figure
 """
-def plot_angles_v2(start, zero, end, phis):
-	pselect = list(range(phis.size))
-	y_s = 1*np.tan(start)
-	y_z = 1*np.tan(zero)
-	y_n = 1*np.tan(end)
-	y_phis = 1*np.tan(phis[pselect])
-	# ys = np.concatenate((np.array([y_s, y_n]),y_phis))
+def plot_angles_v2(start, zero, end, phis, img_name, bundle_no, **kwarg):
+	### params
+    paths = settings.paths
+    matching_info = settings.matching_info
+    analysis_params_general = settings.analysis_params_general
+    if('is_save' in kwarg.keys()):
+        is_save = kwarg['is_save']
+    else:
+        is_save = False
 
-	xs = np.ones((phis.size + 2))
+    pselect = list(range(phis.size))
+    y_s = 1*np.tan(start)
+    y_z = 1*np.tan(zero)
+    y_n = 1*np.tan(end)
+    y_phis = 1*np.tan(phis[pselect])
+    # ys = np.concatenate((np.array([y_s, y_n]),y_phis))
 
-	number = len(y_phis)
-	cmap = plt.get_cmap('Wistia')
-	colors = [cmap(i) for i in np.linspace(0, 1, number)]
+    xs = np.ones((phis.size + 2))
 
-	fig = plt.figure()
-	for i, color in enumerate(colors, start=0):
-		plt.plot([0,1], [0,y_phis[i]], color=color)
-	# for i in y_phis:
-	#     plt.plot(, '-')
-	plt.plot([0,1], [0,y_s], '-', linewidth = 2.0, color = 'b')
-	plt.plot([0,1], [0,y_z], '-', linewidth = 2.0, color = 'g')
-	plt.plot([0,1], [0,y_n], '-', linewidth = 2.0, color = 'k')
+    number = len(y_phis)
+    cmap = plt.get_cmap('Wistia')
+    colors = [cmap(i) for i in np.linspace(0, 1, number)]
 
-	plt.show()
+    fig = plt.figure()
+    for i, color in enumerate(colors, start=0):
+        plt.plot([0,1], [0,y_phis[i]], color=color)
+    # for i in y_phis:
+    #     plt.plot(, '-')
+    plt.plot([0,1], [0,y_s], '-', linewidth = 2.0, color = 'b')
+    plt.plot([0,1], [0,y_z], '-', linewidth = 2.0, color = 'g')
+    plt.plot([0,1], [0,y_n], '-', linewidth = 2.0, color = 'k')
+
+    if(is_save):
+        plt.ioff()
+        folder_name = img_name
+        subfolder1 = 'Angle_Plot'
+        subfolder2 = f'slice_type_{analysis_params_general.slice_type}_center_type_{analysis_params_general.center_type}'
+        figure_name = f'bundle_no_{bundle_no}_s{analysis_params_general.slice_type}c{analysis_params_general.slice_type}.tif'
+
+        my_help.check_dir(os.path.join(paths.fig_out_prefix))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
+        plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), bbox_inches='tight')
+    else:
+    	plt.show()
+    
+    return fig
 
 
 # ================= Angle normalization functions =================
@@ -183,28 +230,37 @@ Output: rel_points -- relative coordinates
 - rel_points[0,6]: center
 - rel_points[0,7:8]: R3, R4
 """
-def cal_grid_rel_position(target_coords, r3_coord, r4_coord, coord_center, center_point, r_unit):
+def cal_grid_rel_position(target_coords, target_coords_extended, r3_coord, r4_coord, coord_center, center_point, r_unit):
 	target_id_to_index = settings.matching_info.target_id_to_index
 
-	rel_points = np.zeros((1,9))
-	#T0_rel 
-	rel_points[0,0] = np.linalg.norm( center_point - target_coords[target_id_to_index[0]] )/r_unit
-	#T2_rel
-	rel_points[0,1] = np.linalg.norm( center_point - target_coords[target_id_to_index[2]] )/r_unit
-	#T3_rel 
-	rel_points[0,2] = np.linalg.norm( center_point - target_coords[target_id_to_index[3]] )/r_unit
-	#T4_rel
-	rel_points[0,3] = np.linalg.norm( center_point - target_coords[target_id_to_index[4]] )/r_unit
-	#T5_rel
-	rel_points[0,4] = np.linalg.norm( center_point - target_coords[target_id_to_index[5]] )/r_unit
-	#T7_rel 
-	rel_points[0,5] = np.linalg.norm( center_point - target_coords[target_id_to_index[7]] )/r_unit
+	rel_points = {}
+	for i in [0,2,3,4,5,7]:
+		rel_points[f'T{i}'] = np.linalg.norm( center_point - target_coords[target_id_to_index[i]] )/r_unit
+		rel_points[f'T{i}_etd'] = np.linalg.norm( center_point - target_coords_extended[target_id_to_index[i]] )/r_unit
+	# #T0_rel 
+	
+	# #T2_rel
+	# rel_points['T2'] = np.linalg.norm( center_point - target_coords[target_id_to_index[2]] )/r_unit
+	# #T3_rel 
+	# rel_points['T3'] = np.linalg.norm( center_point - target_coords[target_id_to_index[3]] )/r_unit
+	# #T4_rel
+	# rel_points['T4'] = np.linalg.norm( center_point - target_coords[target_id_to_index[4]] )/r_unit
+	# #T5_rel
+	# rel_points['T5'] = np.linalg.norm( center_point - target_coords[target_id_to_index[5]] )/r_unit
+	# #T7_rel 
+	# rel_points['T7'] = np.linalg.norm( center_point - target_coords[target_id_to_index[7]] )/r_unit
+	# #T4_extended_rel
+	# rel_points['T4_etd'] = np.linalg.norm( center_point - target_coords_extended[target_id_to_index[4]] )/r_unit
+	# #T3_extended_rel
+	# rel_points['T3_etd'] = np.linalg.norm( center_point - target_coords_extended[target_id_to_index[4]] )/r_unit
+	# #T7_extended_rel
 	#Center_rel 
-	rel_points[0,6] = np.linalg.norm( center_point - coord_center )/r_unit
+	rel_points['center'] = np.linalg.norm( center_point - coord_center )/r_unit
 	#R3_rel 
-	rel_points[0,7] = np.linalg.norm( center_point - r3_coord )/r_unit
+	rel_points['R3'] = np.linalg.norm( center_point - r3_coord )/r_unit
 	#R4_rel 
-	rel_points[0,8] = np.linalg.norm( center_point - r4_coord )/r_unit
+	rel_points['R4'] = np.linalg.norm( center_point - r4_coord )/r_unit
+
 
 	return rel_points
 
@@ -219,12 +275,25 @@ Output:
 - params: parameters to passed on for intensity calculation function -- z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius
 - rel_points: relative coordinates for target positions and heel positions
 """
-def get_slice_params_v1(bundles_df, bundle_params, **kwarg):
+def get_slice_params_v1(bundles_df, bundle_params, img_name, **kwarg):
 	### decomposite parameters.
 	analysis_params_general = settings.analysis_params_general
 	radius_expanse_ratio = analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
 	
-	bundle_no, target_inds, target_coords, coord_center, slice_zero_point, slice_one_point, length_one_point, center_point, r_no = bundle_params
+	bundle_no, target_inds, target_coords, target_coords_extended, coord_center, slice_zero_point, slice_one_point, length_one_point, center_point, r_no = bundle_params
+
+	if('is_print' in kwarg.keys()):
+		is_print = kwarg['is_print']
+	else:
+		is_print = False
+	if('is_plot' in kwarg.keys()):
+		is_plot = kwarg['is_plot']
+	else:
+		is_plot = kwarg['is_plot']
+	if('is_save' in kwarg.keys()):
+		is_save = kwarg['is_save']
+	else:
+		is_save = False
 
 	### R heels info
 	r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
@@ -237,7 +306,7 @@ def get_slice_params_v1(bundles_df, bundle_params, **kwarg):
 	radius = r_unit * radius_expanse_ratio
 	
 	### calculating grid's relative position
-	rel_points = cal_grid_rel_position(target_coords, r3_coord, r4_coord, coord_center, center_point, r_unit)
+	rel_points = cal_grid_rel_position(target_coords, target_coords_extended, r3_coord, r4_coord, coord_center, center_point, r_unit)
 
 	### slice phis calculation
 	ang_start2r = np.arctan2( slice_zero_point[1] - center_point[1], slice_zero_point[0] - center_point[0] )
@@ -245,7 +314,7 @@ def get_slice_params_v1(bundles_df, bundle_params, **kwarg):
 	
 	phi_range = inner_angle(slice_one_point - center_point, slice_zero_point - center_point, True)
 	phi_unit = phi_range/analysis_params_general.num_angle_section
-	if(kwarg['is_print']):
+	if(is_print):
 		print("ang_start2r: ")
 		print(ang_start2r, ang_end2r)
 	
@@ -272,12 +341,12 @@ def get_slice_params_v1(bundles_df, bundle_params, **kwarg):
 		phis = np.flip(phis, axis = 0)
 	
 	### printing/plotting
-	if(kwarg['is_print']):
+	if(is_print):
 		print("final:")
 		print(phis)
 	
-	if(kwarg['is_plot']):
-		plot_angles(ang_start2r, ang_end2r, phis)
+	if(is_plot):
+		fig = plot_angles(ang_start2r, ang_end2r, phis, img_name, bundle_no, is_save = is_save)
 	
 	### ticks for angle axis.
 	y_ticks = np.linspace(- 1-analysis_params_general.num_outside_angle * (phi_unit/phi_range)*2, 1 + analysis_params_general.num_outside_angle * (phi_unit/phi_range)*2, analysis_params_general.num_angle_section + analysis_params_general.num_outside_angle*2 + 1)
@@ -286,9 +355,10 @@ def get_slice_params_v1(bundles_df, bundle_params, **kwarg):
 	
 	### consolidating final params
 	params = analysis_params_general.z_offset, analysis_params_general.num_x_section, r_z, phis, center_point, y_ticks, radius
-
-	return params, rel_points
-
+	if(is_plot):
+		return params, rel_points, fig
+	else:
+		return params, rel_points
 
 ### Angle normalization v3: T3 = -1, T4 = 0, T7 = 1
 """
@@ -301,17 +371,30 @@ Output:
 - params: parameters to passed on for intensity calculation function -- z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius
 - rel_points: relative coordinates for target positions and heel positions
 """
-def get_slice_params_v3(bundles_df, bundle_params, **kwarg):
+def get_slice_params_v3(bundles_df, bundle_params, img_name, **kwarg):
 	### decomposite parameters.
 	analysis_params_general = settings.analysis_params_general
 	radius_expanse_ratio = analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
 	target_id_to_index = settings.matching_info.target_id_to_index
 
-	bundle_no, target_inds, target_coords, coord_center, SliceNegOnePoint, slice_one_point, length_one_point, center_point, r_no = bundle_params
+	bundle_no, target_inds, target_coords, target_coords_extended, coord_center, SliceNegOnePoint, slice_one_point, length_one_point, center_point, r_no = bundle_params
 
 	angle_sel_num = analysis_params_general.num_angle_section / 2
 	analysis_params_general.num_outside_angle = analysis_params_general.num_outside_angle
 	
+	if('is_print' in kwarg.keys()):
+		is_print = kwarg['is_print']
+	else:
+		is_print = False
+	if('is_plot' in kwarg.keys()):
+		is_plot = kwarg['is_plot']
+	else:
+		is_plot = kwarg['is_plot']
+	if('is_save' in kwarg.keys()):
+		is_save = kwarg['is_save']
+	else:
+		is_save = False
+
 	### R heels info
 	r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
 	r3_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 3)[0,:]
@@ -322,7 +405,7 @@ def get_slice_params_v3(bundles_df, bundle_params, **kwarg):
 	radius = r_unit * radius_expanse_ratio
 	
 	### calculating grid's relative position
-	rel_points = cal_grid_rel_position(target_coords, r3_coord, r4_coord, coord_center, center_point, r_unit)
+	rel_points = cal_grid_rel_position(target_coords, target_coords_extended, r3_coord, r4_coord, coord_center, center_point, r_unit)
 
 	### slice phis calculation
 	angNegOne2R = np.arctan2( SliceNegOnePoint[1] - center_point[1], SliceNegOnePoint[0] - center_point[0] )
@@ -333,7 +416,7 @@ def get_slice_params_v3(bundles_df, bundle_params, **kwarg):
 	phi_range_1 = inner_angle(SliceNegOnePoint - center_point, target_coords[3] - center_point, True)
 	phi_unit_1 = phi_range_1/angle_sel_num
 	
-	if(kwarg['is_print']):
+	if(is_print):
 		print("angNegOne - angZero: ")
 		print(angNegOne2R, angZero)
 
@@ -363,20 +446,20 @@ def get_slice_params_v3(bundles_df, bundle_params, **kwarg):
 
 	y_ticks_1 = np.linspace(-1 - analysis_params_general.num_outside_angle*phi_unit_1/phi_range_1, 0, angle_sel_num + analysis_params_general.num_outside_angle + 1)
 
-	if(kwarg['is_print']):
+	if(is_print):
 		print("final:")
 		print(phis_1, y_ticks_1)
 		print(len(phis_1), len(y_ticks_1))
 
-	if(kwarg['is_plot']):
-		plot_angles(angNegOne2R, angZero, phis_1)
+	# if(is_plot):
+	# 	plot_angles(angNegOne2R, angZero, phis_1)
 
 	
 	## middle ~ T3 (0 ~ 1)
 	phi_range_2 = inner_angle(slice_one_point - center_point, target_coords[3] - center_point, True)
 	phi_unit_2 = phi_range_2/angle_sel_num
 
-	if(kwarg['is_print']):
+	if(is_print):
 		print("angZero -angOne: ")
 		print(angZero, angOne2R)
 
@@ -405,13 +488,13 @@ def get_slice_params_v3(bundles_df, bundle_params, **kwarg):
 	y_ticks_2 = np.linspace(0, 1 + analysis_params_general.num_outside_angle*phi_unit_2/phi_range_2, angle_sel_num + analysis_params_general.num_outside_angle + 1)
 
 	### printing/plotting
-	if(kwarg['is_print']):
+	if(is_print):
 		print("final:")
 		print(phis_2, y_ticks_2)
 		print(len(phis_2), len(y_ticks_2))
 
-	if(kwarg['is_plot']):
-		plot_angles(angZero, angOne2R, phis_2)
+	# if(is_plot):
+	# 	plot_angles(angZero, angOne2R, phis_2)
 	
 	### combining phis
 	phis = np.concatenate((phis_1,phis_2), axis = 0)
@@ -421,17 +504,20 @@ def get_slice_params_v3(bundles_df, bundle_params, **kwarg):
 	y_ticks[y_ticks == -0] = 0
 
 	### printing/plotting
-	if(kwarg['is_print']):
+	if(is_print):
 		print(phis, y_ticks)
 		print(len(phis), len(y_ticks))
 
-	if(kwarg['is_plot']):
-		plot_angles_v2(angNegOne2R, angZero, angOne2R, phis)
+	if(is_plot):
+		fig = plot_angles_v2(angNegOne2R, angZero, angOne2R, phis, img_name, bundle_no, is_save = is_save)
 
 	### consolidating final params	
 	params = analysis_params_general.z_offset, analysis_params_general.num_x_section, r_z, phis, center_point, y_ticks, radius
 
-	return params, rel_points
+	if(is_plot):
+		return params, rel_points, fig
+	else:
+		return params, rel_points
 
 # ================= Calculate intensity matrix =================
 ### intensity matrix calculation

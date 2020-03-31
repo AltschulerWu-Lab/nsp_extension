@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
-# @Last Modified by:   sf942274
-# @Last Modified time: 2020-03-30 03:29:40
+# @Last Modified by:   Weiyue Ji
+# @Last Modified time: 2020-03-31 02:29:08
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -219,7 +219,7 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 		my_help.print_to_log("Bundle No: " + str(bundle_no))
 
 		### targets info
-		ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+		ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df)
 		coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
 		coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
 		coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)
@@ -295,7 +295,7 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 
 
 		### targets info
-		ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df, matching_info.index_to_target_id)
+		ind_targets, coord_targets = my_help.get_target_coords(bundle_no, bundles_df)
 		coord_center = my_help.get_bundle_center(bundle_no, bundles_df)
 		coord_r4s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 4)
 		coord_r3s = my_help.get_rx_coords(bundle_no, bundles_df, ind_targets, 3)

@@ -1,0 +1,25 @@
+# @Author: lily
+# @Date:   2019-07-16 04:09:06
+# @Last Modified by:   Weiyue Ji
+# @Last Modified time: 2020-03-31 16:53:50
+# @==========explanation========
+# @inputs:
+# @env = input_list[0]
+# @fig_out_folder = input_list[1]
+# @data_out_folder = input_list[2]
+# @annotName = input_list[0]
+# @slicetype = input_list[1]: 0-v1, 1-v2
+# @centertype = input_list[2]: 0-T0, 1-center
+# @num_angleSection = input_list[3]: 24
+# @num_outsideAngle = input_list[4]: 18
+# @num_Xsection = input_list[5]: 50
+# @z_offset = input_list[6]: 20
+# @scale_factor = input_list[7] = rfp/gfp
+# @channels_type = input[11] - 'R3R4' or 'FasII'
+
+#!/bin/sh
+echo "Fz_Gal80_s38r1_summary.csv, 0, 1, 24, 18, 40, 20, 1" | /netapp/home/wji/anaconda3/bin/python3 /awlab/projects/2019_09_NSP_Extension/code/python_cluster/main_functions/data_quantification_main_v0927.py
+
+qstat -j $JOB_ID
+
+Euclid, Figure_output_v0331, Data_output_v0331, Ctrl_24hrs_Gal80_s3r1_annotation.csv, 0, 1, 24, 18, 50, 20, 0.9, R3R4

@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-03-27 15:06:33
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-30 03:23:05
+# @Last Modified time: 2020-03-31 04:13:20
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -70,7 +70,8 @@ class Paths:
 
 ### class that stores indexing and color coding set-ups that are universal.
 class MatchingInfo:
-	def __init__(self):
+	def __init__(self, channels_type):
+		self.channels_type = channels_type
 		self.index_to_target_id = {
 			0:0, 
 			1:2, 
@@ -97,46 +98,66 @@ class MatchingInfo:
 			7: '#FF7C80', 
 			0: '#FFFFFF'
 		} # dic{color code for each R and target ID}
-		self.channel_mapping = {
-			'RFP':0, 
-			'GFP':1, 
-			'R3_1':2, 
-			'R4_1':3, 
-			'R3_2':4, 
-			'R4_2':5, 
-			'R3_3': 6,
-			'FasII': 7,
-			'R3_FasII':8,
-			'R4_FasII':9,
-			0:'RFP', 
-			1:'GFP', 
-			2:'R3_1', 
-			3:'R4_1', 
-			4:'R3_2', 
-			5:'R4_2', 
-			6:'R3_3',
-			7:'FasII',
-			8:'R3_FasII',
-			9:'R4_FasII'
-		} # mapping between image matrix dimention and channels
-		self.channel_cmap = {
-			0:'Reds', 
-			1:'Greens', 
-			2:'Reds', 
-			3:'Greens', 
-			4:'Reds', 
-			5:'Greens', 
-			6:'Reds',
-			7:'Blues',
-			8:'Reds',
-			9:'Greens'
-		} # cmap used for plotting for each channel
-		self.channel_mapping_checking = {
-			0:'RFP',
-			1:'GFP',
-			2:'24b10',
-			3:'FasII'
-		}
+		if(channels_type == 'R3R4'):
+			self.channel_mapping = {
+				'RFP':0, 
+				'GFP':1, 
+				'R3_1':2, 
+				'R4_1':3, 
+				'R3_2':4, 
+				'R4_2':5, 
+				'R3_3': 6,
+				0:'RFP', 
+				1:'GFP', 
+				2:'R3_1', 
+				3:'R4_1', 
+				4:'R3_2', 
+				5:'R4_2', 
+				6:'R3_3',
+			} 
+			self.channel_cmap = {
+				0:'Reds', 
+				1:'Greens', 
+				2:'Reds', 
+				3:'Greens', 
+				4:'Reds', 
+				5:'Greens', 
+				6:'Reds',
+			}
+		elif(channels_type == 'FasII'):
+			self.channel_mapping = {
+				'RFP':0,
+				'GFP':1,
+				'FasII':2,
+				'R3_FasII':3,
+				'R4_FasII':4,
+				0:'RFP',
+				1:'GFP',
+				2:'FasII',
+				3:'R3_FasII',
+				4:'R4_FasII'
+			}
+			self.channel_cmap = {
+				0:'Reds', 
+				1:'Greens', 
+				2:'Blues', 
+				3:'Reds', 
+				4:'Greens', 
+			}
+		elif(channels_type == 'checking'):
+			self.channel_mapping = {
+				0:'RFP',
+				1:'GFP',
+				2:'24b10',
+				3:'FasII'
+			}
+			self.channel_cmap = {
+				0:'Reds', 
+				1:'Greens', 
+				2:'Greys', 
+				3:'Blues', 
+			}
+
 
 ### class that stores parameters for analysis
 class GeneralParams:
@@ -179,7 +200,8 @@ class GeneralParams:
 # num_x_section = input_list[8]
 # z_offset = input_list[9]
 # scale_factor = int(input_list[10])
-# example of an input: Windows, Data_Output, Figure_Output, Fz_26hrs_Gal80_s5r1_annotation.csv, 0, 1, 10, 5, 10, 10, 1
+# channels_type = input[11]
+# example of an input: Windows, Data_Output, Figure_Output, Fz_26hrs_Gal80_s5r1_annotation.csv, 0, 1, 10, 5, 10, 10, 1, FasII
 input_str = input()
 input_list = input_str.split(', ')
 print(input_str)
@@ -189,7 +211,7 @@ names = [input_list[1], input_list[2], input_list[3]]
 paths = Paths(input_list[0], names)
 
 ### get indexing class
-matching_info = MatchingInfo()
+matching_info = MatchingInfo(input_list[11])
 
 ### get analysis parameters
 analysis_params_general = GeneralParams(input_list)
