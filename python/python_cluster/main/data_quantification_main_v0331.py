@@ -2,7 +2,7 @@
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-31 16:18:36
+# @Last Modified time: 2020-04-01 07:08:37
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -158,9 +158,9 @@ def process_image(image, image_shape):
 		image_norm[:,:,:,6] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
 		# image_norm[:,:,:,6] = image_norm[:,:,:,0]
 
-		# del r3_img, r4_img, gfp, gfp_thr
+		del r3_img, r4_img, gfp, gfp_thr
 
-	elif(matching_info.channels_type == 'R3R4'):
+	elif(matching_info.channels_type == 'FasII'):
 		# RFP_norm
 		image_norm[:,:,:,0] = exposure.rescale_intensity(image[:,:,:,0], in_range = 'image', out_range='dtype')
 		# GFP_norm
@@ -179,9 +179,11 @@ def process_image(image, image_shape):
 		image_norm[:,:,:,4] = exposure.rescale_intensity(image_norm[:,:,:,1] * fasii_thr, in_range = 'image', out_range='dtype')
 		
 		del fasii_thr
+
 	else:
 		print('ERROR! Please specify which channel type!')
 		my_help.print_to_log("ERROR! Please specify which channel type!")
+	
 	return image_norm
 
 

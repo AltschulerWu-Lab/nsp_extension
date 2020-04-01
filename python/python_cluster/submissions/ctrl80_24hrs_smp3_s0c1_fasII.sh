@@ -1,7 +1,7 @@
 # @Author: lily
 # @Date:   2019-07-16 04:09:06
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-31 17:01:29
+# @Last Modified time: 2020-03-31 18:55:14
 # @==========explanation========
 # @inputs:
 # @env = input_list[0]
@@ -18,6 +18,6 @@
 # @channels_type = input[11] - 'R3R4' or 'FasII'
 
 #!/bin/sh
-echo "Euclid, Figure_output_v0331, Data_output_v0331, Ctrl_24hrs_Gal80_s3r1_annotation.csv, 1, 1, 24, 18, 50, 20, 0.9, R3R4" | /netapp/home/wji/anaconda3/bin/python3 /awlab/projects/2019_09_NSP_Extension/code/python_cluster/main/data_quantification_main_v0331.py
+echo "Euclid, Figure_output_v0331, Data_output_v0331, Ctrl_24hrs_Gal80_s3r1_annotation.csv, 0, 1, 24, 18, 50, 20, 0.9, FasII" | /wynton/home/awlab/wji/anaconda3/bin/python3 /awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/main/data_quantification_main_v0331.py
 
 qstat -j $JOB_ID

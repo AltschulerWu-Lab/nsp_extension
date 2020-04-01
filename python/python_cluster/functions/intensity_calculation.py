@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-31 04:52:34
+# @Last Modified time: 2020-04-01 06:22:51
 
 
 import io, os, sys, types
@@ -42,159 +42,57 @@ Input: vector
 Output: vector
 """
 def unit_vector(vector):
-	
-	return vector / np.linalg.norm(vector)
+    
+    return vector / np.linalg.norm(vector)
 
 """ 
-	Function: Returns the angle in radians(or degree) between vectors 'v1' and 'v2' 
-	Input: 
-	- v1/v2: vectors
-	- isRadians: True/False
-	Output: radians (or degree) of the inner angle
+    Function: Returns the angle in radians(or degree) between vectors 'v1' and 'v2' 
+    Input: 
+    - v1/v2: vectors
+    - isRadians: True/False
+    Output: radians (or degree) of the inner angle
 """
 def inner_angle(v1, v2, isRadians):
-	
-	v1_u = unit_vector(v1)
-	v2_u = unit_vector(v2)
-	if isRadians:
-		return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
-	else:
-		return np.rad2deg(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
+    
+    v1_u = unit_vector(v1)
+    v2_u = unit_vector(v2)
+    if isRadians:
+        return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+    else:
+        return np.rad2deg(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
 
 
 ### angle normalization
 """ 
-	Function: normalize angle to -pi ~ pi 
-	Input: angle (in radians)
-	Output: angle (in radians)
+    Function: normalize angle (or list of angles) to -pi ~ pi 
+    Input: angle as float or numpy array (in radians)
+    Output: angle as float or numpy array (in radians)
 """
-def angle_normalization(angle):
-	
-	if(angle<-np.pi):
-		angle = angle + 2*np.pi
-	if(angle>np.pi):
-		angle = angle - 2*np.pi
-	return angle
+def angle_normalization(angles):
+    if(np.isscalar(angles)):
+        if(angles<-np.pi):
+            angles = angles + 2*np.pi
+        if(angles>np.pi):
+            angles = angles - 2*np.pi
+        return angles
+    elif(type(angles) == np.ndarray):
+        angles[angles>np.pi] = angles[angles>np.pi] - 2*np.pi
+        angles[angles<-np.pi] = angles[angles<-np.pi] + 2*np.pi
+        return angles
+    else:
+        print(f'{type(angles)} datatype not supported in angle_normalization!')
+        return None
 
 ### difference between two angles
 """
-	source: https://stackoverflow.com/questions/1878907/the-smallest-difference-between-2-angles
-	Funtion: calcualte the smallest difference between two angles.
-	Input: x,y -- angles (in radians)
-	Output: angle (in radians)
+    source: https://stackoverflow.com/questions/1878907/the-smallest-difference-between-2-angles
+    Funtion: calcualte the smallest difference between two angles.
+    Input: x,y -- angles (in radians)
+    Output: angle (in radians)
 """
 def smallest_angle(x, y):
-	
-	return min((2 * np.pi) - abs(x - y), abs(x - y))
-
-# ================= Visualization functions =================
-"""
-Function: plog slicing of angles.
-Input: 
-- start, end: angles in radians
-- phis: array of angles that should start from "start" and end at "end"
-Output: figure
-"""
-def plot_angles(start, end, phis, img_name, bundle_no, **kwarg):
-    ### params
-    paths = settings.paths
-    matching_info = settings.matching_info
-    analysis_params_general = settings.analysis_params_general
-    if('is_save' in kwarg.keys()):
-        is_save = kwarg['is_save']
-    else:
-        is_save = False
-
-    pselect = list(range(phis.size))
-    y_s = 1*np.tan(start)
-    y_n = 1*np.tan(end)
-    y_phis = 1*np.tan(phis[pselect])
-
-    xs = np.ones((phis.size + 2))
-
-    number = len(y_phis)
-    cmap = plt.get_cmap('Wistia')
-    colors = [cmap(i) for i in np.linspace(0, 1, number)]
-
-    fig = plt.figure()
-    for i, color in enumerate(colors, start=0):
-        plt.plot([0,1], [0,y_phis[i]], color=color)
-
-    plt.plot([0,1], [0,y_s], '-', linewidth = 2.0, color = 'b')
-    plt.plot([0,1], [0,y_n], '-', linewidth = 2.0, color = 'k')
-
-    if(is_save):
-        plt.ioff()
-        folder_name = img_name
-        subfolder1 = 'Angle_Plot'
-        subfolder2 = f'slice_type_{analysis_params_general.slice_type}_center_type_{analysis_params_general.center_type}'
-        figure_name = f'bundle_no_{bundle_no}_s{analysis_params_general.slice_type}c{analysis_params_general.slice_type}.tif'
-
-        my_help.check_dir(os.path.join(paths.fig_out_prefix))
-        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
-        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
-        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
-        plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), bbox_inches='tight')
-    else:
-    	plt.show()
     
-    return fig
-
-"""
-Function: plog slicing of angles.
-Input: 
-- start, zero, end: angles in radians
-- phis: array of angles that should start from "start", mid-point at "zero" and end at "end"
-Output: figure
-"""
-def plot_angles_v2(start, zero, end, phis, img_name, bundle_no, **kwarg):
-	### params
-    paths = settings.paths
-    matching_info = settings.matching_info
-    analysis_params_general = settings.analysis_params_general
-    if('is_save' in kwarg.keys()):
-        is_save = kwarg['is_save']
-    else:
-        is_save = False
-
-    pselect = list(range(phis.size))
-    y_s = 1*np.tan(start)
-    y_z = 1*np.tan(zero)
-    y_n = 1*np.tan(end)
-    y_phis = 1*np.tan(phis[pselect])
-    # ys = np.concatenate((np.array([y_s, y_n]),y_phis))
-
-    xs = np.ones((phis.size + 2))
-
-    number = len(y_phis)
-    cmap = plt.get_cmap('Wistia')
-    colors = [cmap(i) for i in np.linspace(0, 1, number)]
-
-    fig = plt.figure()
-    for i, color in enumerate(colors, start=0):
-        plt.plot([0,1], [0,y_phis[i]], color=color)
-    # for i in y_phis:
-    #     plt.plot(, '-')
-    plt.plot([0,1], [0,y_s], '-', linewidth = 2.0, color = 'b')
-    plt.plot([0,1], [0,y_z], '-', linewidth = 2.0, color = 'g')
-    plt.plot([0,1], [0,y_n], '-', linewidth = 2.0, color = 'k')
-
-    if(is_save):
-        plt.ioff()
-        folder_name = img_name
-        subfolder1 = 'Angle_Plot'
-        subfolder2 = f'slice_type_{analysis_params_general.slice_type}_center_type_{analysis_params_general.center_type}'
-        figure_name = f'bundle_no_{bundle_no}_s{analysis_params_general.slice_type}c{analysis_params_general.slice_type}.tif'
-
-        my_help.check_dir(os.path.join(paths.fig_out_prefix))
-        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
-        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
-        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
-        plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), bbox_inches='tight')
-    else:
-    	plt.show()
-    
-    return fig
+    return min((2 * np.pi) - abs(x - y), abs(x - y))
 
 
 # ================= Angle normalization functions =================
@@ -207,374 +105,285 @@ Input:
 Output: phis -- array of angles in radians
 """
 def get_phis(phi_start, phi_end, num_of_slices):
-	if((-np.pi <= phi_end <= -0.5*np.pi) & (phi_end*phi_start < 0)):
-		phi_end_transform = phi_end + 2*np.pi
-		phis = np.linspace(phi_start, phi_end_transform, num_of_slices)
-	elif((-np.pi <= phi_start <= -0.5*np.pi) & (phi_end*phi_start < 0)):
-		phi_start_transform = phi_start + 2*np.pi
-		phis = np.linspace(phi_end, phi_start_transform, num_of_slices)
-	else:
-		phis = np.linspace(phi_start, phi_end, num_of_slices)
+    if((-np.pi <= phi_end <= 0) & (phi_end*phi_start < 0) & (phi_end < angle_normalization(phi_start - np.pi))):
+        phi_end_transform = phi_end + 2*np.pi
+        phis = np.linspace(phi_start, phi_end_transform, num_of_slices)
+    elif((-np.pi <= phi_start <= -0.5*np.pi) & (phi_end*phi_start < 0) & (phi_end < angle_normalization(phi_start - np.pi))):
+        phi_start_transform = phi_start + 2*np.pi
+        phis = np.linspace(phi_end, phi_start_transform, num_of_slices)
+    else:
+        phis = np.linspace(phi_start, phi_end, num_of_slices)
+    phis_final = angle_normalization(phis)
+    return phis_final
 
-	phis [phis>np.pi] = phis[phis>np.pi] - 2*np.pi
-	phis [phis<-np.pi] = phis[phis<-np.pi] + 2*np.pi
-	
-	return phis
+### start and end angle calculation
+"""
+Function: expand pie range beyond ang_start2r-ang_end2r by num_outside_angle*phi_unit each.
+Input:
+- ang_start2r, ang_end2r(np.folat64): angles in radians
+- num_outside_angle (int)
+- phi_unit(float)
+Output: phis(np.ndarray) -- array of angles in radians
+"""
+def get_start_end(ang_start2r, ang_end2r, num_outside_angle, phi_unit):
+    if(((-np.pi <= ang_start2r <= -0.5*np.pi) | (-np.pi <= ang_end2r <= -0.5*np.pi)) & (ang_start2r*ang_end2r < 1) ):
+        if((-np.pi <= ang_start2r <= -0.5*np.pi) & (-np.pi <= ang_end2r <= -0.5*np.pi)):
+            phi_start = min(ang_start2r, ang_end2r) - num_outside_angle * phi_unit
+            phi_end = max(ang_start2r, ang_end2r) + num_outside_angle * phi_unit
+        else:
+            phi_start = max(ang_start2r, ang_end2r) - num_outside_angle * phi_unit
+            phi_end = min(ang_start2r, ang_end2r) + num_outside_angle * phi_unit
+    else:
+        phi_start = min(ang_start2r, ang_end2r) - num_outside_angle * phi_unit
+        phi_end = max(ang_start2r, ang_end2r) + num_outside_angle * phi_unit
+
+    phi_start = angle_normalization(phi_start)
+    phi_end = angle_normalization(phi_end)
+    return phi_start, phi_end
 
 ### Grid calculation
 """
-Function: calculating grid's relative position
+Function: calculating target grid's relative position
 Input: target_coords, r3_coord, r4_coord, coord_center -- coordinates
-Output: rel_points -- relative coordinates
-- rel_points[0,0:5]: T0, T2, T3, T4, T5, T7
-- rel_points[0,6]: center
-- rel_points[0,7:8]: R3, R4
+Output: 
+- rel_points -- relative coordinates in dictionary
+    keys = 'T0'-'T7', 'center', 'R3', 'R4'
 """
 def cal_grid_rel_position(target_coords, target_coords_extended, r3_coord, r4_coord, coord_center, center_point, r_unit):
-	target_id_to_index = settings.matching_info.target_id_to_index
+    target_id_to_index = settings.matching_info.target_id_to_index
 
-	rel_points = {}
-	for i in [0,2,3,4,5,7]:
-		rel_points[f'T{i}'] = np.linalg.norm( center_point - target_coords[target_id_to_index[i]] )/r_unit
-		rel_points[f'T{i}_etd'] = np.linalg.norm( center_point - target_coords_extended[target_id_to_index[i]] )/r_unit
-	# #T0_rel 
-	
-	# #T2_rel
-	# rel_points['T2'] = np.linalg.norm( center_point - target_coords[target_id_to_index[2]] )/r_unit
-	# #T3_rel 
-	# rel_points['T3'] = np.linalg.norm( center_point - target_coords[target_id_to_index[3]] )/r_unit
-	# #T4_rel
-	# rel_points['T4'] = np.linalg.norm( center_point - target_coords[target_id_to_index[4]] )/r_unit
-	# #T5_rel
-	# rel_points['T5'] = np.linalg.norm( center_point - target_coords[target_id_to_index[5]] )/r_unit
-	# #T7_rel 
-	# rel_points['T7'] = np.linalg.norm( center_point - target_coords[target_id_to_index[7]] )/r_unit
-	# #T4_extended_rel
-	# rel_points['T4_etd'] = np.linalg.norm( center_point - target_coords_extended[target_id_to_index[4]] )/r_unit
-	# #T3_extended_rel
-	# rel_points['T3_etd'] = np.linalg.norm( center_point - target_coords_extended[target_id_to_index[4]] )/r_unit
-	# #T7_extended_rel
-	#Center_rel 
-	rel_points['center'] = np.linalg.norm( center_point - coord_center )/r_unit
-	#R3_rel 
-	rel_points['R3'] = np.linalg.norm( center_point - r3_coord )/r_unit
-	#R4_rel 
-	rel_points['R4'] = np.linalg.norm( center_point - r4_coord )/r_unit
+    # target_rel_poses
+    rel_points = {}
+    for i in [0,2,3,4,5,7]:
+        rel_points[f'T{i}'] = np.linalg.norm( center_point - target_coords[target_id_to_index[i]] )/r_unit
+        rel_points[f'T{i}_etd'] = np.linalg.norm( center_point - target_coords_extended[target_id_to_index[i]] )/r_unit
+    #Center_rel 
+    rel_points['center'] = np.linalg.norm( center_point - coord_center )/r_unit
+    #R3_rel 
+    rel_points['R3'] = np.linalg.norm( center_point - r3_coord )/r_unit
+    #R4_rel 
+    rel_points['R4'] = np.linalg.norm( center_point - r4_coord )/r_unit
 
 
-	return rel_points
+    return rel_points
 
-### Angle normalization v1: T3 = 0, T7 = 1
+### Angle normalization v1: T7 = -1, T3 = 1
 """
 Function: calculate parameters necessary for image intensity transformation
 Input:
 - bundles_df: dataframe containing bundle information
-- bundles_params: parameters regarding that bundle -- bundle_no, target_inds, target_coords, coord_center, slice_zero_point, slice_one_point, length_one_point, center_point, r_no
+- bundles_params: parameters regarding that bundle -- bundle_no, target_inds, target_coords, coord_center, slice_neg_one_point, slice_one_point, length_one_point, center_point, r_no
 - **kwarg: is_print, is_plot
 Output: 
 - params: parameters to passed on for intensity calculation function -- z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius
 - rel_points: relative coordinates for target positions and heel positions
 """
 def get_slice_params_v1(bundles_df, bundle_params, img_name, **kwarg):
-	### decomposite parameters.
-	analysis_params_general = settings.analysis_params_general
-	radius_expanse_ratio = analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
-	
-	bundle_no, target_inds, target_coords, target_coords_extended, coord_center, slice_zero_point, slice_one_point, length_one_point, center_point, r_no = bundle_params
+    ### decomposite parameters.
+    analysis_params_general = settings.analysis_params_general
+    radius_expanse_ratio = analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
+    
+    bundle_no, target_inds, target_coords, target_coords_extended, coord_center, slice_neg_one_point, slice_one_point, length_one_point, center_point, r_no = bundle_params
 
-	if('is_print' in kwarg.keys()):
-		is_print = kwarg['is_print']
-	else:
-		is_print = False
-	if('is_plot' in kwarg.keys()):
-		is_plot = kwarg['is_plot']
-	else:
-		is_plot = kwarg['is_plot']
-	if('is_save' in kwarg.keys()):
-		is_save = kwarg['is_save']
-	else:
-		is_save = False
+    if('is_print' in kwarg.keys()):
+        is_print = kwarg['is_print']
+    else:
+        is_print = False
+    if('is_plot' in kwarg.keys()):
+        is_plot = kwarg['is_plot']
+    else:
+        is_plot = kwarg['is_plot']
+    if('is_save' in kwarg.keys()):
+        is_save = kwarg['is_save']
+    else:
+        is_save = False
+    if('is_checking' in kwarg.keys()):
+        is_checking = kwarg['is_checking']
+    else:
+        is_checking = False
 
-	### R heels info
-	r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
-	
-	r3_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 3)[0,:]
-	r4_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 4)[0,:]
+    ### R heels info
+    r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
+    
+    r3_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 3)[0,:]
+    r4_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 4)[0,:]
 
-	### slice radius calculation
-	r_unit = np.linalg.norm( center_point - length_one_point )
-	radius = r_unit * radius_expanse_ratio
-	
-	### calculating grid's relative position
-	rel_points = cal_grid_rel_position(target_coords, target_coords_extended, r3_coord, r4_coord, coord_center, center_point, r_unit)
+    ### slice radius calculation
+    r_unit = np.linalg.norm( center_point - length_one_point )
+    radius = r_unit * radius_expanse_ratio
+    
+    ### calculating grid's relative position
+    rel_points = cal_grid_rel_position(target_coords, target_coords_extended, r3_coord, r4_coord, coord_center, center_point, r_unit)
 
-	### slice phis calculation
-	ang_start2r = np.arctan2( slice_zero_point[1] - center_point[1], slice_zero_point[0] - center_point[0] )
-	ang_end2r = np.arctan2( slice_one_point[1] - center_point[1], slice_one_point[0] - center_point[0])
-	
-	phi_range = inner_angle(slice_one_point - center_point, slice_zero_point - center_point, True)
-	phi_unit = phi_range/analysis_params_general.num_angle_section
-	if(is_print):
-		print("ang_start2r: ")
-		print(ang_start2r, ang_end2r)
-	
-	if(((-np.pi <= ang_start2r <= -0.5*np.pi) | (-np.pi <= ang_end2r <= -0.5*np.pi)) & (ang_start2r*ang_end2r < 1) ):
-		if((-np.pi <= ang_start2r <= -0.5*np.pi) & (-np.pi <= ang_end2r <= -0.5*np.pi)):
-			phi_start = min(ang_start2r, ang_end2r) - analysis_params_general.num_outside_angle * phi_unit
-			phi_end = max(ang_start2r, ang_end2r) + analysis_params_general.num_outside_angle * phi_unit
-		else:
-			phi_start = max(ang_start2r, ang_end2r) - analysis_params_general.num_outside_angle * phi_unit
-			phi_end = min(ang_start2r, ang_end2r) + analysis_params_general.num_outside_angle * phi_unit
-	else:
-		phi_start = min(ang_start2r, ang_end2r) - analysis_params_general.num_outside_angle * phi_unit
-		phi_end = max(ang_start2r, ang_end2r) + analysis_params_general.num_outside_angle * phi_unit
+    ### slice phis calculation
+    # -1: T7
+    ang_start2r = np.arctan2( slice_neg_one_point[1] - center_point[1], slice_neg_one_point[0] - center_point[0] )
+    # 1: T3
+    ang_end2r = np.arctan2( slice_one_point[1] - center_point[1], slice_one_point[0] - center_point[0])
+    # range and unit
+    phi_range = inner_angle(slice_one_point - center_point, slice_neg_one_point - center_point, True)
+    phi_unit = phi_range/analysis_params_general.num_angle_section
+    
+    # start and end angle of pie slices.
+    phi_start, phi_end = get_start_end(ang_start2r, ang_end2r, analysis_params_general.num_outside_angle, phi_unit)
+        
+    # get lists of angle slices.
+    phis = get_phis(phi_start, phi_end, analysis_params_general.num_angle_section + analysis_params_general.num_outside_angle * 2 + 1)
 
-	phi_start = angle_normalization(phi_start)
-	phi_end = angle_normalization(phi_end)
+    # aligh angle slices to from T7 to T3.
+    if(smallest_angle(ang_start2r, phis[-1]) < smallest_angle(ang_start2r, phis[0])):
+        phis = np.flip(phis, axis = 0)
+    
+    ### printing/plotting
+    if(is_print):
+        print(f'ang_start2r={ang_start2r}, ang_end2r={ang_end2r}, phi_range={phi_range}, phi_unit={phi_unit}')
+        print(f'phi_start={phi_start}, phi_end={phi_end}')
+        print("final phis:")
+        print(phis)
+    if(is_plot):
+        fig = my_plot.plot_angles(phis, [ang_start2r, ang_end2r], img_name, bundle_no, is_save = is_save)
+    
+    ### ticks for angle axis.
+    y_ticks = np.linspace(- 1-analysis_params_general.num_outside_angle * (phi_unit/phi_range)*2, 1 + analysis_params_general.num_outside_angle * (phi_unit/phi_range)*2, analysis_params_general.num_angle_section + analysis_params_general.num_outside_angle*2 + 1)
+    y_ticks = np.round(y_ticks, 2)
+    y_ticks[y_ticks == -0] = 0
+    
+    ### consolidating final params
+    params = analysis_params_general.z_offset, analysis_params_general.num_x_section, r_z, phis, center_point, y_ticks, radius
+    
+    if(is_checking):
+        return phis, [ang_start2r, ang_end2r], rel_points
+    else:
+        if(is_plot):
+            return params, rel_points, fig
+        else:
+            return params, rel_points
 
-	phis = get_phis(phi_start, phi_end, analysis_params_general.num_angle_section + analysis_params_general.num_outside_angle * 2 + 1)
-
-	x = ang_start2r
-	y = phis[0]
-	z = phis[-1]
-	if(smallest_angle(ang_start2r, phis[-1]) < smallest_angle(ang_start2r, phis[0])):
-		phis = np.flip(phis, axis = 0)
-	
-	### printing/plotting
-	if(is_print):
-		print("final:")
-		print(phis)
-	
-	if(is_plot):
-		fig = plot_angles(ang_start2r, ang_end2r, phis, img_name, bundle_no, is_save = is_save)
-	
-	### ticks for angle axis.
-	y_ticks = np.linspace(- 1-analysis_params_general.num_outside_angle * (phi_unit/phi_range)*2, 1 + analysis_params_general.num_outside_angle * (phi_unit/phi_range)*2, analysis_params_general.num_angle_section + analysis_params_general.num_outside_angle*2 + 1)
-	y_ticks = np.round(y_ticks, 2)
-	y_ticks[y_ticks == -0] = 0
-	
-	### consolidating final params
-	params = analysis_params_general.z_offset, analysis_params_general.num_x_section, r_z, phis, center_point, y_ticks, radius
-	if(is_plot):
-		return params, rel_points, fig
-	else:
-		return params, rel_points
-
-### Angle normalization v3: T3 = -1, T4 = 0, T7 = 1
+### Angle normalization v3: T7 = -1, T4 = 0, T3 = 1
 """
 Function: calculate parameters necessary for image intensity transformation
 Input:
 - bundles_df: dataframe containing bundle information
-- bundles_params: parameters regarding that bundle -- bundle_no, target_inds, target_coords, coord_center, slice_zero_point, slice_one_point, length_one_point, center_point, r_no
+- bundles_params: parameters regarding that bundle -- bundle_no, target_inds, target_coords, coord_center, slice_neg_one_point, slice_one_point, length_one_point, center_point, r_no
 - **kwarg: is_print, is_plot
 Output: 
 - params: parameters to passed on for intensity calculation function -- z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius
 - rel_points: relative coordinates for target positions and heel positions
 """
 def get_slice_params_v3(bundles_df, bundle_params, img_name, **kwarg):
-	### decomposite parameters.
-	analysis_params_general = settings.analysis_params_general
-	radius_expanse_ratio = analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
-	target_id_to_index = settings.matching_info.target_id_to_index
+    ### decomposite parameters.
+    analysis_params_general = settings.analysis_params_general
+    radius_expanse_ratio = analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
+    target_id_to_index = settings.matching_info.target_id_to_index
 
-	bundle_no, target_inds, target_coords, target_coords_extended, coord_center, SliceNegOnePoint, slice_one_point, length_one_point, center_point, r_no = bundle_params
+    bundle_no, target_inds, target_coords, target_coords_extended, coord_center, slice_neg_one_point, slice_one_point, length_one_point, center_point, r_no = bundle_params
 
-	angle_sel_num = analysis_params_general.num_angle_section / 2
-	analysis_params_general.num_outside_angle = analysis_params_general.num_outside_angle
-	
-	if('is_print' in kwarg.keys()):
-		is_print = kwarg['is_print']
-	else:
-		is_print = False
-	if('is_plot' in kwarg.keys()):
-		is_plot = kwarg['is_plot']
-	else:
-		is_plot = kwarg['is_plot']
-	if('is_save' in kwarg.keys()):
-		is_save = kwarg['is_save']
-	else:
-		is_save = False
+    angle_sel_num = analysis_params_general.num_angle_section / 2
+    analysis_params_general.num_outside_angle = analysis_params_general.num_outside_angle
+    
+    if('is_print' in kwarg.keys()):
+        is_print = kwarg['is_print']
+    else:
+        is_print = False
+    if('is_plot' in kwarg.keys()):
+        is_plot = kwarg['is_plot']
+    else:
+        is_plot = kwarg['is_plot']
+    if('is_save' in kwarg.keys()):
+        is_save = kwarg['is_save']
+    else:
+        is_save = False
+    if('is_checking' in kwarg.keys()):
+        is_checking = kwarg['is_checking']
+    else:
+        is_checking = False
 
-	### R heels info
-	r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
-	r3_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 3)[0,:]
-	r4_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 4)[0,:]
+    ### R heels info
+    r_z = int(bundles_df.loc[bundle_no,'coord_Z_R' + str(r_no)]) - 1
+    r3_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 3)[0,:]
+    r4_coord = my_help.get_rx_coords(bundle_no, bundles_df, target_inds, 4)[0,:]
 
-	### slice radius calculation
-	r_unit = np.linalg.norm( center_point - length_one_point )
-	radius = r_unit * radius_expanse_ratio
-	
-	### calculating grid's relative position
-	rel_points = cal_grid_rel_position(target_coords, target_coords_extended, r3_coord, r4_coord, coord_center, center_point, r_unit)
+    ### slice radius calculation
+    r_unit = np.linalg.norm( center_point - length_one_point )
+    radius = r_unit * radius_expanse_ratio
+    
+    ### calculating grid's relative position
+    rel_points = cal_grid_rel_position(target_coords, target_coords_extended, r3_coord, r4_coord, coord_center, center_point, r_unit)
 
-	### slice phis calculation
-	angNegOne2R = np.arctan2( SliceNegOnePoint[1] - center_point[1], SliceNegOnePoint[0] - center_point[0] )
-	angZero = np.arctan2(target_coords[target_id_to_index[4]][1] - center_point[1], target_coords[target_id_to_index[4]][0] - center_point[0])
-	angOne2R = np.arctan2(slice_one_point[1] - center_point[1], slice_one_point[0] - center_point[0])
-	
-	## T3' ~ middle (-1 ~ 0)
-	phi_range_1 = inner_angle(SliceNegOnePoint - center_point, target_coords[3] - center_point, True)
-	phi_unit_1 = phi_range_1/angle_sel_num
-	
-	if(is_print):
-		print("angNegOne - angZero: ")
-		print(angNegOne2R, angZero)
+    ### slice phis calculation
+    # -1: T7
+    ang_negone2r = np.arctan2( slice_neg_one_point[1] - center_point[1], slice_neg_one_point[0] - center_point[0] )
+    # 0: T4
+    ang_zero = np.arctan2(target_coords[target_id_to_index[4]][1] - center_point[1], target_coords[target_id_to_index[4]][0] - center_point[0])
+    # 1: T3
+    ang_one2r = np.arctan2(slice_one_point[1] - center_point[1], slice_one_point[0] - center_point[0])
+    
+    ## T3' ~ middle (-1 ~ 0)
+    phi_range_1 = inner_angle(slice_neg_one_point - center_point, target_coords[3] - center_point, True)
+    phi_unit_1 = phi_range_1/angle_sel_num
+    
+    phi_start_1, phi_end_1 = get_start_end(ang_negone2r, ang_zero, analysis_params_general.num_outside_angle, phi_unit_1)
 
-	if(((-np.pi <= angNegOne2R <= -0.5*np.pi) | (-np.pi <= angZero <= -0.5*np.pi)) & (angNegOne2R*angZero < 1) ):
-		if((-np.pi <= angNegOne2R <= -0.5*np.pi) & (-np.pi <= angZero <= -0.5*np.pi)):
-			phi_start_1 = min(angNegOne2R, angZero) - analysis_params_general.num_outside_angle * phi_unit_1
-			phi_end_1 = max(angNegOne2R, angZero) + analysis_params_general.num_outside_angle * phi_unit_1
-		else:
-			phi_start_1 = max(angNegOne2R, angZero) - analysis_params_general.num_outside_angle * phi_unit_1
-			phi_end_1 = min(angNegOne2R, angZero) + analysis_params_general.num_outside_angle * phi_unit_1
-	else:
-		phi_start_1 = min(angNegOne2R, angZero) - analysis_params_general.num_outside_angle * phi_unit_1
-		phi_end_1 = max(angNegOne2R, angZero) + analysis_params_general.num_outside_angle * phi_unit_1
 
-	phi_start_1 = angle_normalization(phi_start_1)
-	phi_end_1 = angle_normalization(phi_end_1)
+    phis_1 = get_phis(phi_start_1, phi_end_1, angle_sel_num + analysis_params_general.num_outside_angle*2 + 1)
 
-	phis_1 = get_phis(phi_start_1, phi_end_1, angle_sel_num + analysis_params_general.num_outside_angle*2 + 1)
+    if(smallest_angle(ang_negone2r, phis_1[-1]) < smallest_angle(ang_negone2r, phis_1[0])):
+        phis_1 = np.flip(phis_1, axis = 0)
 
-	if(smallest_angle(angNegOne2R, phis_1[-1]) < smallest_angle(angNegOne2R, phis_1[0])):
-		phis_1 = np.flip(phis_1, axis = 0)
+    n_1 = int(angle_sel_num + analysis_params_general.num_outside_angle + 1)
+    
+    phis_1 = phis_1[0:n_1]
+    phis_1[n_1-1] = ang_zero
 
-	n_1 = int(angle_sel_num + analysis_params_general.num_outside_angle + 1)
-	
-	phis_1 = phis_1[0:n_1]
-	phis_1[n_1-1] = angZero
+    y_ticks_1 = np.linspace(-1 - analysis_params_general.num_outside_angle*phi_unit_1/phi_range_1, 0, angle_sel_num + analysis_params_general.num_outside_angle + 1)
 
-	y_ticks_1 = np.linspace(-1 - analysis_params_general.num_outside_angle*phi_unit_1/phi_range_1, 0, angle_sel_num + analysis_params_general.num_outside_angle + 1)
 
-	if(is_print):
-		print("final:")
-		print(phis_1, y_ticks_1)
-		print(len(phis_1), len(y_ticks_1))
+    ## middle ~ T3 (0 ~ 1)
+    phi_range_2 = inner_angle(slice_one_point - center_point, target_coords[3] - center_point, True)
+    phi_unit_2 = phi_range_2/angle_sel_num
 
-	# if(is_plot):
-	# 	plot_angles(angNegOne2R, angZero, phis_1)
+    phi_start_2, phi_end_2 = get_start_end(ang_zero, ang_one2r, analysis_params_general.num_outside_angle, phi_unit_2)
 
-	
-	## middle ~ T3 (0 ~ 1)
-	phi_range_2 = inner_angle(slice_one_point - center_point, target_coords[3] - center_point, True)
-	phi_unit_2 = phi_range_2/angle_sel_num
+    phis_2 = get_phis(phi_start_2, phi_end_2, angle_sel_num + analysis_params_general.num_outside_angle*2 + 1)
 
-	if(is_print):
-		print("angZero -angOne: ")
-		print(angZero, angOne2R)
+    if(smallest_angle(ang_zero, phis_2[-1]) < smallest_angle(ang_zero, phis_2[0])):
+        phis_2 = np.flip(phis_2, axis = 0)
 
-	if(((-np.pi <= angZero <= -0.5*np.pi) | (-np.pi <= angOne2R <= -0.5*np.pi)) & (angZero*angOne2R < 1) ):
-		if((-np.pi <= angZero <= -0.5*np.pi) & (-np.pi <= angOne2R <= -0.5*np.pi)):
-			phi_start_2 = min(angZero, angOne2R) - analysis_params_general.num_outside_angle * phi_unit_2
-			phi_end_2 = max(angZero, angOne2R) + analysis_params_general.num_outside_angle * phi_unit_2
-		else:
-			phi_start_2 = max(angZero, angOne2R) - analysis_params_general.num_outside_angle * phi_unit_2
-			phi_end_2 = min(angZero, angOne2R) + analysis_params_general.num_outside_angle * phi_unit_2
-	else:
-		phi_start_2 = min(angZero, angOne2R) - analysis_params_general.num_outside_angle * phi_unit_2
-		phi_end_2 = max(angZero, angOne2R) + analysis_params_general.num_outside_angle * phi_unit_2
+    n_2 = int(analysis_params_general.num_outside_angle+1)
+    phis_2 = phis_2[n_2:]
 
-	phi_start_2 = angle_normalization(phi_start_2)
-	phi_end_2 = angle_normalization(phi_end_2)
+    y_ticks_2 = np.linspace(0, 1 + analysis_params_general.num_outside_angle*phi_unit_2/phi_range_2, angle_sel_num + analysis_params_general.num_outside_angle + 1)
 
-	phis_2 = get_phis(phi_start_2, phi_end_2, angle_sel_num + analysis_params_general.num_outside_angle*2 + 1)
+    # if(is_plot):
+    #   plot_angles(ang_zero, ang_one2r, phis_2)
+    
+    ### combining phis
+    phis = np.concatenate((phis_1,phis_2), axis = 0)
+    y_ticks_2 = y_ticks_2[1:]
+    y_ticks = np.concatenate((y_ticks_1,y_ticks_2), axis = 0)
+    y_ticks = np.round(y_ticks,2)
+    y_ticks[y_ticks == -0] = 0
 
-	if(smallest_angle(angZero, phis_2[-1]) < smallest_angle(angZero, phis_2[0])):
-		phis_2 = np.flip(phis_2, axis = 0)
+    ### printing/plotting
+    if(is_print):
+        print(f'-1 = {ang_negone2r}, 0 = {ang_zero}, 1 = {ang_one2r}')
+        print(f'phi_1({len(phis_1)}), y_ticks_1({len(y_ticks_1)}):')
+        print(phis_1, y_ticks_1)
+        print(f'phi_2({len(phis_2)}), y_ticks_2({len(y_ticks_2)}):')
+        print(phis_2, y_ticks_2)
+        print(f'final phis({len(phis)}), y_ticks({len(y_ticks)}):')
+        print(phis, y_ticks)
 
-	n_2 = int(analysis_params_general.num_outside_angle+1)
-	phis_2 = phis_2[n_2:]
+    if(is_plot):
+        fig = my_plot.plot_angles(phis, [ang_negone2r, ang_zero, ang_one2r], img_name, bundle_no, is_save = is_save)
 
-	y_ticks_2 = np.linspace(0, 1 + analysis_params_general.num_outside_angle*phi_unit_2/phi_range_2, angle_sel_num + analysis_params_general.num_outside_angle + 1)
+    ### consolidating final params  
+    params = analysis_params_general.z_offset, analysis_params_general.num_x_section, r_z, phis, center_point, y_ticks, radius
 
-	### printing/plotting
-	if(is_print):
-		print("final:")
-		print(phis_2, y_ticks_2)
-		print(len(phis_2), len(y_ticks_2))
-
-	# if(is_plot):
-	# 	plot_angles(angZero, angOne2R, phis_2)
-	
-	### combining phis
-	phis = np.concatenate((phis_1,phis_2), axis = 0)
-	y_ticks_2 = y_ticks_2[1:]
-	y_ticks = np.concatenate((y_ticks_1,y_ticks_2), axis = 0)
-	y_ticks = np.round(y_ticks,2)
-	y_ticks[y_ticks == -0] = 0
-
-	### printing/plotting
-	if(is_print):
-		print(phis, y_ticks)
-		print(len(phis), len(y_ticks))
-
-	if(is_plot):
-		fig = plot_angles_v2(angNegOne2R, angZero, angOne2R, phis, img_name, bundle_no, is_save = is_save)
-
-	### consolidating final params	
-	params = analysis_params_general.z_offset, analysis_params_general.num_x_section, r_z, phis, center_point, y_ticks, radius
-
-	if(is_plot):
-		return params, rel_points, fig
-	else:
-		return params, rel_points
-
-# ================= Calculate intensity matrix =================
-### intensity matrix calculation
-"""
-Function: calculate intensity matrix for normalized grwoth cone.
-Input:
-- params: parameters generated from previous function -- z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius
-- image: normalized image
-- channel: int indicating which channel to calculate
-Output: intensity_matrix
-"""
-
-def get_intensity_matrix_new(params, image):
-	### decomposite parameters.
-	z_max = image.shape[0]
-	z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius = params
-
-	### initialization
-	intensity_matrix = np.zeros((len(phis), num_x_section + 1, z_offset*2+1))
-	intensity_matrix = intensity_matrix - 100
-	z_values = np.linspace((r_z-z_offset), (r_z+z_offset), z_offset*2+1).astype(int)
-
-	### get meshgrid of x and y inds.
-	matrix_shape = image[0,:,:].shape
-	xs = np.zeros((len(phis), num_x_section + 1))
-	ys = np.zeros((len(phis), num_x_section + 1))
-	for phi in phis:
-		i = int(np.argwhere(phis == phi))
-		circleY = radius * np.sin(phi) + center_point[1]
-		circleX = radius * np.cos(phi) + center_point[0]
-
-		xs[i,:] = np.linspace(center_point[0], circleX, num_x_section + 1)
-		ys[i,:] = (xs[i,:] - center_point[0]) * np.tan(phi) + center_point[1]
-	
-	xbound = np.array(range(int(np.floor(np.min(xs))), int(np.ceil(np.max(xs)+1))))
-	ybound = np.array(range(int(np.floor(np.min(ys))), int(np.ceil(np.max(ys)+1))))
-
-	vy, vx = np.meshgrid(ybound, xbound)
-
-	vxf = vx.flatten()
-	vyf = vy.flatten()
-
-	### calculate intensity matrix
-	# Error: too close to the boundary to generate full matrix
-	if((np.max(vxf) > matrix_shape[1]) | (np.max(vyf) > matrix_shape[0]) | (np.min(vxf) < 0) | (np.min(vyf) < 0)):
-		print_content = f'vx_max = {np.max(vxf)}, vy_max = {np.max(vyf)}; xboundary = {matrix_shape[1]}, yboundary = {matrix_shape[0]}'
-		print("Error! Too close to the boundary!")
-		print(print_content)
-
-	else:
-		for z in z_values:
-			# correct situation.
-			if((z >= 0) & (z < z_max)):
-				gridded = interpolate.griddata(np.column_stack((vxf, vyf)), image[z,vy,vx].flatten(), (xs, ys), method='linear')
-				intensity_matrix[:,:,z - r_z-z_offset] = gridded
-			# Error: not enough z slices for calculation
-			else:
-				print("Error! not enough Z!")
-		
-	return intensity_matrix
+    if(is_checking):
+        return phis, [ang_negone2r, ang_zero, ang_one2r], rel_points
+    else:
+        if(is_plot):
+            return params, rel_points, fig
+        else:
+            return params, rel_points

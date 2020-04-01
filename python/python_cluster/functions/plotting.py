@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-31 05:40:08
+# @Last Modified time: 2020-04-01 06:34:37
 
 
 import io, os, sys, types
@@ -338,6 +338,133 @@ def plot_individual_bundles(bundle_no, bundles_df, image_norm, xRatio, yRatio, *
             ax.tick_params(axis='both', which='both', labelbottom='off', labelleft = 'off')
         else:
             ax.tick_params(axis = 'both', labelsize = 12)
+
+
+"""
+Function: plog slicing of angles.
+Input: 
+- phi_edges(list): two(or three) angles in radians
+- phis(np.ndarray): array of angles that should start from "start" and end at "end"
+- img_name(str): name of image being processed
+- bundle_no(int): number of bundle
+Output: figure
+"""
+def plot_angles(phis, phi_edges, img_name, bundle_no, **kwarg):
+    ### params
+    paths = settings.paths
+    matching_info = settings.matching_info
+    analysis_params_general = settings.analysis_params_general
+
+    if('is_save' in kwarg.keys()):
+        is_save = kwarg['is_save']
+    else:
+        is_save = False
+
+    number = len(phis)
+    cmap = plt.get_cmap('PuBu')
+    colors = [cmap(i) for i in np.linspace(0, 1, number)]
+
+    ### figure
+    fig = plt.figure(figsize = (6,6))
+    sns.set_style("white")
+
+    ## set-up font sizes
+    SMALL_SIZE = 12
+    MEDIUM_SIZE = 14
+    BIGGER_SIZE = 16
+    plt.rc('font', size=SMALL_SIZE)         # controls default text sizes
+    plt.rc('axes', titlesize=BIGGER_SIZE)   # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)   # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
+    plt.rc('ytick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
+    plt.rc('legend', fontsize=MEDIUM_SIZE)  # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE) # fontsize of the figure title
+
+    for i, color in enumerate(colors, start=0):
+        plt.polar(phis[i], 1, 'o', color = color)
+    plt.polar([0, phis[0]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[7])
+    plt.polar([0, phis[-1]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[3])
+    if(len(phi_edges) == 2):
+        plt.polar([0,phi_edges[0]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[7])
+        plt.polar([0,phi_edges[1]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[3])
+    elif(len(phi_edges) == 3):
+        plt.polar([0,phi_edges[0]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[7])
+        plt.polar([0,phi_edges[1]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[4])
+        plt.polar([0,phi_edges[2]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[3])
+    
+    plt.title(f'Bundle_No {bundle_no}: s{analysis_params_general.slice_type}c{analysis_params_general.center_type}')
+
+    if(is_save):
+        plt.ioff()
+        folder_name = img_name
+        subfolder1 = 'Angle_Plot'
+        subfolder2 = f'slice_type_{analysis_params_general.slice_type}_center_type_{analysis_params_general.center_type}'
+        figure_name = f'bundle_no_{bundle_no}_s{analysis_params_general.slice_type}c{analysis_params_general.center_type}.tif'
+
+        my_help.check_dir(os.path.join(paths.fig_out_prefix))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
+        my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
+        plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), bbox_inches='tight')
+    else:
+        plt.show()
+    
+    return fig
+
+def plot_slicing_options(phis_1, phis_2, phi_edges_1, phi_edges_2, bundle_no):
+    ### params
+    paths = settings.paths
+    matching_info = settings.matching_info
+    analysis_params_general = settings.analysis_params_general
+
+    ### figure
+    fig = plt.figure(figsize = (10, 5), constrained_layout=True, facecolor="1")
+    sns.set_style("white")
+
+    ## set-up font sizes
+    SMALL_SIZE = 12
+    MEDIUM_SIZE = 14
+    BIGGER_SIZE = 16
+    plt.rc('font', size=SMALL_SIZE)         # controls default text sizes
+    plt.rc('axes', titlesize=BIGGER_SIZE)   # fontsize of the axes title
+    plt.rc('axes', labelsize=MEDIUM_SIZE)   # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
+    plt.rc('ytick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
+    plt.rc('legend', fontsize=MEDIUM_SIZE)  # legend fontsize
+    plt.rc('figure', titlesize=BIGGER_SIZE) # fontsize of the figure title
+
+    gs = fig.add_gridspec(1,2)
+    ###
+    ax = fig.add_subplot(gs[0, 0], projection='polar')
+
+    number = len(phis_1)
+    cmap = plt.get_cmap('PuBu')
+    colors = [cmap(i) for i in np.linspace(0, 1, number)]
+
+    for i, color in enumerate(colors, start=0):
+        ax.plot(phis_1[i], 1, 'o', color = color)
+    ax.plot([0, phis_1[0]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[7])
+    ax.plot([0, phis_1[-1]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[3])
+    ax.plot([0,phi_edges_1[0]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[7])
+    ax.plot([0,phi_edges_1[1]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[3])
+
+    ###
+    ax = fig.add_subplot(gs[0, 1], projection='polar')
+
+    number = len(phis_1)
+    cmap = plt.get_cmap('PuBu')
+    colors = [cmap(i) for i in np.linspace(0, 1, number)]
+
+    for i, color in enumerate(colors, start=0):
+        ax.plot(phis_2[i], 1, 'o', color = color)
+    ax.plot([0, phis_2[0]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[7])
+    ax.plot([0, phis_2[-1]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[3])
+    ax.plot([0,phi_edges_2[0]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[7])
+    ax.plot([0,phi_edges_2[1]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[4])
+    ax.plot([0,phi_edges_2[2]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[3])
+
+    fig.suptitle(f'Bundle_No {bundle_no}')
+
 
 
 def plot_bundle_vs_matrix_all(bundle_no, bundles_df, image, intensity_matrix, fig_params, tick_params, plot_options, **kwarg):
