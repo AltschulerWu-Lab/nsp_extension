@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: sf942274
 # @Date:   2019-07-15 04:32:53
-# @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-31 16:18:36
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-04-01 07:31:18
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -29,7 +29,8 @@ from sklearn import linear_model, metrics
 
 ### include folders with additional functions
 # sys.path.insert(0, '/Volumes/Project/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
-module_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
+# module_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
+module_path = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions'
 sys.path.insert(0, module_path)
 # sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions')
 
@@ -158,9 +159,9 @@ def process_image(image, image_shape):
 		image_norm[:,:,:,6] = exposure.rescale_intensity(r3_img, in_range = 'image', out_range='dtype')
 		# image_norm[:,:,:,6] = image_norm[:,:,:,0]
 
-		# del r3_img, r4_img, gfp, gfp_thr
+		del r3_img, r4_img, gfp, gfp_thr
 
-	elif(matching_info.channels_type == 'R3R4'):
+	elif(matching_info.channels_type == 'FasII'):
 		# RFP_norm
 		image_norm[:,:,:,0] = exposure.rescale_intensity(image[:,:,:,0], in_range = 'image', out_range='dtype')
 		# GFP_norm
@@ -179,9 +180,11 @@ def process_image(image, image_shape):
 		image_norm[:,:,:,4] = exposure.rescale_intensity(image_norm[:,:,:,1] * fasii_thr, in_range = 'image', out_range='dtype')
 		
 		del fasii_thr
+
 	else:
 		print('ERROR! Please specify which channel type!')
 		my_help.print_to_log("ERROR! Please specify which channel type!")
+	
 	return image_norm
 
 
