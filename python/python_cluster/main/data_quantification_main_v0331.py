@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
-# @Author: sf942274
-# @Date:   2019-07-15 04:32:53
-<<<<<<< HEAD
-# @Last Modified by:   sf942274
-# @Last Modified time: 2020-04-01 07:31:18
-=======
+# @Author: Weiyue Ji
+# @Date:   2020-04-01 07:43:20
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-04-01 07:08:37
->>>>>>> 3cb4bd69183213d3028553b8e7ae151db6d8ba31
+# @Last Modified time: 2020-04-01 10:51:34
+
 
 import io, os, sys, types, pickle, datetime, time
 
