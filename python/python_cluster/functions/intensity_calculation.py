@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-04-01 06:22:51
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-04-01 08:36:02
 
 
 import io, os, sys, types
@@ -387,3 +387,50 @@ def get_slice_params_v3(bundles_df, bundle_params, img_name, **kwarg):
             return params, rel_points, fig
         else:
             return params, rel_points
+
+def get_intensity_matrix_new(params, image, channel, channel_mapping):
+    z_max = image.shape[0]
+    z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius = params
+
+    intensity_matrix = np.zeros((len(phis), num_x_section + 1, z_offset*2+1))
+    intensity_matrix = intensity_matrix - 100
+    Z_values = np.linspace((r_z-z_offset), (r_z+z_offset), z_offset*2+1).astype(int)
+
+
+    matrix_shape = image[0,:,:,channel_mapping[channel]].shape
+    xs = np.zeros((len(phis), num_x_section + 1))
+    ys = np.zeros((len(phis), num_x_section + 1))
+    for phi in phis:
+        i = int(np.argwhere(phis == phi))
+        circleY = radius * np.sin(phi) + center_point[1]
+        circleX = radius * np.cos(phi) + center_point[0]
+
+        xs[i,:] = np.linspace(center_point[0], circleX, num_x_section + 1)
+        ys[i,:] = (xs[i,:] - center_point[0]) * np.tan(phi) + center_point[1]
+    
+    xbound = np.array(range(int(np.floor(np.min(xs))), int(np.ceil(np.max(xs)+1))))
+    ybound = np.array(range(int(np.floor(np.min(ys))), int(np.ceil(np.max(ys)+1))))
+
+    vy, vx = np.meshgrid(ybound, xbound)
+
+    vxf = vx.flatten()
+    vyf = vy.flatten()
+
+    # print(np.max(vyf), np.max(vxf))
+    # print(matrix_shape)
+
+    if((np.max(vxf) > matrix_shape[1]) | (np.max(vyf) > matrix_shape[0]) | (np.min(vxf) < 0) | (np.min(vyf) < 0)):
+        print_content = f'vx_max = {np.max(vxf)}, vy_max = {np.max(vyf)}; xboundary = {matrix_shape[1]}, yboundary = {matrix_shape[0]}'
+        print(print_content)
+        print("Error! Too close to the boundary!")
+    else:
+        for z in Z_values:
+            if((z >= 0) & (z < z_max)):
+                imageMatrix = image[z,:,:,channel_mapping[channel]]
+                matrix_shape = imageMatrix.shape
+                gridded = interpolate.griddata(np.column_stack((vxf, vyf)), imageMatrix[vy,vx].flatten(), (xs, ys), method='linear')
+                intensity_matrix[:,:,z - r_z-z_offset] = gridded
+            else:
+                print("not enough Z!")
+        
+    return intensity_matrix
