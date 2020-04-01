@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2020-03-27 15:06:33
-# @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-31 04:13:20
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-04-01 08:38:43
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -12,7 +12,7 @@ global paths, analysis_params_general, matching_info
 class Paths:
 	def __init__(self, env, names):
 		### unpack parameters
-		fig_out_folder, data_out_folder, annot_name = names
+		fig_out_folder, data_out_folder, annot_name, channels_type = names
 
 		### initialization
 		image_folder = 'Images'
@@ -56,7 +56,7 @@ class Paths:
 			self.code_path = 'W:\\2019_09_NSP_Extension\\code\\NSP_codes\\python_cluster\\functions'
 
 		### paths
-		log_name = f'{annot_name_sub}_s{input_list[4]}c{input_list[5]}_log_v{date_info}.txt'
+		log_name = f'{annot_name_sub}_s{input_list[4]}c{input_list[5]}_{channels_type}_log_v{date_info}.txt'
 		cat_name = annot_name_sub.split('_')[0]
 		time_name = annot_name_sub.split('_')[1][:2]
 
@@ -207,7 +207,7 @@ input_list = input_str.split(', ')
 print(input_str)
 
 ### get paths class
-names = [input_list[1], input_list[2], input_list[3]]
+names = [input_list[1], input_list[2], input_list[3], input_list[11]]
 paths = Paths(input_list[0], names)
 
 ### get indexing class
