@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   sf942274
-# @Last Modified time: 2020-04-01 08:36:02
+# @Last Modified by:   Weiyue Ji
+# @Last Modified time: 2020-04-01 11:44:41
 
 
 import io, os, sys, types
@@ -388,7 +388,14 @@ def get_slice_params_v3(bundles_df, bundle_params, img_name, **kwarg):
         else:
             return params, rel_points
 
-def get_intensity_matrix_new(params, image, channel, channel_mapping):
+def get_intensity_matrix_new(params, image):
+    ### decomposite parameters.
+    # analysis_params_general = settings.analysis_params_general
+    # radius_expanse_ratio = analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type]
+    # target_id_to_index = settings.matching_info.target_id_to_index
+    # channel_mapping = settings.matching_info.channel_mapping
+
+
     z_max = image.shape[0]
     z_offset, num_x_section, r_z, phis, center_point, y_ticks, radius = params
 
@@ -397,7 +404,7 @@ def get_intensity_matrix_new(params, image, channel, channel_mapping):
     Z_values = np.linspace((r_z-z_offset), (r_z+z_offset), z_offset*2+1).astype(int)
 
 
-    matrix_shape = image[0,:,:,channel_mapping[channel]].shape
+    matrix_shape = image[0,:,:,].shape
     xs = np.zeros((len(phis), num_x_section + 1))
     ys = np.zeros((len(phis), num_x_section + 1))
     for phi in phis:
@@ -426,7 +433,7 @@ def get_intensity_matrix_new(params, image, channel, channel_mapping):
     else:
         for z in Z_values:
             if((z >= 0) & (z < z_max)):
-                imageMatrix = image[z,:,:,channel_mapping[channel]]
+                imageMatrix = image[z,:,:]
                 matrix_shape = imageMatrix.shape
                 gridded = interpolate.griddata(np.column_stack((vxf, vyf)), imageMatrix[vy,vx].flatten(), (xs, ys), method='linear')
                 intensity_matrix[:,:,z - r_z-z_offset] = gridded
