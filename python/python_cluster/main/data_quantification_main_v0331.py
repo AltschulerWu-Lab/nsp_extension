@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: sf942274
 # @Date:   2020-04-01 08:09:19
-# @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-04-01 11:37:15
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-04-01 20:25:13
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -29,8 +29,8 @@ from sklearn import linear_model, metrics
 
 ### include folders with additional functions
 # sys.path.insert(0, '/Volumes/Project/2019_09_NSP_Extension/code/NSP_codes/python_cluster/helper_functions')
-module_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
-# module_path = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions'
+# module_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
+module_path = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions'
 sys.path.insert(0, module_path)
 # sys.path.insert(0, '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions')
 
