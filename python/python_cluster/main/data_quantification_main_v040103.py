@@ -2,7 +2,7 @@
 # @Author: sf942274
 # @Date:   2020-04-01 08:09:19
 # @Last Modified by:   sf942274
-# @Last Modified time: 2020-04-05 04:31:00
+# @Last Modified time: 2020-04-05 04:29:18
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -207,10 +207,10 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 	num_norm_channels = image_norm.shape[-1]
 
 	ind_part = int(len(annot_bundles_df)/3)
-	print(f'Bundle Nos: {annot_bundles_df.index[ind_part:ind_part*2].tolist()}')
-	my_help.print_to_log(f'Bundle Nos: {annot_bundles_df.index[ind_part:ind_part*2].tolist()}\n')
+	print(f'Bundle Nos: {annot_bundles_df.index[ind_part*2:].tolist()}')
+	my_help.print_to_log(f'Bundle Nos: {annot_bundles_df.index[ind_part*2:].tolist()}\n')
 	
-	intensity_matrix = np.zeros((len(annot_bundles_df.index[ind_part:ind_part*2]), num_norm_channels, matrix_y, matrix_x, matrix_z))
+	intensity_matrix = np.zeros((len(annot_bundles_df.index[ind_part*2:]), num_norm_channels, matrix_y, matrix_x, matrix_z))
 	intensity_matrix = intensity_matrix - 100
 	
 	params = [];
@@ -234,7 +234,7 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 
 	### process
 	
-	for ind, bundle_no in enumerate(annot_bundles_df.index[ind_part:ind_part*2]):
+	for ind, bundle_no in enumerate(annot_bundles_df.index[ind_part*2:]):
 		print(f'Bundle No {bundle_no}: ', end = " ")
 		my_help.print_to_log(f'Bundle No {bundle_no}: ')
 
@@ -309,7 +309,7 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 	num_norm_channels = image_norm.shape[-1]
 	ind_part = int(len(annot_bundles_df)/3)
 	
-	for ind, bundle_no in enumerate(annot_bundles_df.index[ind_part:ind_part*2]):
+	for ind, bundle_no in enumerate(annot_bundles_df.index[ind_part*2:]):
 		print(f'Bundle No {bundle_no}:', end = " ")
 		my_help.print_to_log(f'Bundle No: {bundle_no}: ')
 
@@ -402,7 +402,7 @@ def save_results(annot_bundles_df, intensity_matrix, params, rel_points):
 		'intensity_matrix': intensity_matrix,
 		'parameter': params,
 		'relativePositions': rel_points,
-		'bundle_nos':list(annot_bundles_df.index[ind_part:ind_part*2]),	
+		'bundle_nos':list(annot_bundles_df.index[ind_part*2:]),	
 	}
 
 	now = datetime.datetime.now()

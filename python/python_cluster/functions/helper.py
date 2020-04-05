@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-03-31 02:43:12
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-04-05 04:31:23
 
 
 
@@ -44,7 +44,7 @@ def print_to_log(info):
     else:
         log_file = open(path, "w+")
 
-    log_file.write(info + '\n')
+    log_file.write(info)
     log_file.close()
 
 

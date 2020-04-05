@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
-# @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-04-01 11:44:41
+# @Last Modified by:   sf942274
+# @Last Modified time: 2020-04-05 04:22:47
 
 
 import io, os, sys, types
@@ -428,8 +428,11 @@ def get_intensity_matrix_new(params, image):
 
     if((np.max(vxf) > matrix_shape[1]) | (np.max(vyf) > matrix_shape[0]) | (np.min(vxf) < 0) | (np.min(vyf) < 0)):
         print_content = f'vx_max = {np.max(vxf)}, vy_max = {np.max(vyf)}; xboundary = {matrix_shape[1]}, yboundary = {matrix_shape[0]}'
+        print("ERROR! Too close to the boundary:", end = " ")
         print(print_content)
-        print("Error! Too close to the boundary!")
+        my_help.print_to_log("ERROR! Too close to the boundary: ")
+        my_help.print_to_log(print_content)
+        my_help.print_to_log("\n")
     else:
         for z in Z_values:
             if((z >= 0) & (z < z_max)):
@@ -438,6 +441,7 @@ def get_intensity_matrix_new(params, image):
                 gridded = interpolate.griddata(np.column_stack((vxf, vyf)), imageMatrix[vy,vx].flatten(), (xs, ys), method='linear')
                 intensity_matrix[:,:,z - r_z-z_offset] = gridded
             else:
-                print("not enough Z!")
+                print("ERROR! not enough Z!")
+                my_help.print_to_log("ERROR! not enough Z!\n")
         
     return intensity_matrix
