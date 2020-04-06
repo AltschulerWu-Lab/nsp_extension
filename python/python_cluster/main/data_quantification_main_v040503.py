@@ -2,7 +2,7 @@
 # @Author: sf942274
 # @Date:   2020-04-01 08:09:19
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-04-05 10:15:46
+# @Last Modified time: 2020-04-05 19:41:46
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -28,8 +28,8 @@ from skimage import exposure, img_as_float, filters, morphology, transform
 from sklearn import linear_model, metrics
 
 ### include folders with additional functions
-# module_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
-module_path = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions'
+module_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
+# module_path = '/awlab/projects/2019_09_NSP_Extension/code/NSP_extension/python/python_cluster/functions'
 sys.path.insert(0, module_path)
 
 import settings as settings
@@ -206,7 +206,7 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 	matrix_z = analysis_params_general.z_offset * 2 + 1
 	num_norm_channels = image_norm.shape[-1]
 
-	ind_part = int(len(annot_bundles_df)/3)
+	ind_part = int(len(annot_bundles_df.index))
 	print(f'Bundle Nos: {annot_bundles_df.index[:ind_part].tolist()}')
 	my_help.print_to_log(f'Bundle Nos: {annot_bundles_df.index[:ind_part].tolist()}\n')
 	
@@ -233,7 +233,6 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 	my_help.print_to_log(f"total time: {time_dur}\n")
 
 	### process
-	
 	for ind, bundle_no in enumerate(annot_bundles_df.index[:ind_part]):
 		print(f'Bundle No {bundle_no}: ', end = " ")
 		my_help.print_to_log(f'Bundle No {bundle_no}: ')
@@ -260,7 +259,6 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name):
 		### get slicing params and calculate matrix
 		center_type = settings.analysis_params_general.center_type
 		slice_type = settings.analysis_params_general.slice_type
-
 		bundle_params = [
 			bundle_no, 
 			ind_targets, 
@@ -307,7 +305,7 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 	analysis_params_general = settings.analysis_params_general
 	matching_info = settings.matching_info
 	num_norm_channels = image_norm.shape[-1]
-	ind_part = int(len(annot_bundles_df)/3)
+	ind_part = int(len(annot_bundles_df.index))
 	
 	for ind, bundle_no in enumerate(annot_bundles_df.index[:ind_part]):
 		print(f'Bundle No {bundle_no}:', end = " ")
@@ -316,7 +314,6 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 		category_id = annot_bundles_df.iloc[0]['CategoryID']
 		sample_id = annot_bundles_df.iloc[0]['SampleID']
 		region_id = annot_bundles_df.iloc[0]['RegionID']
-
 
 
 		### targets info
@@ -330,47 +327,49 @@ def produce_figures(bundles_df, annot_bundles_df, intensity_matrix, params, rel_
 		pp_i = params[ind]
 		rel_points_i = rel_points[ind]
 
-		if(sum(np.all(intensity_matrix[ind, :, :, :, :] == -100, axis = 0)[2].flatten()) == 0):
-		    ## heat map
-		    print("HeatMap:", end = " ")
-		    my_help.print_to_log("HeatMap: ")
-		    plt.ioff()
-		    ori_x = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], intensity_matrix[ind, :, :, :, :].shape[2]), 2)
-		    tick_params = [2, 1, ori_x, 21] ### tickTypeX, tickTypeY, tickArg2_X, tickArg2_Y
-		    
-		    for thr_function_ids in [0, 1, 2]: # different thresholding methods
-		        print(f'thr{thr_function_ids}:', end = " ")
-		        my_help.print_to_log(f'thr{thr_function_ids}: ')
-		        
-		        thrs = np.zeros((num_norm_channels))
-		        if(thr_function_ids == 0):
-		            thrs = np.zeros((num_norm_channels))
-		        elif(thr_function_ids == 1):
-		            thrs = thr_otsu
-		        elif(thr_function_ids == 2):
-		            thrs = thr_li
-		        # elif(thr_function_ids == 3):
-		        #   thrs = thr_isodata
+		matrix = my_help.delete_zero_columns(intensity_matrix[ind, :, :, :, :], -100, 3)
+		# if(sum(np.all(intensity_matrix[ind, :, :, :, :] == -100, axis = 0)[2].flatten()) == 0):
+		if(len(matrix.flatten()) > 0):
+			## heat map
+			print("HeatMap:", end = " ")
+			my_help.print_to_log("HeatMap: ")
+			plt.ioff()
+			ori_x = np.round(np.linspace(0, analysis_params_general.radius_expanse_ratio[analysis_params_general.center_type], matrix.shape[2]), 2)
+			tick_params = [2, 1, ori_x, 21] ### tickTypeX, tickTypeY, tickArg2_X, tickArg2_Y
+			
+			for thr_function_ids in [0, 1, 2]: # different thresholding methods
+				print(f'thr{thr_function_ids}:', end = " ")
+				my_help.print_to_log(f'thr{thr_function_ids}: ')
+				
+				thrs = np.zeros((num_norm_channels))
+				if(thr_function_ids == 0):
+					thrs = np.zeros((num_norm_channels))
+				elif(thr_function_ids == 1):
+					thrs = thr_otsu
+				elif(thr_function_ids == 2):
+					thrs = thr_li
+				# elif(thr_function_ids == 3):
+				#   thrs = thr_isodata
 
-		        fig_name = f'{category_id}_s{sample_id}r{region_id}_{matching_info.channels_type}_bundle_no_{bundle_no}_{thr_function_ids}.png'
-		        fig_params = [pp_i, img_name, fig_name]
-		        plot_options = [thrs, thr_function_ids, num_norm_channels]
-		        fig = my_plot.plot_bundle_vs_matrix_all(bundle_no, bundles_df, image_norm, intensity_matrix[ind, :, :, :, :], fig_params, tick_params, plot_options, is_label_off = True, is_save = True, is_true_x_tick = True, is_ori_tick = False)
-		        plt.close(fig)
-		        
+				fig_name = f'{category_id}_s{sample_id}r{region_id}_{matching_info.channels_type}_bundle_no_{bundle_no}_{thr_function_ids}.png'
+				fig_params = [pp_i, img_name, fig_name]
+				plot_options = [thrs, thr_function_ids, num_norm_channels]
+				fig = my_plot.plot_bundle_vs_matrix_all(bundle_no, bundles_df, image_norm, matrix, fig_params, tick_params, plot_options, is_label_off = True, is_save = True, is_true_x_tick = True, is_ori_tick = False)
+				plt.close(fig)
+				
 
-		    # polar plot
-		    fig_params = [pp_i, img_name]
-		    # # plot_options = [True, True] # isLabelOff, isSave
-		    print("; Polar: channels", end = " ")
-		    my_help.print_to_log("; Polar: channels")
-		    for channel_no in range(num_norm_channels):
-		        fig = my_plot.plot_polar_new(bundle_no, bundles_df, image_norm, channel_no, intensity_matrix[ind, :, :, :, :], fig_params, rel_points_i, is_label_off = True, is_save = True, is_extended_target = True)
-		        plt.close(fig)
-		        print(f'{channel_no}-', end = " ")
-		        my_help.print_to_log(f'{channel_no}-')
-	    print("\n")
-	    my_help.print_to_log("\n")
+			# polar plot
+			fig_params = [pp_i, img_name]
+			# # plot_options = [True, True] # isLabelOff, isSave
+			print("; Polar: channels", end = " ")
+			my_help.print_to_log("; Polar: channels")
+			for channel_no in range(num_norm_channels):
+				fig = my_plot.plot_polar_new(bundle_no, bundles_df, image_norm, channel_no, matrix, fig_params, rel_points_i, is_label_off = True, is_save = True, is_extended_target = True)
+				plt.close(fig)
+				print(f'{channel_no}-', end = " ")
+				my_help.print_to_log(f'{channel_no}-')
+			print("\n")
+			my_help.print_to_log("\n")
 
 		else:
 			print("error! No intensity matrix calculated!")
@@ -392,7 +391,7 @@ def save_results(annot_bundles_df, intensity_matrix, params, rel_points):
 	sample_id = annot_bundles_df.iloc[0]['SampleID']
 	region_id = annot_bundles_df.iloc[0]['RegionID']
 	channels_type = matching_info.channels_type
-	ind_part = int(len(annot_bundles_df)/3)
+	ind_part = int(len(annot_bundles_df.index))
 
 	output_data = {
 		'category_ID' : category_id,
