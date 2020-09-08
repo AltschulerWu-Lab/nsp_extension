@@ -3,7 +3,7 @@ This repository contains data analysis codes for manuscript "On the role of phot
 
 ## Contents
 ### image_preprocessing
-This folder contains ImageJ macro scripts to batch process images obtained from Nikon confocal images. Processing contains format transformation (from .nd2 to .tif) and background subtraction.
+This folder contains ImageJ macro scripts to batch process images obtained from Nikon confocal images. Processing include format change (from .nd2 to .tif) and background subtraction.
 
 ### image_quantification
 This folder contains python scripts to transform annotated images using the standardized coordinate system described in the manuscript.
