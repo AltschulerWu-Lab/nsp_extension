@@ -8,5 +8,5 @@ This folder contains ImageJ macro scripts to batch process images obtained from 
 ### image_quantification
 This folder contains python scripts to transform annotated images using the standardized coordinate system described in the manuscript.
 
-### generate_figures
+### figure_generation
 This folder contains python scripts and a jupyter notebook to generate figures in the manuscript.
