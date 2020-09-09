@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: Weiyue Ji
 # @Date:   2020-03-27 15:06:33
-# @Last Modified by:   sf942274
-# @Last Modified time: 2020-08-10 02:56:37
+# @Last Modified by:   Weiyue Ji
+# @Last Modified time: 2020-09-09 01:24:53
 
 import io, os, sys, types, pickle, datetime, time
 
@@ -29,7 +29,7 @@ class Paths:
 		fig_out_folder, data_out_folder, annot_name, channels_type = names
 
 		### initialization
-		image_folder = 'Images_new'
+		image_folder = 'Images'
 		roi_folder = 'ROIs'
 		annot_folder = 'Annotations'
 
@@ -66,6 +66,13 @@ class Paths:
 			self.log_prefix = 'W:\\2019_09_NSP_Extension\\code\\NSP_extension\\python\\python_cluster\\logs'
 			self.code_path = 'W:\\2019_09_NSP_Extension\\code\\NSP_extension\\python\\python_cluster\\functions'
 
+		elif(env == 'Github'):
+			# example image on github.
+			self.data_prefix = os.path.join(os.path.dirname(os.getcwd()), 'data_example')
+			self.output_prefix = os.path.join(os.path.dirname(os.getcwd()), 'output_example')
+			self.log_prefix = os.path.join(os.path.dirname(os.getcwd()), 'logs')
+			self.code_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
+
 		### paths
 		now = datetime.datetime.now()
 		date_info=f'{now.year}_{now.month}_{now.day}_{now.hour}{now.minute}{now.second}'
@@ -79,7 +86,7 @@ class Paths:
 		self.log_path = os.path.join(self.log_prefix, log_name)
 		self.image_path = os.path.join(self.data_prefix, image_folder)
 		self.roi_path = os.path.join(self.data_prefix, roi_folder)
-		self.annot_path = os.path.join(self.data_prefix, annot_folder, cat_name, time_name, annot_name)
+		self.annot_path = os.path.join(self.data_prefix, annot_folder, annot_name)
 		self.fig_out_prefix = os.path.join(self.output_prefix, fig_out_folder)
 		self.data_out_prefix = os.path.join(self.output_prefix, data_out_folder)
 		self.annot_name = annot_name
@@ -87,7 +94,12 @@ class Paths:
 ### class that stores indexing and color coding set-ups that are universal.
 class MatchingInfo:
 	def __init__(self, channels_type):
+		# type of channels info.
+		# R3R4: calculate density map of R3 and R4s
+		# checking: checking raw images.
 		self.channels_type = channels_type
+		
+		# dic{target array index : target ID}
 		self.index_to_target_id = {
 			0:0, 
 			1:2, 
@@ -95,7 +107,9 @@ class MatchingInfo:
 			3:4, 
 			4:5, 
 			5:7
-		} # dic{index : target ID}
+		} 
+		
+		# dic{target ID : target array index}
 		self.target_id_to_index = {
 			0:0, 
 			2:1, 
@@ -103,7 +117,9 @@ class MatchingInfo:
 			4:3, 
 			5:4, 
 			7:5
-		} # dic{target ID : index}
+		} 
+
+		# dic{target ID : color code}
 		self.color_code = {
 			1: '#00FFFF', 
 			2: '#1FF509', 
@@ -113,52 +129,19 @@ class MatchingInfo:
 			6: '#FFAE01', 
 			7: '#FF7C80', 
 			0: '#FFFFFF'
-		} # dic{color code for each R and target ID}
+		}
+
+		# name of channels for each channels_type
 		if(channels_type == 'R3R4'):
 			self.channel_mapping = {
 				'RFP':0, 
 				'GFP':1, 
-				'R3_1':2, 
-				'R4_1':3, 
-				'R3_2':4, 
-				'R4_2':5, 
-				'R3_3': 6,
 				0:'RFP', 
 				1:'GFP', 
-				2:'R3_1', 
-				3:'R4_1', 
-				4:'R3_2', 
-				5:'R4_2', 
-				6:'R3_3',
 			} 
 			self.channel_cmap = {
 				0:'Reds', 
 				1:'Greens', 
-				2:'Reds', 
-				3:'Greens', 
-				4:'Reds', 
-				5:'Greens', 
-				6:'Reds',
-			}
-		elif(channels_type == 'FasII'):
-			self.channel_mapping = {
-				'RFP':0,
-				'GFP':1,
-				'FasII':2,
-				'R3_FasII':3,
-				'R4_FasII':4,
-				0:'RFP',
-				1:'GFP',
-				2:'FasII',
-				3:'R3_FasII',
-				4:'R4_FasII'
-			}
-			self.channel_cmap = {
-				0:'Reds', 
-				1:'Greens', 
-				2:'Blues', 
-				3:'Reds', 
-				4:'Greens', 
 			}
 		elif(channels_type == 'checking'):
 			self.channel_mapping = {
@@ -174,18 +157,15 @@ class MatchingInfo:
 				3:'Blues', 
 			}
 
-
 ### class that stores parameters for analysis
 class GeneralParams:
 	def __init__(self, input_list):
 		self.slice_type = int(input_list[4])
-		self.center_type = int(input_list[5])
-		self.num_angle_section = int(input_list[6])
-		self.num_outside_angle = int(input_list[7])
-		self.num_x_section = int(input_list[8])
-		self.z_offset = int(input_list[9])
-		self.scale_factor = float(input_list[10])
-		self.radius_expanse_ratio = [3, 3.8]
+		self.num_angle_section = int(input_list[5])
+		self.num_outside_angle = int(input_list[6])
+		self.num_x_section = int(input_list[7])
+		self.z_offset = int(input_list[8])
+		self.radius_expanse_ratio = 3
 
 	def add_col_params(self, dic):
 		if not hasattr(self, 'col_params'):
@@ -210,24 +190,22 @@ class GeneralParams:
 # data_out_folder = input_list[2]
 # annot_name = input_list[3]
 # slice_type = input_list[4]
-# center_type = input_list[5]
-# num_angle_section = input_list[6]
-# num_outside_angle = input_list[7]
-# num_x_section = input_list[8]
-# z_offset = input_list[9]
-# scale_factor = int(input_list[10])
-# channels_type = input[11]
-# example of an input: Windows, Data_Output, Figure_Output, Fz_26hrs_Gal80_s5r1_annotation.csv, 0, 1, 10, 5, 10, 10, 1, FasII
+# num_angle_section = input_list[5]
+# num_outside_angle = input_list[6]
+# num_x_section = input_list[7]
+# z_offset = input_list[8]
+# channels_type = input[9]
+# example of an input: Github, Figure_Output, Data_Output, Ctrl_26hrs_Gal80_s1r1_example.csv, 1, 10, 5, 10, 10, R3R4
 input_str = input()
 input_list = input_str.split(', ')
 print(input_str)
 
 ### get paths class
-names = [input_list[1], input_list[2], input_list[3], input_list[11]]
+names = [input_list[1], input_list[2], input_list[3], input_list[9]]
 paths = Paths(input_list[0], names)
 
 ### get indexing class
-matching_info = MatchingInfo(input_list[11])
+matching_info = MatchingInfo(input_list[9])
 
 ### get analysis parameters
 analysis_params_general = GeneralParams(input_list)
