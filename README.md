@@ -1,4 +1,4 @@
-# Extension Rule of Neural Superposition
+# On the role of photoreceptor identify in controlling accurate wiring of the Drosophila visual circuit
 This repository contains data analysis codes for manuscript "On the role of photoreceptor identify in controlling accurate wiring of the Drosophila visual circuit"
 
 ## Contents
