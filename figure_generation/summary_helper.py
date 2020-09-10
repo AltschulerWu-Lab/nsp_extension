@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-09-09 04:01:25
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-09 13:19:11
+# @Last Modified time: 2020-09-09 21:00:59
 
 import io, os, sys, types, datetime, pickle, warnings
 
@@ -640,13 +640,13 @@ def fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, 
 
 
 ### processing summary_df with calculation of mutual repulsion
-def process_sum_df_mr(sum_df_old, annots_df, outputs):
+def process_sum_df_mr(sum_df_old, annots_df, rel_poses):
 	"""
 	Function: process summary_df with calculation of mutual repulsion
 	Inputs:
 	- sum_df_old: DataFrame. Imported angle and length csv file.
 	- annots_df: DataFrame. Imported annotation csv file.
-	- outputs: Dictionary. Imported output pickle files from image quantification process.
+	- rel_poses: Dictionary. Relative position info from the image quantification process.
 	Output:
 	- sum_df: DataFrame. Combined annotation and angle/length info.
 	"""
@@ -670,10 +670,10 @@ def process_sum_df_mr(sum_df_old, annots_df, outputs):
 	sum_df_group = sum_df.groupby(['TimeID', 'SampleID'])
 
 	### process each sample
-	for key in outputs.keys():
+	for key in rel_poses.keys():
 		timeID = key[0]
 		sampleID = key[1]
-		rel_pos = outputs[key]['relative_positions']
+		rel_pos = rel_poses[key]
 		print(f"{timeID}_hrs_sample_{sampleID}", end = ", ")
 
 		if((timeID, sampleID) not in sum_df_group.groups):
@@ -814,13 +814,13 @@ def process_sum_df_mr(sum_df_old, annots_df, outputs):
 
 
 ### processing summary_df without calculation of mutual repulsion
-def process_sum_df(sum_df_old, annots_df, outputs):
+def process_sum_df(sum_df_old, annots_df, rel_poses):
 	"""
 	Function: process summary_df without calculation of mutual repulsion
 	Inputs:
 	- sum_df_old: DataFrame. Imported angle and length csv file.
 	- annots_df: DataFrame. Imported annotation csv file.
-	- outputs: Dictionary. Imported output pickle files from image quantification process.
+	- rel_poses: Dictionary. Relative position info from the image quantification process.
 	Output:
 	- sum_df: DataFrame. Combined annotation and angle/length info.
 	"""
@@ -844,10 +844,10 @@ def process_sum_df(sum_df_old, annots_df, outputs):
 	sum_df_group = sum_df.groupby(['TimeID', 'SampleID'])
 
 	### process each sample
-	for key in outputs.keys():
+	for key in rel_poses.keys():
 		timeID = key[0]
 		sampleID = key[1]
-		rel_pos = outputs[key]['relative_positions']
+		rel_pos = rel_poses[key]
 		print(f"{timeID}_hrs_sample_{sampleID}", end = ", ")
 
 		if((timeID, sampleID) not in sum_df_group.groups):
@@ -1246,9 +1246,9 @@ def plot_polar_density(matrix, channel_no, rel_points, analysis_params, **kwargs
 		ax2.set_xticks(ticks = [-phi_unit, 0, phi_unit])
 		ax2.set_xticklabels(labels = [1, 0, -1])
 	if(channel_no == 0):
-		ax2.set_title('R3 or R4')
+		ax2.set_title('R3 or R4', fontsize = 30)
 	elif(channel_no == 1):
-		ax2.set_title('R4')
+		ax2.set_title('R4', fontsize = 30)
 
 	#### color bar for polar plot
 	cNorm = matplotlib.colors.Normalize(vmin=0, vmax=vmax)   #-- Defining a normalised scale
@@ -1263,7 +1263,7 @@ def plot_polar_density(matrix, channel_no, rel_points, analysis_params, **kwargs
 	return fig
 
 ### generate figure.
-def generate_density_plot_figure(bundle_no, output_data, **kwargs):
+def generate_density_plot_figure(output_data, **kwargs):
 	### unravel params
 	paths = settings.paths
 
@@ -1274,7 +1274,7 @@ def generate_density_plot_figure(bundle_no, output_data, **kwargs):
 	if('fig_format' in kwargs.keys()):
 		fig_format = kwargs['fig_format']
 	else:
-		fig_format = 'png'
+		fig_format = 'svg'
 	if('fig_res' in kwargs.keys()):
 		fig_res = kwargs['fig_res']
 	else:
@@ -1285,17 +1285,20 @@ def generate_density_plot_figure(bundle_no, output_data, **kwargs):
 		channels = ['GFP', 'RFP']
 	
 	
-	rel_points = output_data['relative_positions'][bundle_no]
-	ind = output_data['bundle_nos'].index(bundle_no)
-	matrix = output_data['intensity_matrix'][ind,:,:,:,:]
+	rel_points = output_data['relative_positions']
+	matrix = output_data['intensity_matrix']
 	category = output_data['category_ID']
-	region_id = output_data['region_ID']
+	fig_id = output_data['figure_ID']
+	time_id = output_data['time_ID']
+	bundle_type = output_data['bundle_type']
+	
+
 	
 	num_angle_section = output_data['analysis_params_general'].num_angle_section
 	num_outside_angle = output_data['analysis_params_general'].num_outside_angle
 	radius_expanse_ratio = output_data['analysis_params_general'].radius_expanse_ratio[1]
-	num_x_section = output_data['parameter'][0][1]
-	z_offset = output_data['parameter'][0]
+	num_x_section = output_data['analysis_params_general'].num_x_section
+	z_offset = output_data['analysis_params_general'].z_offset
 
 	analysis_params = (num_angle_section, 
 					   num_outside_angle, 
@@ -1331,7 +1334,7 @@ def generate_density_plot_figure(bundle_no, output_data, **kwargs):
 			name = kwargs['fig_name']
 			fig_name = f'{name}_{channel}_density_plot.{fig_format}'
 		else:
-			fig_name = f'{category}_{time_id}hrs_s{sample_id}r{region_id}_bundle{bundle_no}_{channel}_density_plot.{fig_format}'
+			fig_name = f'{fig_id}_{category}_{time_id}hrs_{bundle_type}_{channel}_density_plot.{fig_format}'
 
 		if not (np.isnan(vmax)):
 			fig = plot_polar_density(matrix, channel_no, rel_points, 
@@ -1406,7 +1409,7 @@ def generate_summary_polar_figure(plot_df, pert_info, **kwargs):
 	if('fig_format' in kwargs.keys()):
 		fig_format = kwargs['fig_format']
 	else:
-		fig_format = 'png'
+		fig_format = 'svg'
 	if('fig_res' in kwargs.keys()):
 		fig_res = kwargs['fig_res']
 	else:
@@ -1565,7 +1568,7 @@ def mutual_repulsion_regression_plot(sum_df_ctrl_final, annots_df_ctrl, **kwargs
 	if('fig_format' in kwargs.keys()):
 		fig_format = kwargs['fig_format']
 	else:
-		fig_format = 'png'
+		fig_format = 'svg'
 	if('fig_res' in kwargs.keys()):
 		fig_res = kwargs['fig_res']
 	else:
