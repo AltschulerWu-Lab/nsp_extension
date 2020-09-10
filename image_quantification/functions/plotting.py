@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-09 01:50:50
+# @Last Modified time: 2020-09-10 14:46:45
 
 
 import io, os, sys, types
@@ -409,11 +409,11 @@ def plot_angles(phis, phi_edges, img_name, bundle_no, **kwargs):
 		subfolder2 = f'slice_type_{analysis_params_general.slice_type}'
 		figure_name = f'bundle_no_{bundle_no}_s{analysis_params_general.slice_type}.tif'
 
-		my_help.check_dir(os.path.join(paths.fig_out_prefix))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
-		plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), bbox_inches='tight')
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1, subfolder2))
+		plt.savefig(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1, subfolder2, figure_name), bbox_inches='tight')
 	else:
 		plt.show()
 	
@@ -609,12 +609,12 @@ def plot_bundle_vs_matrix(bundle_no, bundles_df, image, intensity_matrix, fig_pa
 		subfolder1 = 'HeatMap'
 		subfolder2 = 'slice_type_' + str(analysis_params_general.slice_type)
 		
-		my_help.check_dir(os.path.join(paths.fig_out_prefix))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1, subfolder2))
 		
-		plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), dpi=72, bbox_inches='tight')
+		plt.savefig(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1, subfolder2, figure_name), dpi=72, bbox_inches='tight')
 	
 	return fig
 
@@ -808,10 +808,10 @@ def plot_polar(bundle_no, bundles_df, image, channel_no, matrix, fig_params, rel
 		subfolder2 = f'slice_type_{analysis_params_general.slice_type}'
 		figure_name = f'bundle_no_{bundle_no}_channel_{matching_info.channel_mapping[channel_no]}.tif'
 
-		my_help.check_dir(os.path.join(paths.fig_out_prefix))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1))
-		my_help.check_dir(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2))
-		plt.savefig(os.path.join(paths.fig_out_prefix, folder_name, subfolder1, subfolder2, figure_name), dpi=72, bbox_inches='tight')
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1))
+		my_help.check_dir(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1, subfolder2))
+		plt.savefig(os.path.join(paths.fig_out_folder_path, folder_name, subfolder1, subfolder2, figure_name), dpi=72, bbox_inches='tight')
 	
 	return fig

@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-09 01:20:43
+# @Last Modified time: 2020-09-10 16:13:43
 
 
 import io, os, sys, types
@@ -181,13 +181,9 @@ def get_bundles_info(roi_df, annot_df, x_ratio, y_ratio, **kwargs):
 	
 
 	## update target & quality-control info
-	print("---annot_df---")
-	my_help.print_to_log("---annot_df---\n")
-
 	for ind in annot_df.index:
 
 		bundle_no = annot_df.iloc[ind]['Bundle_No'].astype(int)
-		print(bundle_no)
 		my_help.print_to_log(f'{bundle_no}, ')
 
 		### target info
@@ -225,4 +221,6 @@ def get_bundles_info(roi_df, annot_df, x_ratio, y_ratio, **kwargs):
 	bundles_df.loc[:,y_coord_cols] = bundles_df.loc[:,y_coord_cols] * y_ratio
 	bundles_df.loc[:,'Target_Major'] = bundles_df.loc[:,'Target_Major'] * x_ratio
 	bundles_df.loc[:,'Target_Minor'] = bundles_df.loc[:,'Target_Minor'] * x_ratio
+
+	my_help.print_to_log("\n")
 	return bundles_df

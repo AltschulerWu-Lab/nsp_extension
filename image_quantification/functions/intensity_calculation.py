@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-09 05:26:16
+# @Last Modified time: 2020-09-10 16:13:35
 
 
 import io, os, sys, types
@@ -449,12 +449,77 @@ def get_slice_params_v2(bundles_df, bundle_params, img_name, **kwargs):
 		else:
 			return params, rel_points
 
+### check if slicing exceeds image boundary.
+def check_boundary(params, image):
+	"""
+	Function: check if slicing exceeds image boundary. If yes, give warning.
+	Inputs:
+	- params: list. parameters to pass on for intensity calculation function 	
+		- z_offset, num_x_section, r_z, phis, slice_center, y_ticks, radius.
+	- image: numpy array. intensity-scaled image matrix.
+	Outputs:
+	print warnings.
+	"""
+	### params
+	z_max = image.shape[0]
+	z_offset, num_x_section, r_z, phis, slice_center, y_ticks, radius = params
+
+	intensity_matrix = np.zeros((len(phis), num_x_section + 1, z_offset*2+1))
+	intensity_matrix = intensity_matrix - 100
+	Z_values = np.linspace((r_z-z_offset), (r_z+z_offset), z_offset*2+1).astype(int)
+
+	matrix_shape = image[0,:,:].shape
+
+
+	### get vx and vy
+	xs = np.zeros((len(phis), num_x_section + 1))
+	ys = np.zeros((len(phis), num_x_section + 1))
+	for phi in phis:
+		i = int(np.argwhere(phis == phi))
+		circleY = radius * np.sin(phi) + slice_center[1]
+		circleX = radius * np.cos(phi) + slice_center[0]
+
+		xs[i,:] = np.linspace(slice_center[0], circleX, num_x_section + 1)
+		ys[i,:] = (xs[i,:] - slice_center[0]) * np.tan(phi) + slice_center[1]
+	
+	xbound = np.array(range(int(np.floor(np.min(xs))), int(np.ceil(np.max(xs)+1))))
+	ybound = np.array(range(int(np.floor(np.min(ys))), int(np.ceil(np.max(ys)+1))))
+
+	
+	### determine if xbound and ybound is out of boundary and if yes, print warning.
+	is_warning = False
+	
+	if(min(xbound) < 0):
+		if not (is_warning):
+			my_help.print_to_log("WARNING: ")
+		my_help.print_to_log('xbound < 0! ')
+		is_warning = True
+	
+	if(min(ybound) < 0):
+		if not (is_warning):
+			my_help.print_to_log("WARNING: ")
+		my_help.print_to_log('ybound < 0! ')
+		is_warning = True
+	
+	if(max(xbound) >= matrix_shape[1]):
+		if not (is_warning):
+			my_help.print_to_log("WARNING: ")
+		my_help.print_to_log(f'xbound > {matrix_shape[1]}! ')
+		is_warning = True
+	
+	if(max(ybound) >= matrix_shape[0]):
+		if not (is_warning):
+			my_help.print_to_log("WARNING: ")
+		my_help.print_to_log(f'ybound > {matrix_shape[0]}! ')
+		is_warning = True
+
 ### calculate standardized density map matrix.
 def get_intensity_matrix_new(params, image):
 	"""
 	Function: calculate standardized density map matrix.
-	Input:
-	- params: parameters to pass on for intensity calculation function 	- z_offset, num_x_section, r_z, phis, slice_center, y_ticks, radius.
+	Inputs:
+	- params: list. parameters to pass on for intensity calculation function 	
+		- z_offset, num_x_section, r_z, phis, slice_center, y_ticks, radius.
 	- image: numpy array. intensity-scaled image matrix.
 	Outputs: 
 	- intensity_matrix: numpy array. standardized density map matrix.
@@ -496,31 +561,16 @@ def get_intensity_matrix_new(params, image):
 	iy_min = 0
 	shape_x = matrix_shape[1]
 	shape_y = matrix_shape[0]
-	is_warning = False
 	if(min(xbound) < 0):
-		print('\nWARNING! xbound<0!', end = "")
-		my_help.print_to_log('\nWARNING! xbound<0!')
 		ix_min = sum(xbound<0)
 		shape_x += sum(xbound<0)
-		is_warning = True
 	if(min(ybound) < 0):
-		print('\nWARNING! ybound<0!', end = "")
-		my_help.print_to_log('\nWARNING! ybound<0!')
 		iy_min = sum(ybound<0)
 		shape_y += sum(ybound<0)
-		is_warning = True
 	if(max(xbound) >= matrix_shape[1]):
-		print(f'\nWARNING! xbound>{matrix_shape[1]}!', end = "")
-		my_help.print_to_log(f'\nWARNING! xbound>{matrix_shape[1]}!')
 		shape_x += sum(xbound >= matrix_shape[1])
-		is_warning = True
 	if(max(ybound) >= matrix_shape[0]):
-		print(f'\nWARNING! ybound>{matrix_shape[0]}!', end = "")
-		my_help.print_to_log(f'\nWARNING! ybound>{matrix_shape[0]}!')
 		shape_y += sum(ybound >= matrix_shape[0])
-		is_warning = True
-	if(is_warning):
-		print("")
 
 	ix_max = ix_min + matrix_shape[1]
 	iy_max = iy_min + matrix_shape[0]

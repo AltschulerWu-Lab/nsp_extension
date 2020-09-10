@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-09 04:25:02
+# @Last Modified time: 2020-09-10 16:08:50
 
 
 import io, os, sys, types
@@ -28,13 +28,16 @@ from scipy import interpolate, spatial, stats
 import skimage.io as skiIo
 from skimage import exposure, img_as_float, filters
 
+import settings as settings
+
 # ================= printing =================
 def print_to_log(info):
 	"""
-	Function: Print information to log file
+	Function: Print information to log file and the command line
 	Input: stuff to print
 	Output:
 	"""
+	print(info, end = "")
 	path = settings.paths.log_path
 	if(os.path.isfile(path)):
 		log_file = open(path, "a+")
