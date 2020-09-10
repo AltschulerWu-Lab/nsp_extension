@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-09 01:35:20
+# @Last Modified time: 2020-09-09 05:26:16
 
 
 import io, os, sys, types
@@ -56,7 +56,7 @@ def inner_angle(v1, v2, is_radians):
 		return np.rad2deg(np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)))
 
 
-### difference between two angles
+### smallest difference between two angles
 def smallest_angle(x, y):
 	"""
 	source: https://stackoverflow.com/questions/1878907/the-smallest-difference-between-2-angles

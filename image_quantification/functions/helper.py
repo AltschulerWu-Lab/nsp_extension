@@ -2,42 +2,39 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-09 01:21:46
-
-
+# @Last Modified time: 2020-09-09 04:25:02
 
 
 import io, os, sys, types
 
 import pandas as pd
 
+
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.colors import BoundaryNorm
+from matplotlib.ticker import MaxNLocator
+from matplotlib.patches import Ellipse
+import seaborn as sns
+
 
 import numpy as np
 from numpy.linalg import eig, inv
+import numpy.ma as ma
 
 import math
-
 from scipy import interpolate, spatial, stats
 
-import seaborn as sns
-
 import skimage.io as skiIo
-from skimage import exposure, img_as_float
+from skimage import exposure, img_as_float, filters
 
-from sklearn import linear_model
-from sklearn import metrics
-
-import settings as settings
-
-
-"""
-Function: Print information to log file
-Input: stuff to print
-Output:
-"""
+# ================= printing =================
 def print_to_log(info):
+	"""
+	Function: Print information to log file
+	Input: stuff to print
+	Output:
+	"""
 	path = settings.paths.log_path
 	if(os.path.isfile(path)):
 		log_file = open(path, "a+")
@@ -50,23 +47,24 @@ def print_to_log(info):
 
 
 # ================= directory related functions =================
-"""
-Function: check if a path exist. If not, make it.
-Input: path
-"""
 def check_dir(path):
+	"""
+	Function: check if a path exist. If not, make it.
+	Input: path
+	"""
 	if not os.path.exists(path):
 		if os.path.exists(os.path.dirname(path)):
 			os.makedirs(path)
 		else:
 			check_dir(os.path.dirname(path))
 
-"""
-Function: get the foldres and files within a particular path.
-Input: path
-Output: lists of folders and files
-"""
+
 def parse_folder_info(path):
+	"""
+	Function: get the foldres and files within a particular path.
+	Input: path
+	Output: lists of folders and files
+	"""
 	folders = [f for f in os.listdir(path) if not os.path.isfile(os.path.join(path, f))]
 	files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 	if('.DS_Store' in files):
@@ -75,12 +73,12 @@ def parse_folder_info(path):
 		files.remove('._.DS_Store')
 	return folders, files
 
-"""
-Function: get a list of path of every file within a folder (including all its subfolders).
-Input: path
-Output: list of paths.
-"""
-def get_file_paths(path):
+def get_file_paths(path):	
+	"""
+	Function: get a list of path of every file within a folder (including all its subfolders).
+	Input: path
+	Output: list of paths.
+	"""
 	filePaths = []
 	folders, files = parse_folder_info(path)
 	if not files:
@@ -95,16 +93,16 @@ def get_file_paths(path):
 
 
 # ================= dataframe related functions =================
-'''
-Function: get database column names that have the same pattern (contain or doesn't contain a particular string)
-Input: 
-- df -- dataframe
-- header_tag -- string
-- isContain -- True/False
-Output: list of strings
-'''
+
 def group_headers(df, header_tag, isContain):
-	
+	'''
+	Function: get database column names that have the same pattern (contain or doesn't contain a particular string)
+	Input: 
+	- df -- dataframe
+	- header_tag -- string
+	- isContain -- True/False
+	Output: list of strings
+	'''
 	if isContain:
 		return [col for col in df.columns.values if header_tag in col]
 	else:
@@ -112,21 +110,21 @@ def group_headers(df, header_tag, isContain):
 
 
 
-# ================= task specific functions =================
-'''
-Function: get index and coordinate information of targets of a given bundle.
-Inputs:
-- bundle_no: int, No. of bundle of interest
-- bundles_df: DataFrame, contains bundles and targets information.
-- kwargs:
-	- "return_type": string. return center of targets ("c"), lower ("e1")/higher bound("e2"), or target ellipse ("ellipse")
-	- "dim": ind. Dimension of coordinates. 2 or 3.
-Outputs:
-- target_inds: list of ints. No. of targets.
-- target_coords: numpy array. coordinates of targets (or it's major, minor axes and angle.)
-
-'''
+# ================= getting coordinates from bundles_df =================
 def get_targets_info(bundle_no, bundles_df, **kwargs):
+	'''
+	Function: get index and coordinate information of targets of a given bundle.
+	Inputs:
+	- bundle_no: int, No. of bundle of interest
+	- bundles_df: DataFrame, contains bundles and targets information.
+	- kwargs:
+		- "return_type": string. return center of targets ("c"), lower ("e1")/higher bound("e2"), or target ellipse ("ellipse")
+		- "dim": ind. Dimension of coordinates. 2 or 3.
+	Outputs:
+	- target_inds: list of ints. No. of targets.
+	- target_coords: numpy array. coordinates of targets (or it's major, minor axes and angle.)
+
+	'''
 	### unravel params
 	if('return_type' in kwargs.keys()):
 		return_type = kwargs['return_type']
@@ -156,15 +154,16 @@ def get_targets_info(bundle_no, bundles_df, **kwargs):
 
 	return target_inds, target_coords
 
-'''
-Function: get annotated bundle center.
-Inputs:
-- bundle_no: int, No. of bundle of interest
-- bundles_df: DataFrame, contains bundles and targets information.
-Output:
-- center_coord: numpy array. coordinate of annotated bundle center (or it's major, minor axes and angle.)
-'''
+
 def get_bundle_center(bundle_no, bundles_df):
+	'''
+	Function: get annotated bundle center.
+	Inputs:
+	- bundle_no: int, No. of bundle of interest
+	- bundles_df: DataFrame, contains bundles and targets information.
+	Output:
+	- center_coord: numpy array. coordinate of annotated bundle center.
+	'''
 	target_inds = []
 	center_coord = np.zeros((1,2))
 	
@@ -173,12 +172,30 @@ def get_bundle_center(bundle_no, bundles_df):
 	return center_coord
 
 def get_heel_coords(bundle_no, bundles_df):
+	'''
+	Function: get heel coordinates.
+	Inputs:
+	- bundle_no: int, No. of bundle of interest
+	- bundles_df: DataFrame, contains bundles and targets information.
+	Output:
+	- heel_coords: numpy array. coordinate of heels.
+	'''
 	heel_coords = np.zeros((6,2))
 	heel_coords[:,0] = list(bundles_df.loc[bundle_no, group_headers(bundles_df, 'coord_X_R', True)])
 	heel_coords[:,1] = list(bundles_df.loc[bundle_no, group_headers(bundles_df, 'coord_Y_R', True)])
 	return heel_coords
 
 def get_rx_coords(bundle_no, bundles_df, target_inds, Rtype):
+	'''
+	Function: get Rx coordinates of the originating bundle and also its putative targets.
+	Inputs:
+	- bundle_no: int, No. of bundle of interest
+	- bundles_df: DataFrame, contains bundles and targets information.
+	- target_inds: index of the putative targets of bundle-of-interest
+	- Rtype: R-cell type.
+	Output:
+	- rx_coords: numpy array. coordinates of Rxs.
+	'''
 	rx_coords = np.zeros((len(target_inds), 2))
 	coord_headers = ['coord_X_R' + str(Rtype), 'coord_Y_R' + str(Rtype)]
 	rx_coords[0,:] = np.array([ bundles_df.loc[ bundle_no, coord_headers[0]], 
@@ -188,19 +205,33 @@ def get_rx_coords(bundle_no, bundles_df, target_inds, Rtype):
 		rx_coords[i,:] = np.array([ bundles_df.loc[ target_inds[i], coord_headers[0]], bundles_df.loc[ target_inds[i], coord_headers[1]]])
 
 	return rx_coords
-	
+
+# ================= others =================
+### delete empty columns of a matrix.
 def delete_zero_columns(matrix, factor, axis):
+	"""
+	Function: delete empty columns of a matrix. "empty" is defined by a specific value.
+	Inputs:
+	- matrix: numpy array (n-dimentional).
+	- factor: float. value defined as empty.
+	- axis: axis of matrix to delete.
+	Output:
+	- new_matrix: numpy array (n-dimentional). matrix with empty columns deleted.
+	"""
+	
 	z_columns = np.unique(np.where(matrix == factor)[axis])
 	new_matrix = np.delete(matrix, z_columns, axis = axis)
 	return new_matrix
 
 ### Calculate line intersections
-"""
-Input: line1 - (point1, point2); line2 - (point1, point2)
-"""
 def line_intersection(line1, line2):
-# source:
-# https://stackoverflow.com/questions/20677795/how-do-i-compute-the-intersection-point-of-two-lines
+	"""
+	Function: Calculate intersection between two lines.
+	Source: https://stackoverflow.com/questions/20677795/how-do-i-compute-the-intersection-point-of-two-lines
+	Input: line1 - (point1, point2); line2 - (point1, point2)
+	Output: x,y - floats. x and y coordinates of intersection.
+	"""
+
 	xdiff = (line1[0][0] - line1[1][0], line2[0][0] - line2[1][0])
 	ydiff = (line1[0][1] - line1[1][1], line2[0][1] - line2[1][1])
 
