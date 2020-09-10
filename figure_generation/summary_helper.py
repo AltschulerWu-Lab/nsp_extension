@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-09-09 04:01:25
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-09 21:00:59
+# @Last Modified time: 2020-09-10 10:22:35
 
 import io, os, sys, types, datetime, pickle, warnings
 
@@ -1358,7 +1358,7 @@ def fit_linear(x, y):
 	popt = np.polyfit(x,y,1)
 	pred = x * popt[0] + popt[1]
 	r2 = get_r_squared(x, y, popt)
-	print(f'k = {popt[0]:.2f}, R2 = {r2:.2f}')
+	print(f'k = {popt[0]:.2f}, R^2 = {r2:.2f}')
 	return popt, pred, r2
 
 def get_r_squared(x, y, popt):
