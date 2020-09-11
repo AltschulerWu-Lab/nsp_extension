@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-09-09 04:01:25
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-10 10:22:35
+# @Last Modified time: 2020-09-10 18:10:30
 
 import io, os, sys, types, datetime, pickle, warnings
 
@@ -639,14 +639,15 @@ def fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, 
 	return sum_df
 
 
-### processing summary_df with calculation of mutual repulsion
-def process_sum_df_mr(sum_df_old, annots_df, rel_poses):
+### processing summary_df
+def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 	"""
 	Function: process summary_df with calculation of mutual repulsion
 	Inputs:
 	- sum_df_old: DataFrame. Imported angle and length csv file.
 	- annots_df: DataFrame. Imported annotation csv file.
 	- rel_poses: Dictionary. Relative position info from the image quantification process.
+	- is_ml: Boolean. whether or not to calculate repulsion model - related values.
 	Output:
 	- sum_df: DataFrame. Combined annotation and angle/length info.
 	"""
@@ -740,43 +741,44 @@ def process_sum_df_mr(sum_df_old, annots_df, rel_poses):
 							
 							sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR, r_type, phi_unit)
 							
-							#### mutual repulsion                                                       
-							##### grid in standardized coordinates
-							target_stc_car, heels_stc_car, _ = get_cartasian_grid_from_stc(sum_df.loc[iR,:], ch, 'angle', 'length', phi_unit)
+							if(is_ml):
+								#### mutual repulsion                                                       
+								##### grid in standardized coordinates
+								target_stc_car, heels_stc_car, _ = get_cartasian_grid_from_stc(sum_df.loc[iR,:], ch, 'angle', 'length', phi_unit)
 
-							##### get theoretical angles
-							point, vector, theta, angle, vs = calculate_mutual_repulsion_theory(heels_stc_car, target_stc_car, r_type)
-							sum_df.loc[iR, f'ml_theory_theta'] = theta
-							sum_df.loc[iR, f'ml_theory_angle'] = angle
-							sum_df.loc[iR, f'ml_theory_vec_x'] = vector[0]
-							sum_df.loc[iR, f'ml_theory_vec_y'] = vector[1]
-							for i in range(vs.shape[0]):
-								sum_df.loc[iR, f'ml_x_v{i+1}'] = vs[i,0]
-								sum_df.loc[iR, f'ml_y_v{i+1}'] = vs[i,1]
-							
-							#### get reference points
-							if(r_type == 3):
-								theta_ref = inner_angle(target_stc_car[2,:] - heels_stc_car[2,:], heels_stc_car[3,:] - heels_stc_car[2,:], True)
-								angle_ref = inner_angle(target_stc_car[2,:] - heels_stc_car[2,:], np.array([1,0]), True)
-							elif(r_type == 4):
-								theta_ref = inner_angle(target_stc_car[5,:] - heels_stc_car[3,:], heels_stc_car[2,:] - heels_stc_car[3,:], True)
-								angle_ref = inner_angle(target_stc_car[5,:] - heels_stc_car[3,:], np.array([1,0]), True)
-							sum_df.loc[iR, 'theta_ref'] = theta_ref
-							sum_df.loc[iR, 'angle_ref'] = angle_ref
+								##### get theoretical angles
+								point, vector, theta, angle, vs = calculate_mutual_repulsion_theory(heels_stc_car, target_stc_car, r_type)
+								sum_df.loc[iR, f'ml_theory_theta'] = theta
+								sum_df.loc[iR, f'ml_theory_angle'] = angle
+								sum_df.loc[iR, f'ml_theory_vec_x'] = vector[0]
+								sum_df.loc[iR, f'ml_theory_vec_y'] = vector[1]
+								for i in range(vs.shape[0]):
+									sum_df.loc[iR, f'ml_x_v{i+1}'] = vs[i,0]
+									sum_df.loc[iR, f'ml_y_v{i+1}'] = vs[i,1]
+								
+								#### get reference points
+								if(r_type == 3):
+									theta_ref = inner_angle(target_stc_car[2,:] - heels_stc_car[2,:], heels_stc_car[3,:] - heels_stc_car[2,:], True)
+									angle_ref = inner_angle(target_stc_car[2,:] - heels_stc_car[2,:], np.array([1,0]), True)
+								elif(r_type == 4):
+									theta_ref = inner_angle(target_stc_car[5,:] - heels_stc_car[3,:], heels_stc_car[2,:] - heels_stc_car[3,:], True)
+									angle_ref = inner_angle(target_stc_car[5,:] - heels_stc_car[3,:], np.array([1,0]), True)
+								sum_df.loc[iR, 'theta_ref'] = theta_ref
+								sum_df.loc[iR, 'angle_ref'] = angle_ref
 
-							#### get measured angles
-							comp_angle_cols = ['angle_mean_otsu', 'angle_mean_li', 'angle_max_avg', 'angle_max_max']
-							comp_length_cols = ['length_mean_otsu', 'length_mean_li', 'length_max', 'length_max']
+								#### get measured angles
+								comp_angle_cols = ['angle_mean_otsu', 'angle_mean_li', 'angle_max_avg', 'angle_max_max']
+								comp_length_cols = ['length_mean_otsu', 'length_mean_li', 'length_max', 'length_max']
 
-							cat_angle = 'angle'
-							cat_length = 'length'
-							gc_point, gc_vector, gc_theta, gc_angle = calculate_mutual_repulsion_data(sum_df.loc[iR,:], ch, phi_unit, cat_angle, cat_length, r_type)
+								cat_angle = 'angle'
+								cat_length = 'length'
+								gc_point, gc_vector, gc_theta, gc_angle = calculate_mutual_repulsion_data(sum_df.loc[iR,:], ch, phi_unit, cat_angle, cat_length, r_type)
 
-							sum_df.loc[iR, f'ml_actual_theta'] = gc_theta
-							sum_df.loc[iR, f'ml_actual_angle'] = gc_angle
+								sum_df.loc[iR, f'ml_actual_theta'] = gc_theta
+								sum_df.loc[iR, f'ml_actual_angle'] = gc_angle
 
-							sum_df.loc[iR, f'ml_x_vgc'] = gc_vector[0]
-							sum_df.loc[iR, f'ml_y_vgc'] = gc_vector[1]
+								sum_df.loc[iR, f'ml_x_vgc'] = gc_vector[0]
+								sum_df.loc[iR, f'ml_y_vgc'] = gc_vector[1]
 
 					#### R3/R3 or R4/R4 case:
 					else:
@@ -814,13 +816,15 @@ def process_sum_df_mr(sum_df_old, annots_df, rel_poses):
 
 
 ### processing summary_df without calculation of mutual repulsion
-def process_sum_df(sum_df_old, annots_df, rel_poses):
+'''
+def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 	"""
 	Function: process summary_df without calculation of mutual repulsion
 	Inputs:
 	- sum_df_old: DataFrame. Imported angle and length csv file.
 	- annots_df: DataFrame. Imported annotation csv file.
 	- rel_poses: Dictionary. Relative position info from the image quantification process.
+	
 	Output:
 	- sum_df: DataFrame. Combined annotation and angle/length info.
 	"""
@@ -948,6 +952,90 @@ def process_sum_df(sum_df_old, annots_df, rel_poses):
 		sum_df.loc[sum_df_groups.get_group((4, 'R3R4')).index,'type_plot'] = 'R4'
 
 	return sum_df
+'''
+
+# ================= Mutual Repulsion Regression ================= #
+def mutual_repulsion_regression(sum_df, annots_df):
+	### parameters
+	paths = settings.paths
+	
+	### regression fitting
+	criteria = (sum_df['symmetry']<=0.5) & (sum_df['TimeID']<=26)
+	sum_df_regression = sum_df.loc[criteria,:]
+	df_regression_results = pd.DataFrame(columns = ['a', 'b', 'r2'])
+	print("=== Regression result ===")
+	for i, r_type in enumerate(["R3", "R4"]):
+		sum_df_r = sum_df_regression.groupby("type_plot").get_group(r_type)
+		df_data = sum_df_r[['ml_x_v1', 'ml_y_v1', 'ml_x_v2', 'ml_y_v2', 'ml_x_vgc', 'ml_y_vgc']].dropna()
+		X, y = generate_regression_data(df_data)
+		model = linear_model.LassoCV(alphas=np.logspace(-6, -3, 7),
+						 max_iter=100000,
+						 cv=5,
+						 fit_intercept=False,
+						 positive=True)
+		reg = model.fit(X,y)
+		
+		print(f"r_type = {r_type}: alpha = {reg.coef_[0]:.2f}, beta = {reg.coef_[1]:.2f}, R^2 = {reg.score(X,y):.2f}")
+
+		df_tmp = pd.DataFrame(columns = df_regression_results.columns)
+		df_tmp.loc[0, 'type_plot'] = r_type
+		df_tmp.loc[0, 'a'] = reg.coef_[0]
+		df_tmp.loc[0, 'b'] = reg.coef_[1]
+		df_tmp.loc[0, 'r2'] = reg.score(X,y)
+		df_regression_results = df_regression_results.append(df_tmp, ignore_index=True)
+	
+	### calculate regression direction
+	sum_df_ctrl_group = sum_df_regression.groupby(["TimeID", "SampleID"])
+	phi_unit = get_angle_unit_data(annots_df, 
+											  criteria = (annots_df['is_Edge'] == 0) & (annots_df['symmetry'] <= 0.5))
+	print("=== Regression direction calculation ===")
+	for gp in sum_df_ctrl_group.groups.keys():
+		time_id, sample_id = gp
+		print(f"{time_id}_hrs_sample_{sample_id}", end = "; ")
+
+		sum_df_current = sum_df_ctrl_group.get_group(gp)
+		annots_df_current = annots_df.groupby(["TimeID", "SampleID"]).get_group(gp).set_index('Bundle_No')
+
+		for ind in sum_df_current.index:
+			r_type = int(sum_df_current.loc[ind, 'type_Rcell'])
+			bundle_no = sum_df_current.loc[ind,'bundle_no']
+
+			coord_heels = get_heel_coords_sum(bundle_no, annots_df_current)
+
+			ori = coord_heels[r_type-1, :]
+
+			if(r_type == 3):
+				v_base = coord_heels[4-1,:] - coord_heels[3-1,:]
+			elif(r_type == 4):
+				v_base = coord_heels[3-1,:] - coord_heels[4-1,:]
+
+			type_plot = sum_df_current.loc[ind, 'type_plot']
+			i_reg = df_regression_results['type_plot'] == type_plot
+			alphas = np.zeros((2))
+			alphas[0] = df_regression_results.loc[i_reg, 'a'].values[0]
+			alphas[1] = df_regression_results.loc[i_reg, 'b'].values[0]
+			
+			v1 = np.array((sum_df_current.loc[ind, 'ml_x_v1'], sum_df_current.loc[ind, 'ml_y_v1']))
+			v2 = np.array((sum_df_current.loc[ind, 'ml_x_v2'], sum_df_current.loc[ind, 'ml_y_v2']))
+			_, v_pred = get_angle_prediction_two_vectors(v1, v2, ori, alphas)
+
+			theta = inner_angle(v_base, v_pred, True)
+			angle = inner_angle(np.array([1,0]), v_pred, True)
+
+			sum_df.loc[ind, 'ml_theory_theta_reg'] = theta
+			sum_df.loc[ind, 'ml_theory_angle_reg'] = angle
+			sum_df.loc[ind, 'ml_theory_vec_x_reg'] = v_pred[0]
+			sum_df.loc[ind, 'ml_theory_vec_y_reg'] = v_pred[1]
+
+	for plot_cat in ['angle', 'theta']:
+		theory_cat = f"ml_theory_{plot_cat}"
+		actual_cat = f"ml_actual_{plot_cat}"
+		sum_df[f"ml_diff_{plot_cat}"] = (sum_df[theory_cat] - sum_df[actual_cat])
+		
+		theory_cat = f"ml_theory_{plot_cat}_reg"
+		actual_cat = f"ml_actual_{plot_cat}"
+		sum_df[f"ml_diff_{plot_cat}_reg"] = (sum_df[theory_cat] - sum_df[actual_cat])
+
 
 # ================= Polar Density Plot =================
 ### Angle slicing
@@ -1395,7 +1483,6 @@ def p_value_3c(df, hue_name, value_name, pair_list, print_pair, method):
 
 # ================= Figure 4 =================
 def generate_summary_polar_figure(plot_df, pert_info, **kwargs):
-	
 	### unravel params
 	time_id, pert_cat, pert_type, pert_rtype = pert_info
 	paths = settings.paths
@@ -1560,7 +1647,8 @@ def p_value_4(df_current, x_cat, y_cat, pert_cat, time_id):
 			print(f"{inds[i]} vs {cols[i]}: {df_stat.loc[inds[i], cols[i]]}")
 
 # ================= Figure S4 =================
-def mutual_repulsion_regression_plot(sum_df_ctrl_final, annots_df_ctrl, **kwargs):
+def mutual_repulsion_regression_plot(sum_df, **kwargs):
+	### parameters
 	if('is_save' in kwargs.keys()):
 		is_save = kwargs['is_save']
 	else:
@@ -1577,98 +1665,17 @@ def mutual_repulsion_regression_plot(sum_df_ctrl_final, annots_df_ctrl, **kwargs
 		name = kwargs['fig_name']
 		fig_name = f'{name}.{fig_format}'
 	else:
-		fig_name = f'mutual_repulsion.{fig_format}'
-
+		fig_name = f'mutual_repulsion.{fig_format}'	
 	paths = settings.paths
 	color_code = settings.matching_info.color_code
 
-	
-	### regression fitting
-	criteria = (sum_df_ctrl_final['symmetry']<=0.5) & (sum_df_ctrl_final['TimeID']<=26)
-	sum_df_regression = sum_df_ctrl_final.loc[criteria,:]
-	df_regression_results = pd.DataFrame(columns = ['a', 'b', 'r2'])
-	print("=== Regression result ===")
-	for i, r_type in enumerate(["R3", "R4"]):
-		sum_df_r = sum_df_regression.groupby("type_plot").get_group(r_type)
-		df_data = sum_df_r[['ml_x_v1', 'ml_y_v1', 'ml_x_v2', 'ml_y_v2', 'ml_x_vgc', 'ml_y_vgc']].dropna()
-		X, y = generate_regression_data(df_data)
-		model = linear_model.LassoCV(alphas=np.logspace(-6, -3, 7),
-						 max_iter=100000,
-						 cv=5,
-						 fit_intercept=False,
-						 positive=True)
-		reg = model.fit(X,y)
-		
-		print(f"r_type = {r_type}: alpha = {reg.coef_[0]:.2f}, beta = {reg.coef_[1]:.2f}, R^2 = {reg.score(X,y):.2f}")
-
-		df_tmp = pd.DataFrame(columns = df_regression_results.columns)
-		df_tmp.loc[0, 'type_plot'] = r_type
-		df_tmp.loc[0, 'a'] = reg.coef_[0]
-		df_tmp.loc[0, 'b'] = reg.coef_[1]
-		df_tmp.loc[0, 'r2'] = reg.score(X,y)
-		df_regression_results = df_regression_results.append(df_tmp, ignore_index=True)
-	
-	sum_df_ctrl_group = sum_df_regression.groupby(["TimeID", "SampleID"])
-	phi_unit = get_angle_unit_data(annots_df_ctrl, 
-											  criteria = (annots_df_ctrl['is_Edge'] == 0) & (annots_df_ctrl['symmetry'] <= 0.5))
-	### calculate regression direction
-	print("=== Regression direction calculation ===")
-	for gp in sum_df_ctrl_group.groups.keys():
-		time_id, sample_id = gp
-		print(f"{time_id}_hrs_sample_{sample_id}", end = "; ")
-
-		sum_df_current = sum_df_ctrl_group.get_group(gp)
-		annots_df_current = annots_df_ctrl.groupby(["TimeID", "SampleID"]).get_group(gp).set_index('Bundle_No')
-
-		for ind in sum_df_current.index:
-			r_type = int(sum_df_current.loc[ind, 'type_Rcell'])
-			bundle_no = sum_df_current.loc[ind,'bundle_no']
-
-			coord_heels = get_heel_coords_sum(bundle_no, annots_df_current)
-
-			ori = coord_heels[r_type-1, :]
-
-			if(r_type == 3):
-				v_base = coord_heels[4-1,:] - coord_heels[3-1,:]
-			elif(r_type == 4):
-				v_base = coord_heels[3-1,:] - coord_heels[4-1,:]
-
-			type_plot = sum_df_current.loc[ind, 'type_plot']
-			i_reg = df_regression_results['type_plot'] == type_plot
-			alphas = np.zeros((2))
-			alphas[0] = df_regression_results.loc[i_reg, 'a'].values[0]
-			alphas[1] = df_regression_results.loc[i_reg, 'b'].values[0]
-			
-			v1 = np.array((sum_df_current.loc[ind, 'ml_x_v1'], sum_df_current.loc[ind, 'ml_y_v1']))
-			v2 = np.array((sum_df_current.loc[ind, 'ml_x_v2'], sum_df_current.loc[ind, 'ml_y_v2']))
-			_, v_pred = get_angle_prediction_two_vectors(v1, v2, ori, alphas)
-
-			theta = inner_angle(v_base, v_pred, True)
-			angle = inner_angle(np.array([1,0]), v_pred, True)
-
-			sum_df_ctrl_final.loc[ind, 'ml_theory_theta_reg'] = theta
-			sum_df_ctrl_final.loc[ind, 'ml_theory_angle_reg'] = angle
-			sum_df_ctrl_final.loc[ind, 'ml_theory_vec_x_reg'] = v_pred[0]
-			sum_df_ctrl_final.loc[ind, 'ml_theory_vec_y_reg'] = v_pred[1]
-
-	for plot_cat in ['angle', 'theta']:
-		theory_cat = f"ml_theory_{plot_cat}"
-		actual_cat = f"ml_actual_{plot_cat}"
-		ref_cat = f"{plot_cat}_ref"
-		sum_df_ctrl_final[f"ml_diff_{plot_cat}"] = (sum_df_ctrl_final[theory_cat] - sum_df_ctrl_final[actual_cat])
-		
-		theory_cat = f"ml_theory_{plot_cat}_reg"
-		actual_cat = f"ml_actual_{plot_cat}"
-		ref_cat = f"{plot_cat}_ref"
-		sum_df_ctrl_final[f"ml_diff_{plot_cat}_reg"] = (sum_df_ctrl_final[theory_cat] - sum_df_ctrl_final[actual_cat])
-	
 	### get plotting params
 	fig_save_path = os.path.join(paths.output_prefix, fig_name)
 	diff_cols = ['ml_diff_theta', 'ml_diff_theta_reg']
 	hue = "type_plot"
 	
-	criteria = (sum_df_ctrl_final["TimeID"] <= 26) & (sum_df_ctrl_final["symmetry"] <= 0.5)
-	plot_df_sum = sum_df_ctrl_final.loc[criteria, [hue, "TimeID"] + diff_cols]
+	criteria = (sum_df["TimeID"] <= 26) & (sum_df["symmetry"] <= 0.5)
+	plot_df_sum = sum_df.loc[criteria, [hue, "TimeID"] + diff_cols]
 	plot_df_sum[diff_cols] = np.degrees(plot_df_sum[diff_cols])
 	plot_df_group = plot_df_sum.groupby("TimeID")
 	groups = list(plot_df_group.groups.keys())
@@ -1714,5 +1721,7 @@ def mutual_repulsion_regression_plot(sum_df_ctrl_final, annots_df_ctrl, **kwargs
 			ax.set_xticks([-90, -45, 0, 45, 90])
 
 	ax.legend(["R3", "R4"], bbox_to_anchor = (1.45, 1.3))
+	
 	if(is_save):
 		plt.savefig(fig_save_path, dpi=fig_res, bbox_inches='tight', format = fig_format, transparent=False)
+
