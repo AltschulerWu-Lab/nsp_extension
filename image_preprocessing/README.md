@@ -1,5 +1,5 @@
 # Image Preprocessing
-This folder contains python scripts to transform annotated images using the standardized coordinate system described in the manuscript.
+This folder contains python scripts to batch process `.nd2` files obtained from a Nikon confocal microscopy. It will perform data format transformation (`.nd2` to `.tif`) and background subtraction.
 
 ## Description
 - This code was developed to run on the UCSF Wynton cluster. However it can also run on any machine that have Fiji (https://imagej.net/Fiji) installed. This code is intended to run windowlessly.
