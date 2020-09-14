@@ -13,7 +13,7 @@ This code was developed to run on the UCSF Wynton cluster. Running the code on a
 
 ## Image quantification process
 **1. Image pre-processing and annotation**
-- Images should convert to `tif` format in order to be imported by the python script. See folder `image_preprocessing` for custom ImageJ macro script to batch process `nd2` files output from Nikon Elements software.
+- Images should convert to `tif` format in order to be imported by the python script. See folder `image_preprocessing` for custom ImageJ macro script to batch process `nd2` files output from NIS Elements software.
 - Images were visually inspected, cropped and annotated using [Fiji](https://imagej.net/Fiji).  See the "Methods" section of the manuscript for detailed description of annotation. Annotation outputs include: 
 	-  `zip` file: Fiji annotations. 
 	- `csv` file: key parameters of the annotation: 1) X, Y, positions of heels. 2) major, minor axis lengths and the major axis angle of the target ellipse.
@@ -31,9 +31,9 @@ This code was developed to run on the UCSF Wynton cluster. Running the code on a
 		- `num_x_section` define number of length sections.
 		- `z_offset`: define number of z-stacks above and below the center (z-slice showing the longest growth cone).
 		- `radius_expanse_ratio`: define max value of relative length given |C-T4| = 1.
-	- Image `.tif` format
-	- Output from Fiji annotation in `.csv` format.
-	- Annotation about bundle and its putative target mapping in `.csv` format.
+	- Image in `tif` format
+	- Output from Fiji annotation in `csv` format.
+	- Annotation about bundle and its putative target mapping in `csv` format.
 - Outputs:
 	- Data output: `pickle` format. This is a dictionary that contains the calculated density maps of each bundles, as well as key parameters.
 	- Figure outputs: Figures of the density maps.
