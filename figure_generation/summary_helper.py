@@ -2,34 +2,25 @@
 # @Author: Weiyue Ji
 # @Date:   2020-09-09 04:01:25
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-10-04 06:09:15
+# @Last Modified time: 2020-10-04 07:24:22
 
-import io, os, sys, types, datetime, pickle, warnings
+import os, matplotlib, math
 
 import pandas as pd
 
-import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm
 from matplotlib.ticker import MaxNLocator
 import seaborn as sns
 
 import numpy as np
-from numpy.linalg import eig, inv
 import numpy.ma as ma
-
-import math
-
-from scipy import interpolate, spatial
 
 import scipy.stats as ss
 import statsmodels.api as sa
 import scikit_posthocs as sp
 
-import skimage.io as skiIo
-from skimage import exposure, img_as_float
-
-from sklearn import linear_model, metrics
+from sklearn import linear_model
 
 import settings as settings
 
