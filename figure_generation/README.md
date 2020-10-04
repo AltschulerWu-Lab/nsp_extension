@@ -11,7 +11,9 @@ This folder contains python scripts and a jupyter notebook to generate figures i
 1. Paths
 
 	paths are defined in the `Paths` class in _settings.py_. It contains paths to the processed data folder (`data_prefix`), desired output folder (`output_prefix`) and the code folder (`code_path`). It is currently set-up so that data and figure outputs are stored under _data_ and _figure_ sub-folder of the folder containing the notebook.
+	
 2. Dependencies
+
 	Python >= 3.6
 	statsmodels >= 0.11.1
 	seaborn >= 0.11.0
