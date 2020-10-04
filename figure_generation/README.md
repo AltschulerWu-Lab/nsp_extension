@@ -15,13 +15,21 @@ This folder contains python scripts and a jupyter notebook to generate figures i
 2. Dependencies
 
 	Python >= 3.6
+	
 	statsmodels >= 0.11.1
+	
 	seaborn >= 0.11.0
+	
 	numpy >= 1.18.5
+	
 	matplotlib >= 3.2.2
+	
 	pandas >= 1.0.5
+	
 	scipy >= 1.5.0
+	
 	scikit_posthocs >= 0.6.5
+	
 	scikit_learn >= 0.23.2
 
 
