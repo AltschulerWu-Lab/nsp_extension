@@ -1,5 +1,5 @@
 # Image Preprocessing
-This folder contains python scripts to batch process `.nd2` files obtained from a Nikon confocal microscope. It will perform data format transformation (`.nd2` to `.tif`) and background subtraction.
+This folder contains python scripts to batch process ND2 files obtained from a Nikon confocal microscope. It will perform data format transformation (ND2 to TIFF) and background subtraction.
 
 ## Description
 - This code was developed to run on the UCSF Wynton cluster. However it can also run on any machine that have [ImageJ](https://imagej.nih.gov/ij/) installed. This code is intended to run windowlessly.
