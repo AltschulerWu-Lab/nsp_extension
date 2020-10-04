@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-09-09 04:01:25
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-17 13:49:55
+# @Last Modified time: 2020-10-04 06:09:15
 
 import io, os, sys, types, datetime, pickle, warnings
 
@@ -904,7 +904,7 @@ def mutual_repulsion_regression(sum_df, annots_df):
 	criteria = (sum_df['symmetry']<=0.5) & (sum_df['TimeID']<=26)
 	sum_df_regression = sum_df.loc[criteria,:]
 	df_regression_results = pd.DataFrame(columns = ['a', 'b', 'r2'])
-	print("=== Regression result ===")
+	print("Regression result:")
 	for i, r_type in enumerate(["R3", "R4"]):
 		sum_df_r = sum_df_regression.groupby("type_plot").get_group(r_type)
 		df_data = sum_df_r[['ml_x_v1', 'ml_y_v1', 'ml_x_v2', 'ml_y_v2', 'ml_x_vgc', 'ml_y_vgc']].dropna()
@@ -929,7 +929,7 @@ def mutual_repulsion_regression(sum_df, annots_df):
 	sum_df_ctrl_group = sum_df_regression.groupby(["TimeID", "SampleID"])
 	phi_unit = get_angle_unit_data(annots_df, 
 											  criteria = (annots_df['is_Edge'] == 0) & (annots_df['symmetry'] <= 0.5))
-	print("=== Regression direction calculation ===")
+	print("Regression direction calculation:", end = " ")
 	for gp in sum_df_ctrl_group.groups.keys():
 		time_id, sample_id = gp
 		print(f"{time_id}_hrs_sample_{sample_id}", end = "; ")
@@ -1401,7 +1401,7 @@ def get_r_squared(x, y, popt):
 
 
 # ================= Figure 3C =================
-def p_value_3c(df, hue_name, value_name, pair_list, print_pair, method):
+def p_value_fig3c(df, hue_name, value_name, pair_list, print_pair, method):
 	df_groups = df.groupby(hue_name)
 	for pair in pair_list:
 		if(print_pair):
@@ -1559,7 +1559,7 @@ def generate_summary_polar_figure(plot_df, pert_info, **kwargs):
 		plt.savefig(fig_save_path, dpi=300, bbox_inches='tight', format = fig_format)
 	plt.show()
 
-def p_value_4(df_current, x_cat, y_cat, pert_cat, time_id):
+def p_value_fig4(df_current, x_cat, y_cat, pert_cat, time_id):
 	if(pert_cat == 'Fz'):
 		pert_type = 'R3/R3'
 	elif(pert_cat == 'Nic'):
