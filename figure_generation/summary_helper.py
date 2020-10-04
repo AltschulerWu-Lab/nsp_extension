@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-09-09 04:01:25
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-09-10 18:10:30
+# @Last Modified time: 2020-09-17 13:49:55
 
 import io, os, sys, types, datetime, pickle, warnings
 
@@ -34,6 +34,7 @@ from sklearn import linear_model, metrics
 import settings as settings
 
 # ================= files =================
+### get the foldres and files within a particular path
 def parse_folder_info(path):
 	"""
 	Function: get the foldres and files within a particular path.
@@ -49,6 +50,7 @@ def parse_folder_info(path):
 		files.remove('._.DS_Store')
 	return folders, files
 
+### sort dictionary according to keys or values
 def sort_dic(dic, switch, is_reverse):
 	"""
 	Function: sort dictionary according to keys or values.
@@ -63,7 +65,7 @@ def sort_dic(dic, switch, is_reverse):
 	elif(switch == 'values'):
 		return {k: v for k, v in sorted(dic.items(), key=lambda item: item[1], reverse = is_reverse)}
 
-### group DataFrame columns
+### group DataFrame columns: get DataFrame column names that have the same pattern
 def group_headers(df, header_tag, isContain):
 	'''
 	Function: get DataFrame column names that have the same pattern (contain or doesn't contain a particular string)
@@ -225,6 +227,19 @@ def polar_to_cartesian(r,theta):
 
 ### get heel coordinates
 def get_heel_coords_sum(bundle_no, annots_df, **kwargs):
+	"""
+	Function: get coordinate of heel positions of a given bundle
+	Inputs:
+	- bundle_no: numpy array. array of coordinates (can either be nx2 or 2xn)
+	- bundles_df: DataFrame. containing informations of bundles.
+	- kwargs: additional parameters
+		- dim: int. dimention of returning coordinates. 2 or 3.
+		- is_pixel: Boolean. whether or not return coordinates in pixel (True) or um (False)
+		- pixel_to_um: numpy array (1x2 or 1x3). um/pixel for each dimension.
+	Outputs:
+	- heel_coords: numpy array. array of heel coordinates.
+	"""
+
 	### unravel params
 	dim = 2
 
@@ -249,6 +264,19 @@ def get_heel_coords_sum(bundle_no, annots_df, **kwargs):
 
 ### get target coordinates
 def get_target_coords_sum(bundle_no, annots_df, **kwargs):
+	"""
+	Function: get coordinate of heel positions of a given bundle
+	Inputs:
+	- bundle_no: numpy array. array of coordinates (can either be nx2 or 2xn)
+	- bundles_df: DataFrame. containing informations of bundles.
+	- kwargs: additional parameters
+		- dim: int. dimention of returning coordinates. 2 or 3.
+		- is_pixel: Boolean. whether or not return coordinates in pixel (True) or um (False)
+		- pixel_to_um: numpy array (1x2 or 1x3). um/pixel for each dimension.
+	Outputs:
+	- heel_coords: numpy array. array of heel coordinates.
+	"""
+
 	### unravel params
 	dim = 2
 	if('return_type' in kwargs.keys()):
@@ -272,23 +300,37 @@ def get_target_coords_sum(bundle_no, annots_df, **kwargs):
 	
 	return target_coords
 
-
+### get angle unit information from theoretical grid.
 def get_angle_unit_theory(return_type):
+	"""
+	Function: get angle unit information from theoretical grid.
+	Input:
+	- return_type: str. 
+		- phi_unit: return radian value of the unit of standardized angle.
+		- aTiCT4: return radian value of angles between targets, center, and T4.
+		- aRiCT4: return radian value of angles between heels, center, and T4.
+	Outputs:
+	- phi_unit: float. radian value of the unit of standardized angle.
+	- aTiCT4: numpy array (6x1). radian value of angles between targets, center, and T4.
+	- aRiCT4: numpy array (6x1). radian value of angles between heels, center, and T4.
+	"""
+
+
 	### before standardization
-	## distance: normal
+	#### distance: normal
 	dT0T2 = dT0T5 = dT2T4 = dT4T5 = 1
 	dT0T4 = dT2T3 = (dT0T5 ** 2 + dT4T5 ** 2 -2*dT4T5*dT0T5*math.cos(math.radians(100)))**0.5
 	dT2T5 = dT3T7 = (dT0T5 ** 2 + dT4T5 ** 2 -2*dT0T2*dT0T5*math.cos(math.radians(80)))**0.5
 	dT0T3 = dT0T7 = ((dT2T5/2) ** 2 + (dT2T3*1.5) ** 2) ** 0.5
 
-	## angles: normal
+	#### angles: normal
 	aT0T2 = math.radians(80)/2
 	aT0T5 = - math.radians(80)/2
 	aT0T3 = math.acos((dT0T3 ** 2 + dT0T7 ** 2 - dT3T7 ** 2)/(2*dT0T3*dT0T7))/2
 	aT0T7 = - aT0T3
 	aT0T4 = 0
 
-	## target coordinates
+	#### target coordinates
 	T0 = np.array((0,0))
 	T2 = np.array((aT0T2, dT0T2))
 	T3 = np.array((aT0T3, dT0T3))
@@ -301,7 +343,7 @@ def get_angle_unit_theory(return_type):
 	for i in range(6):
 		target_grid_cart[i,:] = polar_to_cartesian(target_grid_polar[i,1], target_grid_polar[i,0])
 
-	## heel coordinates
+	#### heel coordinates
 	alpha = 0.2354
 	a = 0.2957
 	b = 0.5
@@ -329,7 +371,6 @@ def get_angle_unit_theory(return_type):
 		aTiCT4[i] = inner_angle(target_grid_cart[i,:] - c, target_grid_cart[3,:] - c, True)
 		if(i in [4,5]):
 			aTiCT4[i] = - aTiCT4[i]
-	# print(aTiCT4)
 
 	aRiCT4 = np.zeros((6,1))
 	for i in range(1,6):
@@ -341,6 +382,7 @@ def get_angle_unit_theory(return_type):
 	phi_unit = aTiCT4[2,0]
 
 
+	### return
 	if(return_type == 'phi_unit'):
 		return phi_unit
 	elif(return_type == 'aTiCT4'):
@@ -348,8 +390,18 @@ def get_angle_unit_theory(return_type):
 	elif(return_type == 'aRiCT4'):
 		return aRiCT4
 
-
+### get angle unit information from measured target positions.
 def get_angle_unit_data(sum_df, **kwargs):
+	"""
+	Function: get angle unit information from measured target positions.
+	Input:
+	- sum_df: DataFrame. processed DataFrame that contains both bundle heel and target info and growth cone length and angle info.
+	- kwargs: additional parameters
+		- 'criteria': Dataframe with Boolean values. filtering which bundles to include in the calculation.
+	Output:
+	- phi_unit: radian value of "1" in standardized coordinate.
+	"""
+
 	if('criteria' in kwargs.keys()):
 		criteria = kwargs['criteria']
 		sum_df = sum_df.loc[criteria, :]
@@ -357,8 +409,20 @@ def get_angle_unit_data(sum_df, **kwargs):
 
 	return phi_unit
 
-
+### get polar coordiantes of target grid from standardized coordinates.
 def get_target_grid_polar_summary(**kwargs):
+	"""
+	Function: get polar coordiantes of target grid.
+	Input:
+	- kwargs:
+		- 'return_type': str. calculate angle based on theoretical grid ("theory") or measured grid ("data")
+		- 'dTiCs': dictionary. {target_id : distance value}. |Ti-C| normalized.
+		- 'aTiCT4s': numpy array. radian values of angles between Ti, C, T4.
+	Output:
+	- grid: numpy array (6x2). polar coordinate values of target grid (T0, T2, T3, T4, T5, T3')
+	"""
+
+	### unravel params
 	index_to_target_id = settings.matching_info.index_to_target_id
 
 	return_type = kwargs['return_type']
@@ -369,16 +433,32 @@ def get_target_grid_polar_summary(**kwargs):
 		dTiCs = kwargs['dTiCs']
 		aTiCT4s =  kwargs['aTiCT4s']
 
+	### get grid
 	grid = np.zeros((6,2))
 	for i in range(6):
+		#### theta
 		grid[i,0] = aTiCT4s[i]
+		#### r
 		if(index_to_target_id[i] in dTiCs.keys()):
 			grid[i,1] = dTiCs[index_to_target_id[i]]
 
 	return grid
 
 
+### get polar coordiantes of heel grid from standardized coordinates.
 def get_heel_grid_polar_summary(**kwargs):
+	"""
+	Function: get polar coordiantes of target grid.
+	Input:
+	- kwargs:
+		- 'return_type': str. calculate angle based on theoretical grid ("theory") or measured grid ("data")
+		- 'dTiCs': dictionary. {target_id : distance value}. |Ti-C| normalized.
+		- 'aTiCT4s': numpy array. radian values of angles between Ti, C, T4.
+	Output:
+	- grid: numpy array (6x2). polar coordinate values of target grid (T0, T2, T3, T4, T5, T3')
+	"""
+
+	### unravel parameters
 	index_to_target_id = settings.matching_info.index_to_target_id
 
 	return_type = kwargs['return_type']
@@ -389,6 +469,7 @@ def get_heel_grid_polar_summary(**kwargs):
 		dRiCs = kwargs['dRiCs']
 		aRiCT4 =  kwargs['aRiCT4']
 
+	### get grid info.
 	grid = np.zeros((6,2))
 	for i in range(6):
 		grid[i,0] = aRiCT4[i]
@@ -651,7 +732,6 @@ def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 	Output:
 	- sum_df: DataFrame. Combined annotation and angle/length info.
 	"""
-	print("Calculate Mutual Repulsion!")
 
 	### get phi_unit
 	criteria = (annots_df['is_Edge'] == 0) & (annots_df['symmetry'] <= 0.5)
@@ -814,145 +894,6 @@ def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 
 	return sum_df
 
-
-### processing summary_df without calculation of mutual repulsion
-'''
-def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
-	"""
-	Function: process summary_df without calculation of mutual repulsion
-	Inputs:
-	- sum_df_old: DataFrame. Imported angle and length csv file.
-	- annots_df: DataFrame. Imported annotation csv file.
-	- rel_poses: Dictionary. Relative position info from the image quantification process.
-	
-	Output:
-	- sum_df: DataFrame. Combined annotation and angle/length info.
-	"""
-	print("No mutual repulsion calculation!")
-
-	### get phi_unit
-	criteria = (annots_df['is_Edge'] == 0) & (annots_df['symmetry'] <= 0.5)
-	phi_unit = get_angle_unit_data(annots_df, criteria = criteria)
-
-	sum_df = sum_df_old.copy(deep = True)
-	paths = settings.paths
-
-	qc_cols = group_headers(annots_df, 'is_', True)
-
-	cols_add = ['heel_pos_type', 'bundle_rcells_total', 'length_fromheel']
-	cols_add += qc_cols
-	sum_df = dataframe_add_column(sum_df, cols_add)
-
-	### group by time and sample ID
-	annots_df_group = annots_df.groupby(['TimeID', 'SampleID'])
-	sum_df_group = sum_df.groupby(['TimeID', 'SampleID'])
-
-	### process each sample
-	for key in rel_poses.keys():
-		timeID = key[0]
-		sampleID = key[1]
-		rel_pos = rel_poses[key]
-		print(f"{timeID}_hrs_sample_{sampleID}", end = ", ")
-
-		if((timeID, sampleID) not in sum_df_group.groups):
-			print(f"ERROR! {timeID}hrs_smp{sampleID} not in sum_df!")
-		else:
-			### sum_df
-			sum_df_current = sum_df_group.get_group((timeID, sampleID))
-			sum_df_current_gp = sum_df_current.groupby('bundle_no')
-
-			### annots_df
-			annots_df_current = annots_df_group.get_group((timeID, sampleID))
-			annots_df_current.loc[:,'Bundle_No'] = annots_df_current.loc[:,'Bundle_No'].values.astype(int)
-			annots_df_current.set_index('Bundle_No', inplace = True)
-
-			# print(f"bundles numbers: sum_df = {len(sum_df_current_gp)}, annot_df = {len(annots_df_current)}, output = {len(rel_pos)}")
-
-			### process each bundle
-			for bundle_no in annots_df_current.index:
-				
-				### update annotation
-				phi_range_1 = rel_pos[bundle_no]["phi_range_1"]
-				phi_range_2 = rel_pos[bundle_no]["phi_range_2"]
-				symmetry = abs(phi_range_1 - phi_range_2)/max(phi_range_2, phi_range_1)
-
-				##### heel and target grid
-				ch = get_heel_coords_sum(bundle_no, annots_df_current)
-				ct = get_target_coords_sum(bundle_no, annots_df_current)
-
-				### relative positions info
-				if(bundle_no not in rel_pos.keys()):
-					print(f"ERROR! Bundle No.{bundle_no} don't exist in output_data!")
-				else:
-					r3_heel = rel_pos[bundle_no]['R3']
-					r4_heel = rel_pos[bundle_no]['R4']
-					t3_pos = rel_pos[bundle_no]['T3c']
-					t7_pos = rel_pos[bundle_no]['T7c']
-
-				### matching summary_df with bundles_df
-				inds_sum =  sum_df_current.index[(sum_df_current['bundle_no'] == bundle_no)]
-
-				### Error: more than two R cells recorded for the particular bundle.
-				if(len(inds_sum) > 2):
-					print(f'Error! multiple incidents (n = {inds_sum}) of same bundle! bundle_no = {bundle_no}')
-
-				### normal
-				elif((len(inds_sum) > 0) & (len(inds_sum) <= 2)):
-
-					r_types = sum_df_current.loc[inds_sum,['type_Rcell']]
-					num_rcells = len(inds_sum)
-
-					#### R3R4 case
-					if(sum_df_current.loc[inds_sum,['type_bundle']].values.flatten()[0] == 'R3R4'): 
-						for iR in r_types.index:
-							r_type = r_types.loc[iR, 'type_Rcell']
-
-							if(r_type == 3):
-								sum_df.loc[iR, 'heel_pos_type'] = 3
-								sum_df.loc[iR, 'length_fromheel'] = sum_df.loc[iR, 'length'] - r3_heel
-							elif(r_type == 4):
-								sum_df.loc[iR,'heel_pos_type'] = 4
-								sum_df.loc[iR, 'length_fromheel'] = sum_df.loc[iR, 'length'] - r4_heel
-							else:
-								print('EROR! Not R3 nor R4!')
-							
-							sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR, r_type, phi_unit)
-							
-					#### R3/R3 or R4/R4 case:
-					else:
-						angle1 = sum_df.loc[r_types.index[0], 'angle']
-						angle2 = sum_df.loc[r_types.index[1], 'angle']
-						# print(angle1, angle2, iR3, iR4, end = "; ")
-						if(angle1 > angle2):
-							iR3 = r_types.index[0]
-							iR4 = r_types.index[1]
-						else:
-							iR3 = r_types.index[1]
-							iR4 = r_types.index[0]
-						sum_df.loc[iR3,'heel_pos_type'] = 3
-						sum_df.loc[iR4,'heel_pos_type'] = 4
-
-						sum_df.loc[iR3, 'length_fromheel'] = sum_df.loc[iR3, 'length'] - r3_heel
-						sum_df.loc[iR4, 'length_fromheel'] = sum_df.loc[iR4, 'length'] - r4_heel
-						
-						sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR3, 3, phi_unit)
-						sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR4, 4, phi_unit)
-			
-
-		sum_df_groups = sum_df.groupby(['heel_pos_type', 'type_bundle'])
-		if((3, 'R3R3') in sum_df_groups.groups.keys()):
-			sum_df.loc[sum_df_groups.get_group((3, 'R3R3')).index,'type_plot'] = 'R3/R3(3)'
-		if((4, 'R3R3') in sum_df_groups.groups.keys()):
-			sum_df.loc[sum_df_groups.get_group((4, 'R3R3')).index,'type_plot'] = 'R3/R3(4)'
-		if((3, 'R4R4') in sum_df_groups.groups.keys()):
-			sum_df.loc[sum_df_groups.get_group((3, 'R4R4')).index,'type_plot'] = 'R4/R4(3)'
-		if((4, 'R4R4') in sum_df_groups.groups.keys()):
-			sum_df.loc[sum_df_groups.get_group((4, 'R4R4')).index,'type_plot'] = 'R4/R4(4)'
-		sum_df.loc[sum_df_groups.get_group((3, 'R3R4')).index,'type_plot'] = 'R3'
-		sum_df.loc[sum_df_groups.get_group((4, 'R3R4')).index,'type_plot'] = 'R4'
-
-	return sum_df
-'''
 
 # ================= Mutual Repulsion Regression ================= #
 def mutual_repulsion_regression(sum_df, annots_df):
