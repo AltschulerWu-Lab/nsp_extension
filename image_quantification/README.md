@@ -12,8 +12,6 @@ This folder contains python scripts to transform annotated images using the stan
 	- pandas >= 1.0.5
 	- scikit_image >= 0.16.2
 	- numpy >= 1.18.5
-	- skimage >= 0.0
-
 
 ## Structure
 - The _main_ folder contains the main python script (_data_quantification_main.py_) to perform the entire image quantification process on one annotated image. 
