@@ -4,7 +4,7 @@ This folder contains python scripts to transform annotated images using the stan
 
 ## Setup
 - This code was developed to run on the UCSF Wynton cluster. Running the code on a different system will require installation of the required packages and adapting the code accordingly. 
-- Required packages:
+- Dependencies:
 	- Python >= 3.6
 	- seaborn >= 0.11.0
 	- scipy >= 1.5.0
