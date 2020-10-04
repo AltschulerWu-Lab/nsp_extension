@@ -3,7 +3,17 @@
 This folder contains python scripts to transform annotated images using the standardized coordinate system described in the manuscript.
 
 ## Setup
-This code was developed to run on the UCSF Wynton cluster. Running the code on a different system will require installation of the required packages and adapting the code accordingly. 
+- This code was developed to run on the UCSF Wynton cluster. Running the code on a different system will require installation of the required packages and adapting the code accordingly. 
+- Required packages:
+	- Python >= 3.6
+	- seaborn >= 0.11.0
+	- scipy >= 1.5.0
+	- matplotlib >= 3.2.2
+	- pandas >= 1.0.5
+	- scikit_image >= 0.16.2
+	- numpy >= 1.18.5
+	- skimage >= 0.0
+
 
 ## Structure
 - The _main_ folder contains the main python script (_data_quantification_main.py_) to perform the entire image quantification process on one annotated image. 
