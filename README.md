@@ -1,4 +1,4 @@
-# On the role of photoreceptor identify in controlling accurate wiring of the Drosophila visual circuit
+# On the role of photoreceptor identity in controlling accurate wiring of the Drosophila visual circuit
 This repository contains data analysis codes for manuscript "On the role of photoreceptor identify in controlling accurate wiring of the Drosophila visual circuit"
 
 ## Contents
