@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-03-27 15:06:33
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-10-04 07:21:56
+# @Last Modified time: 2021-06-02 21:56:10
 
 import os
 
@@ -25,8 +25,9 @@ def get_unique_filename(prefix, filename):
 ### class that store all the paths.
 class Paths:
 	def __init__(self):
-		self.data_prefix = os.path.join(os.getcwd(), 'data')
-		self.output_prefix = os.path.join(os.getcwd(), 'figures')
+		pardir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+		self.data_prefix = os.path.join(pardir, 'data')
+		self.output_prefix = os.path.join(pardir, 'results')
 		self.code_path = os.getcwd()
 
 ### class that stores indexing and color coding set-ups that are universal.
