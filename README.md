@@ -1,5 +1,5 @@
-# On the role of photoreceptor identity in controlling accurate wiring of the Drosophila visual circuit
-This repository contains data analysis codes for manuscript "On the role of photoreceptor identify in controlling accurate wiring of the Drosophila visual circuit"
+# Analysis of growth cone extension in standardized coordinates highlights self-organization rules during wiring of the Drosophila visual system
+This repository contains data analysis codes for manuscript "Analysis of growth cone extension in standardized coordinates highlights self-organization rules during wiring of the Drosophila visual system"
 
 ## Contents
 ### image_preprocessing
