@@ -19,8 +19,6 @@ This folder contains python scripts to transform annotated images using the stan
 	+ The _function_ folder contains python scripts with functions to support the main script. If the sub-folder structure is kept intact, the functions should be imported automatically.
 	+ The _submission_ folder contains one example of bash script to run the quantification pipeline on UCSF Wynton cluster.
 - The _data_ folder contains one example image and its annotations.
-- The _output_ folder is intended to store outputs from the quantification process.
-- The _doc_ folder is intended to store log files of the quantification.
 
 ## Image quantification process
 **1. Image pre-processing and annotation**
@@ -32,7 +30,7 @@ This folder contains python scripts to transform annotated images using the stan
 **2. Image quantification using _data_quantification_main.py_**
 - Paths: paths are defined in the `Path` class in _settings.py_ file in the _functions_ folder. It contains paths to the input folder (`data_folder_path`), desired output folder (`output_folder_path`), folder to save log files (`log_folder_path`), and the code folder (`code_path`). Current folder structure is:
 	- Inputs are stored under _data_ folder located in the same sup-folder as _src_ where all python scripts are. Images are stored in the sub-folder _Images_, csv outputs from Fiji are stored in the sub-folder _ROIs_, and annotation of bundle and target indexing are stored in the sub-folder _Annotations_
-	- Outputs are stored under _output_ folder located in the same sup-folder as _src_ where all python scripts are. Data outputs will be stored under the sub-folder _Data_Output_ while figures will be stored under the sub-folder _Figure_Output_.
+	- Outputs will be stored under _output_ folder located in the same sup-folder as _src_ where all python scripts are. Data outputs will be stored under the sub-folder _Data_Output_ while figures will be stored under the sub-folder _Figure_Output_.
 	- Log files will be stored under _/doc/logs_ folder.
 - Inputs:
 	- String input: this will pass the name of the annotation file as well as key parameters to the script. Name and parameters are separated by comma. Example of a string input: `annotation_example.csv, 1, 40, 40, 76, 20, 3.8`. Parameters passed are: 
