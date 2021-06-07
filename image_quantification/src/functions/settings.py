@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-03-27 15:06:33
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-10-04 06:54:46
+# @Last Modified time: 2021-06-06 17:53:39
 
 import os, datetime
 
@@ -44,10 +44,11 @@ def check_dir(path):
 class Paths:
 	def __init__(self, annot_name):
 		### paths to be specified. Can directly change from here.
-		self.data_folder_path = os.path.join(os.path.dirname(os.getcwd()), 'data_example')
-		self.output_folder_path = os.path.join(os.path.dirname(os.getcwd()), 'output_example')
-		self.log_folder_path = os.path.join(os.path.dirname(os.getcwd()), 'logs')
-		self.code_path = os.path.join(os.path.dirname(os.getcwd()), 'functions')
+		self.pardir = os.path.abspath(os.path.join(os.getcwd(), os.pardir, os.pardir))
+		self.data_folder_path = os.path.join(self.pardir, 'data')
+		self.output_folder_path = os.path.join(self.pardir, 'results')
+		self.log_folder_path = os.path.join(self.pardir, 'doc', 'logs')
+		self.code_path = os.path.join(self.pardir, 'src', 'functions')
 
 		### internal folder structure
 		image_folder = 'Images'
@@ -132,7 +133,7 @@ class GeneralParams:
 		self.num_outside_angle = int(input_list[3]) # number of angle sections to expand in calculation outside of angle(T3-c-T3').
 		self.num_x_section = int(input_list[4]) # number of length sections
 		self.z_offset = int(input_list[5]) # number of z-stacks above and below the center (z-slice showing the longest growth cone (typically R3 and/or R4))
-		self.radius_expanse_ratio = int(input_list[6]) # max value of relative length given |C-T4| = 1
+		self.radius_expanse_ratio = float(input_list[6]) # max value of relative length given |C-T4| = 1
 
 
 ### get input

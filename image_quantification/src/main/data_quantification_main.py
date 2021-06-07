@@ -2,7 +2,7 @@
 # @Author: sf942274
 # @Date:   2020-04-01 08:09:19
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-10-04 06:56:19
+# @Last Modified time: 2021-06-06 17:52:02
 
 import os, sys, pickle, datetime, time, warnings
 
@@ -219,13 +219,13 @@ def analyze_image(bundles_df, annot_bundles_df, image_norm, image_name, m2p_rati
 						4]
 
 		### calculate slicing information
-		#### Angle normalization v3: T7 = -1, T4 = 0, T3 = 1
-		if(slice_type == 0):
-			pp_i, rel_points_i, fig  = my_int.get_slice_params_v1(bundles_df, bundle_params, image_name, xy_ratio = m2p_ratio[0], is_print = False, is_plot = True, is_save = True)
+		#### Angle normalization v2: T7 = -1, T4 = 0, T3 = 1
+		if(slice_type == 1):
+			pp_i, rel_points_i, fig  = my_int.get_slice_params_v2(bundles_df, bundle_params, image_name, xy_ratio = m2p_ratio[0], is_print = False, is_plot = True, is_save = True)
 
 		#### Angle normalization v1: T7 = -1, T3 = 1
-		elif(slice_type == 1):
-			pp_i, rel_points_i, fig = my_int.get_slice_params_v2(bundles_df, bundle_params, image_name, xy_ratio = m2p_ratio[0], is_print = False, is_plot = True, is_save = True)
+		elif(slice_type == 0):
+			pp_i, rel_points_i, fig = my_int.get_slice_params_v1(bundles_df, bundle_params, image_name, xy_ratio = m2p_ratio[0], is_print = False, is_plot = True, is_save = True)
 
 		plt.close(fig)
 		params.append(pp_i)

@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-03-27 15:06:33
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2021-06-02 21:56:10
+# @Last Modified time: 2021-06-06 17:44:19
 
 import os
 
@@ -86,7 +86,6 @@ class GeneralParams:
 		self.num_outside_angle = 0
 		self.num_x_section = 0
 		self.z_offset = 0
-		self.scale_factor = 0
 		self.radius_expanse_ratio = 0
 
 ### class that stores parameters for analysis
