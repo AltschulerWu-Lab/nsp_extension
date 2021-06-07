@@ -1,5 +1,5 @@
 # Figure Generation
-This folder contains python scripts and a jupyter notebook to generate figures in the manuscript.
+This folder contains all tje data and scripts necessary to generate all data figures in the manuscript.
 
 ## Structure
 - _data_ folder contains all the data necessary to generate data figures in the manuscript.
