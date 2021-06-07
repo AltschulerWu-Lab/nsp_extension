@@ -6,8 +6,6 @@ This folder contains python scripts and a jupyter notebook to generate figures i
 - _src_ folder contains all scripts used to generate data figures.
 	+ _settings.py_ and _summary_helper.py_ contains functions to support the notebook.
 	+ All the plots are done in the notebook _generate_figures.ipynb_.
-- _results_ folder is intended to store plotted figures.
-
 
 ## Generate Figures
 1. Paths
