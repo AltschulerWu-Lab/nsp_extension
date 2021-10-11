@@ -1,4 +1,4 @@
-# Analysis of growth cone extension in standardized coordinates highlights self-organization rules during wiring of the Drosophila visual system
+# Analysis of growth cone extension in standardized coordinates highlights self-organization rules during wiring of the *Drosophila* visual system
 This repository contains data analysis codes for manuscript "Analysis of growth cone extension in standardized coordinates highlights self-organization rules during wiring of the Drosophila visual system"
 
 ## Contents
