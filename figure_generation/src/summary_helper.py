@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2020-09-09 04:01:25
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-10-04 07:24:22
+# @Last Modified time: 2021-10-10 21:49:31
 
 import os, matplotlib, math
 
@@ -93,6 +93,7 @@ def dataframe_add_column(df, column_list):
 
 	return df
 
+
 # ================= geometry =================
 ### Inner angle calculation
 # source: https://stackoverflow.com/questions/2827393/angles-between-two-n-dimensional-vectors-in-python
@@ -167,7 +168,6 @@ def get_counter_angle(start, end, is_radians):
 			angle = angle+360
 	return angle
 
-
 ### get_vector_length
 def get_vector_length(v):
 	"""
@@ -216,6 +216,91 @@ def polar_to_cartesian(r,theta):
 	return x,y
 
 
+### re-center coordinates
+def carcedian_re_center_coords(coords, center):
+	"""
+	Function: re-center array of coordinates according to the center coordinate
+	Inputs:
+	- coords: numpy array. array of coordinates (can either be nx2 or 2xn)
+	- center: numpy array. coordinate of the center (1x2 or 2x1)
+	Outputs:
+	- new_coords: numpy array. array of coordinates re-centered. same format as coords.
+	"""
+	new_coords = np.copy(coords)
+	shape = coords.shape
+	if(shape[0] == 2):
+		new_coords[0,:] = new_coords[0,:] - center[0]
+		new_coords[1,:] = new_coords[1,:] - center[1]
+	elif(shape[1] == 2):
+		new_coords[:,0] = new_coords[:,0] - center[0]
+		new_coords[:,1] = new_coords[:,1] - center[1]
+	return new_coords
+
+### flip coordinates horizontally or vertically.
+def flip_coords(coords, axis):
+	"""
+	Function: flip coordinates horizontally or vertically
+	Inputs:
+	- coords: numpy array. array of coordinates (can either be nx2 or 2xn)
+	- axis: str. 'v' = flip vertically; 'h' = flip horizontally.
+	Outputs:
+	- new_coords: numpy array. array of coordinates re-centered. same format as coords.
+	"""
+	new_coords = np.copy(coords)
+	shape = coords.shape
+	if(axis == 'h'):
+		if(shape[0] == 2):
+			new_coords[0,:] = - new_coords[0,:]
+		elif(shape[1] == 2):
+			 new_coords[:,0] = - new_coords[:,0]
+	if(axis == 'v'):
+		if(shape[0] == 2):
+			new_coords[1,:] = - new_coords[1,:]
+		elif(shape[1] == 2):
+			 new_coords[:,1] = - new_coords[:,1]
+	return new_coords
+
+### rotate coordinates counter-clockwise.
+def rotate_points(center_point, coords, angle):
+	"""
+	Function: Rotates coordinates counter-clockwise around a center point. Rotation angle is in radians.
+	Source: adapted from https://gist.github.com/somada141/d81a05f172bb2df26a2c
+	Input:
+	- center_point: numpy array. 1x2 or 2x1. 
+	- coords: numpy array. array of coordinates (nx2).
+	- angle: float. rotation angle in radians.
+	Output:
+	- new_coords: numpy array (nx2). new coordinates after rotation.
+	"""
+	new_coords = np.zeros(coords.shape)
+	new_coords[:,0] = coords[:,0] - center_point[0]
+	new_coords[:,1] = coords[:,1] - center_point[1]
+	
+	new_coords[:,0] = new_coords[:,0] * math.cos(angle) - new_coords[:,1] * math.sin(angle)
+	new_coords[:,1] = new_coords[:,0] * math.sin(angle) + new_coords[:,1] * math.cos(angle)
+	
+	new_coords[:,0] = new_coords[:,0] + center_point[0]
+	new_coords[:,1] = new_coords[:,1] - center_point[1]
+	
+	return new_coords
+
+### get centroids of given coordinates.
+def get_centroid(coords):
+	"""
+	Function: get centroids of given coordinates.
+	Input:
+	- coords: numpy array. mx2xn. m = number of centroids; n = number of points per centroid.
+	Output:
+	- new_coords: numpy array (mx2). centroids.
+	"""
+	new_coords = np.zeros((coords.shape[0], coords.shape[1]))
+	for i in range(coords.shape[0]):
+		new_coords[i,0] = np.sum(coords[i,0,:])/coords.shape[2]
+		new_coords[i,1] = np.sum(coords[i,1,:])/coords.shape[2]
+	return new_coords
+
+
+
 ### get heel coordinates
 def get_heel_coords_sum(bundle_no, annots_df, **kwargs):
 	"""
@@ -234,22 +319,10 @@ def get_heel_coords_sum(bundle_no, annots_df, **kwargs):
 	### unravel params
 	dim = 2
 
-	if('is_pixel' in kwargs.keys()):
-		is_pixel = kwargs['is_pixel']
-	else:
-		is_pixel = True
-	if('pixel_to_um' in kwargs.keys()):
-		pixel_to_um = kwargs['pixel_to_um']
-	else:
-		pixel_to_um = np.zeros((dim)) + 1
-	
 	### get heel coordinates
 	heel_coords = np.zeros((6,dim))
 	heel_coords[:,0] = list(annots_df.loc[bundle_no, group_headers(annots_df, 'coord_X_R', True)])
 	heel_coords[:,1] = list(annots_df.loc[bundle_no, group_headers(annots_df, 'coord_Y_R', True)])
-	if(not is_pixel):
-		for i in range(heel_coords.shape[1]):
-			heel_coords[:,i] = heel_coords[:,i] * pixel_to_um[i]
 
 	return heel_coords
 
@@ -270,18 +343,6 @@ def get_target_coords_sum(bundle_no, annots_df, **kwargs):
 
 	### unravel params
 	dim = 2
-	if('return_type' in kwargs.keys()):
-		return_type = kwargs['return_type']
-	else:
-		return_type = 'c'
-	if('is_pixel' in kwargs.keys()):
-		is_pixel = kwargs['is_pixel']
-	else:
-		is_pixel = True
-	if('pixel_to_um' in kwargs.keys()):
-		pixel_to_um = kwargs['pixel_to_um']
-	else:
-		pixel_to_um = np.zeros((dim)) + 1
 	index_to_target_id = settings.matching_info.index_to_target_id
 
 	### get target coordinates
@@ -396,6 +457,8 @@ def get_angle_unit_data(sum_df, **kwargs):
 	if('criteria' in kwargs.keys()):
 		criteria = kwargs['criteria']
 		sum_df = sum_df.loc[criteria, :]
+
+	# print(f"get_angle_unit_num={len(sum_df)}")
 	phi_unit = sum_df['aT3cT7'].mean()/2
 
 	return phi_unit
@@ -435,7 +498,6 @@ def get_target_grid_polar_summary(**kwargs):
 
 	return grid
 
-
 ### get polar coordiantes of heel grid from standardized coordinates.
 def get_heel_grid_polar_summary(**kwargs):
 	"""
@@ -468,7 +530,6 @@ def get_heel_grid_polar_summary(**kwargs):
 			grid[i,1] = dRiCs[i+1]
 
 	return grid
-
 
 ### Standardized coordinate --> grid in cartasian coordinates.
 def get_cartasian_grid_from_stc(sum_df_ri, ch, cat_angle, cat_length, phi_unit):
@@ -523,7 +584,7 @@ def get_cartasian_grid_from_stc(sum_df_ri, ch, cat_angle, cat_length, phi_unit):
 		
 	return target_stc_car, heels_stc_car, gc_tip_car
 
-
+### get angle and length of growth cones.
 def get_gc_angle_length(sum_df_ri, coord_heels, phi_unit, cat_angle, cat_length, r_type):
 	### from standardized coordinate to cartasian coordinate
 	target_stc_car, heels_stc_car, gc_tip_car = get_cartasian_grid_from_stc(sum_df_ri, coord_heels, cat_angle, cat_length, phi_unit)
@@ -533,19 +594,25 @@ def get_gc_angle_length(sum_df_ri, coord_heels, phi_unit, cat_angle, cat_length,
 		ori = heels_stc_car[2,:]
 	else:
 		ori = heels_stc_car[3,:]
-	v_gc = gc_tip_car - ori
 	
+	v_gc = gc_tip_car - ori
+
+	### relative angle
 	gc_angle = inner_angle(v_gc, np.array([1,0]), True)
+	gc_angle_rel = gc_angle/phi_unit
+
+	if(v_gc[0,1] < 0):
+		gc_angle_rel = - gc_angle_rel
+
+	### relative length.
 	gc_lengtrh = get_vector_length(v_gc)
 
-	### direction of angle
-	if(v_gc[0,1] < 0):
-		gc_angle = - gc_angle
+	return gc_lengtrh, gc_angle_rel
 
-	return gc_lengtrh, gc_angle
 
 
 # ================= mutual repulsion calculation =================
+### new vector based on two base vectors and its weights (alphas)
 def get_angle_prediction_two_vectors(v1, v2, origin, alphas):
 	v1_uni = unit_vector(v1)
 	v2_uni = unit_vector(v2)
@@ -558,6 +625,7 @@ def get_angle_prediction_two_vectors(v1, v2, origin, alphas):
 	
 	return point, v_new
 
+### calculate theoretical angle
 def calculate_mutual_repulsion_theory(coord_heels, coord_target, r_type):
 	r_type = int(r_type)
 	
@@ -580,10 +648,15 @@ def calculate_mutual_repulsion_theory(coord_heels, coord_target, r_type):
 	ls[0] = get_vector_length(v1)
 	ls[1] = get_vector_length(v2)
 
+	# print(f"v1={v1}, v2={v2}.")
+
 
 	### repulse from neighbor heels, weighted equally
 	alpha = 0.5
 	p, v = get_angle_prediction_two_vectors(v1, v2, ori, [alpha, 1-alpha])
+
+	# print(f"p={p}, v = {v}")
+
 	point = np.transpose(p)
 	vector = np.transpose(v)
 	theta = inner_angle(vector, v_base, True)
@@ -591,6 +664,7 @@ def calculate_mutual_repulsion_theory(coord_heels, coord_target, r_type):
 
 	return point, vector, theta, angle, np.vstack((v1, v2))
 
+### calculate actual angle.
 def calculate_mutual_repulsion_data(sum_df_ri, ch, phi_unit, cat_angle, cat_length, r_type):
 	target_stc_car, heels_stc_car, gc_tip_car = get_cartasian_grid_from_stc(sum_df_ri, ch, cat_angle, cat_length, phi_unit)
 
@@ -608,6 +682,7 @@ def calculate_mutual_repulsion_data(sum_df_ri, ch, phi_unit, cat_angle, cat_leng
 
 	return gc_tip_car, gc_vector, gc_theta, gc_angle
 
+### data for regression.
 def generate_regression_data(sum_df):
 	X = np.zeros((len(sum_df) * 2, 2))
 	y = np.zeros((len(sum_df) * 2))    
@@ -631,10 +706,187 @@ def generate_regression_data(sum_df):
 	
 	return X,y
 
+### regression analysis for mutual repulsion
+def mutual_repulsion_regression(sum_df, annots_df):
+	### parameters
+	paths = settings.paths
+	
+	### regression fitting
+	criteria = (sum_df['symmetry']<=0.5) & (sum_df['time_id']<=26)
+	sum_df_regression = sum_df.loc[criteria,:]
+	print(len(sum_df_regression))
+	df_regression_results = pd.DataFrame(columns = ['a', 'b', 'r2'])
+	print("Regression result:")
+	for i, r_type in enumerate(["R3", "R4"]):
+		sum_df_r = sum_df_regression.groupby("type_plot").get_group(r_type)
+		df_data = sum_df_r[['ml_x_v1', 'ml_y_v1', 'ml_x_v2', 'ml_y_v2', 'ml_x_vgc', 'ml_y_vgc']].dropna()
+		X, y = generate_regression_data(df_data)
+		model = linear_model.LassoCV(alphas=np.logspace(-6, -3, 7),
+                     max_iter=100000,
+                     cv=5,
+                     fit_intercept=False,
+                     positive=True)
+		reg = model.fit(X,y)
+		
+		print(f"r_type = {r_type}: alpha = {reg.coef_[0]:.2f}, beta = {reg.coef_[1]:.2f}, R^2 = {reg.score(X,y):.2f}")
+
+		df_tmp = pd.DataFrame(columns = df_regression_results.columns)
+		df_tmp.loc[0, 'type_plot'] = r_type
+		df_tmp.loc[0, 'a'] = reg.coef_[0]
+		df_tmp.loc[0, 'b'] = reg.coef_[1]
+		df_tmp.loc[0, 'r2'] = reg.score(X,y)
+		df_regression_results = df_regression_results.append(df_tmp, ignore_index=True)
+	
+	### calculate regression direction
+	sum_df_ctrl_group = sum_df_regression.groupby(["time_id", "sample_no"])
+	phi_unit = get_angle_unit_data(annots_df, 
+											  criteria = (annots_df['is_Edge'] == 0) & (annots_df['symmetry'] <= 0.5))
+	print("Regression direction calculation:", end = " ")
+	for gp in sum_df_ctrl_group.groups.keys():
+		time_id, sample_id = gp
+		print(f"{time_id}_hrs_sample_{sample_id}", end = "; ")
+
+		sum_df_current = sum_df_ctrl_group.get_group(gp)
+		annots_df_current = annots_df.groupby(["time_id", "sample_no"]).get_group(gp).set_index('bundle_no')
+
+		for ind in sum_df_current.index:
+			r_type = int(sum_df_current.loc[ind, 'type_Rcell'])
+			bundle_no = sum_df_current.loc[ind,'bundle_no']
+
+			coord_heels = get_heel_coords_sum(bundle_no, annots_df_current)
+
+			ori = coord_heels[r_type-1, :]
+
+			if(r_type == 3):
+				v_base = coord_heels[4-1,:] - coord_heels[3-1,:]
+			elif(r_type == 4):
+				v_base = coord_heels[3-1,:] - coord_heels[4-1,:]
+
+			type_plot = sum_df_current.loc[ind, 'type_plot']
+			i_reg = df_regression_results['type_plot'] == type_plot
+			alphas = np.zeros((2))
+			alphas[0] = df_regression_results.loc[i_reg, 'a'].values[0]
+			alphas[1] = df_regression_results.loc[i_reg, 'b'].values[0]
+			
+			v1 = np.array((sum_df_current.loc[ind, 'ml_x_v1'], sum_df_current.loc[ind, 'ml_y_v1']))
+			v2 = np.array((sum_df_current.loc[ind, 'ml_x_v2'], sum_df_current.loc[ind, 'ml_y_v2']))
+			_, v_pred = get_angle_prediction_two_vectors(v1, v2, ori, alphas)
+
+			theta = inner_angle(v_base, v_pred, True)
+			angle = inner_angle(np.array([1,0]), v_pred, True)
+
+			sum_df.loc[ind, 'ml_theory_theta_reg'] = theta
+			sum_df.loc[ind, 'ml_theory_angle_reg'] = angle
+			sum_df.loc[ind, 'ml_theory_vec_x_reg'] = v_pred[0]
+			sum_df.loc[ind, 'ml_theory_vec_y_reg'] = v_pred[1]
+
+	for plot_cat in ['angle', 'theta']:
+		theory_cat = f"ml_theory_{plot_cat}"
+		actual_cat = f"ml_actual_{plot_cat}"
+		sum_df[f"ml_diff_{plot_cat}"] = (sum_df[theory_cat] - sum_df[actual_cat])
+		
+		theory_cat = f"ml_theory_{plot_cat}_reg"
+		actual_cat = f"ml_actual_{plot_cat}"
+		sum_df[f"ml_diff_{plot_cat}_reg"] = (sum_df[theory_cat] - sum_df[actual_cat])
+
+	return df_data
+
+# ================= process annots_df ================= #
+### process annotation files.
+def process_annots_df(annots_df, rel_poses):
+	"""
+	Function: processing Dataframe with heel/target coordinates of bundles.
+	
+	Inputs:
+	- annots_df: DataFrame. Imported bundle information csv.
+	- rel_poses: Dictionaries. Relative position info from the image quantification process.
+	
+	Output:
+	- annots_df: DataFrame. Processed DataFrame that combines relative position info and heel/target coordinates (center, orientation, and axis aligned).
+	"""
+
+
+	paths = settings.paths
+	target_id_to_index = settings.matching_info.target_id_to_index
+	index_to_target_id = settings.matching_info.index_to_target_id
+	
+	annots_df_group = annots_df.groupby(['time_id', 'sample_no'])
+	### process individual time and sample
+	for gp in annots_df_group.groups.keys():
+		time_id, sample_id = gp
+		print(f'{time_id}, {sample_id}; ', end = "")
+		
+		rel_pos = rel_poses[gp]
+		annot_bundles_df = annots_df_group.get_group(gp).reset_index().set_index('bundle_no')
+		annot_bundles_df.sort_index(inplace = True)
+
+		### align target and heel positions.
+		for i_bd, bundle_no in enumerate(annot_bundles_df.index):
+			
+			ind_annot = annot_bundles_df.loc[bundle_no, 'index']
+			orientation = annot_bundles_df.loc[bundle_no, ['Orientation_AP', 'Orientation_DV']]
+
+			### original target and heel coordinates.
+			ct_ori = get_target_coords_sum(bundle_no, annot_bundles_df)
+			ch_ori = get_heel_coords_sum(bundle_no, annot_bundles_df)
+			center = line_intersection((ch_ori[2,:], ct_ori[target_id_to_index[3],:]),
+											   (ch_ori[3,:], ct_ori[target_id_to_index[7],:]))
+			center = np.array(center)
+
+
+			### new coordinate initialization
+			ct_new = carcedian_re_center_coords(ct_ori, center)
+			ch_new = carcedian_re_center_coords(ch_ori, center)
+
+
+			### flip coordinates so that heels are at same orientation.
+			if(orientation['Orientation_AP'] != "A"):
+				ct_new = flip_coords(ct_new, 'v')
+				ch_new = flip_coords(ch_new, 'v')
+			if(orientation['Orientation_DV'] != "R"):
+				ct_new = flip_coords(ct_new, 'h')
+				ch_new = flip_coords(ch_new, 'h')
+
+
+			### rotate coordinates so that center-T4 line is x-axis.
+			angle = inner_angle(np.array([1,0]) - np.array([0,0]), ct_new[3,:] - np.array([0,0]), True)
+			if(ct_new[3,1] > 0):
+				angle = 2*np.pi - angle
+			ch_new = rotate_points(np.array([0,0]), ch_new, angle)
+			ct_new = rotate_points(np.array([0,0]), ct_new, angle)
+
+
+			### update the new coordinates to annots_df.
+			for i in range(ch_new.shape[0]):
+				annots_df.loc[ind_annot, f'coord_X_R{i+1}'] = ch_new[i,0]
+				annots_df.loc[ind_annot, f'coord_Y_R{i+1}'] = ch_new[i,1]
+				annots_df.loc[ind_annot, f'coord_X_T{index_to_target_id[i]}'] = ct_new[i,0]
+				annots_df.loc[ind_annot, f'coord_Y_T{index_to_target_id[i]}'] = ct_new[i,1]
+
+			### update other information to annots_df.
+			phi_range_1 = rel_pos[bundle_no]["phi_range_1"]
+			phi_range_2 = rel_pos[bundle_no]["phi_range_2"]
+			symmetry = abs(phi_range_1 - phi_range_2)/max(phi_range_2, phi_range_1)
+			annots_df.loc[ind_annot, 'symmetry'] = symmetry
+			annots_df.loc[ind_annot, 'aT7cT4'] = rel_pos[bundle_no]['phi_range_1']
+			annots_df.loc[ind_annot, 'aT3cT4'] = rel_pos[bundle_no]['phi_range_2']
+			annots_df.loc[ind_annot, 'aT3cT7'] = phi_range_1 + phi_range_2
+			annots_df.loc[ind_annot, 'aT2cT4'] = inner_angle(ct_new[target_id_to_index[2],:], ct_new[target_id_to_index[4],:], True)
+			annots_df.loc[ind_annot, 'aT5cT4'] = inner_angle(ct_new[target_id_to_index[5],:], ct_new[target_id_to_index[4],:], True)
+			annots_df.loc[ind_annot, 'aT2cT5'] = inner_angle(ct_new[target_id_to_index[2],:], ct_new[target_id_to_index[5],:], True)
+
+			annots_df.loc[ind_annot, 'R3'] = rel_pos[bundle_no]["R3"]
+			annots_df.loc[ind_annot, 'R4'] = rel_pos[bundle_no]["R4"]
+			annots_df.loc[ind_annot, 'length_one_um'] = rel_pos[bundle_no]["length_one_um"]
+			annots_df.loc[ind_annot, 'T3c'] = rel_pos[bundle_no]["T3c"]
+			annots_df.loc[ind_annot, 'T7c'] = rel_pos[bundle_no]["T7c"]
+
+	print("")
+	return annots_df
 
 # ================= process summary_df =================
 ### supporting function: fill sum_df information for each bundle.
-def fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR, r_type, phi_unit):
+def fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR, r_type, phi_unit_real, phi_unit_theory):
 	"""
 	Function: fill sum_df information for each bundle
 	Inputs:
@@ -655,8 +907,8 @@ def fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, 
 	phi_range_2 = rel_pos[bundle_no]["phi_range_2"]
 	aT30T7 = phi_range_1 + phi_range_2
 	symmetry = abs(phi_range_1 - phi_range_2)/max(phi_range_2, phi_range_1)
-	ch = get_heel_coords_sum(bundle_no, annots_df_current)
-	ct = get_target_coords_sum(bundle_no, annots_df_current)
+	coord_heels = get_heel_coords_sum(bundle_no, annots_df_current)
+	# coord_targets = get_target_coords_sum(bundle_no, annots_df_current)
 
 	### convert R4 angle to mirror-symmetric
 	if(r_type == 4):
@@ -699,78 +951,81 @@ def fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, 
 	cat_angle = 'angle'
 	cat_length = 'length'
 	
-	gc_length, gc_angle = get_gc_angle_length(sum_df.loc[iR,:], ch, phi_unit, cat_angle, cat_length, r_type)
+	gc_length, gc_angle_rel = get_gc_angle_length(sum_df.loc[iR,:], coord_heels, phi_unit_real, cat_angle, cat_length, r_type)
 	
-	sum_df.loc[iR, f"{cat_angle}_gc"] = gc_angle
-	if(r_type == 4):
-		sum_df.loc[iR, f"{cat_angle}_gc_mrr"] = 0 - gc_angle
-	elif(r_type == 3):
-		sum_df.loc[iR, f"{cat_angle}_gc_mrr"] = gc_angle
 	sum_df.loc[iR, f"{cat_length}_gc"] = gc_length
+
+	sum_df.loc[iR, f"{cat_angle}_gc"] = gc_angle_rel
+	sum_df.loc[iR, f"{cat_angle}_gc_plot"] = gc_angle_rel * phi_unit_theory
+	
+	if(r_type == 4):
+		sum_df.loc[iR, f"{cat_angle}_gc_mrr"] = 0 - gc_angle_rel
+	elif(r_type == 3):
+		sum_df.loc[iR, f"{cat_angle}_gc_mrr"] = gc_angle_rel
 
 	return sum_df
 
 
-### processing summary_df
+### processing data structure with annotated growth cone length and angle, and update bundle annotation data structure at the same time.
 def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 	"""
-	Function: process summary_df with calculation of mutual repulsion
+	Function: processing Dataframe with annotated growth cone length and angle, and update bundle annotation data structure at the same time.
 	Inputs:
-	- sum_df_old: DataFrame. Imported angle and length csv file.
-	- annots_df: DataFrame. Imported annotation csv file.
+	- sum_df_old: DataFrame. Imported angle and length dataframe.
+	- annots_df_old: DataFrame. Imported annotation csv dataframe.
 	- rel_poses: Dictionary. Relative position info from the image quantification process.
 	- is_ml: Boolean. whether or not to calculate repulsion model - related values.
 	Output:
-	- sum_df: DataFrame. Combined annotation and angle/length info.
+	- sum_df: DataFrame. processed DataFrame that contains both bundle heel and target info and growth cone length and angle info.
 	"""
 
 	### get phi_unit
 	criteria = (annots_df['is_Edge'] == 0) & (annots_df['symmetry'] <= 0.5)
-	phi_unit = get_angle_unit_data(annots_df, criteria = criteria)
+	phi_unit_avg = get_angle_unit_data(annots_df, criteria = criteria)
+	phi_unit_theory = get_angle_unit_theory('aTiCT4')[2]
+	# print(phi_unit_avg, phi_unit_theory)
 
+	### new sum_df dataframe with added columns
 	sum_df = sum_df_old.copy(deep = True)
 	paths = settings.paths
 
 	qc_cols = group_headers(annots_df, 'is_', True)
-
 	cols_add = ['heel_pos_type', 'bundle_rcells_total', 'length_fromheel']
 	cols_add += qc_cols
 	sum_df = dataframe_add_column(sum_df, cols_add)
 
 	### group by time and sample ID
-	annots_df_group = annots_df.groupby(['TimeID', 'SampleID'])
-	sum_df_group = sum_df.groupby(['TimeID', 'SampleID'])
+	annots_df_group = annots_df.groupby(['time_id', 'sample_no'])
+	sum_df_group = sum_df.groupby(['time_id', 'sample_no'])
 
 	### process each sample
 	for key in rel_poses.keys():
-		timeID = key[0]
-		sampleID = key[1]
+		time_id = key[0]
+		sample_no = key[1]
 		rel_pos = rel_poses[key]
-		print(f"{timeID}_hrs_sample_{sampleID}", end = ", ")
+		print(f"{time_id}, {sample_no}", end = "; ")
 
-		if((timeID, sampleID) not in sum_df_group.groups):
-			print(f"ERROR! {timeID}hrs_smp{sampleID} not in sum_df!")
-		else:
+		# if((time_id, sample_no) not in sum_df_group.groups):
+		# 	print(f"ERROR! {time_id}hrs_smp{sample_no} not in sum_df!")
+		if((time_id, sample_no) in sum_df_group.groups):
 			### sum_df
-			sum_df_current = sum_df_group.get_group((timeID, sampleID))
+			sum_df_current = sum_df_group.get_group((time_id, sample_no))
 			sum_df_current_gp = sum_df_current.groupby('bundle_no')
 
 			### annots_df
-			annots_df_current = annots_df_group.get_group((timeID, sampleID))
-			annots_df_current.loc[:,'Bundle_No'] = annots_df_current.loc[:,'Bundle_No'].values.astype(int)
-			annots_df_current.set_index('Bundle_No', inplace = True)
-
-			# print(f"bundles numbers: sum_df = {len(sum_df_current_gp)}, annot_df = {len(annots_df_current)}, output = {len(rel_pos)}")
+			annots_df_current = annots_df_group.get_group((time_id, sample_no))
+			annots_df_current.loc[:,'bundle_no'] = annots_df_current.loc[:,'bundle_no'].values.astype(int)
+			annots_df_current = annots_df_current.reset_index().set_index('bundle_no')
 
 			### process each bundle
 			for bundle_no in annots_df_current.index:
 				
-				### update annotation
+				### bundle geometry information.
 				phi_range_1 = rel_pos[bundle_no]["phi_range_1"]
 				phi_range_2 = rel_pos[bundle_no]["phi_range_2"]
 				symmetry = abs(phi_range_1 - phi_range_2)/max(phi_range_2, phi_range_1)
 
-				##### heel and target grid
+				### heel and target grid
 				ch = get_heel_coords_sum(bundle_no, annots_df_current)
 				ct = get_target_coords_sum(bundle_no, annots_df_current)
 
@@ -810,15 +1065,24 @@ def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 							else:
 								print('EROR! Not R3 nor R4!')
 							
-							sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR, r_type, phi_unit)
+							if(sum_df.loc[iR, 'angle'] < 0):
+								phi_unit_real = phi_range_1
+							else:
+								phi_unit_real = phi_range_2
 							
-							if(is_ml):
-								#### mutual repulsion                                                       
+							sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR, r_type, phi_unit_real, phi_unit_theory)
+							
+							#### mutual repulsion
+							if(is_ml): 
 								##### grid in standardized coordinates
-								target_stc_car, heels_stc_car, _ = get_cartasian_grid_from_stc(sum_df.loc[iR,:], ch, 'angle', 'length', phi_unit)
+								target_stc_car, heels_stc_car, _ = get_cartasian_grid_from_stc(sum_df.loc[iR,:], ch, 'angle', 'length', phi_unit_avg)
+								# print(f"phi_unit_avg={phi_unit_avg}")
+								# print(f"heels_stc_car={heels_stc_car}")
 
 								##### get theoretical angles
 								point, vector, theta, angle, vs = calculate_mutual_repulsion_theory(heels_stc_car, target_stc_car, r_type)
+								# print(f"theta={theta}, angle={angle}.")
+
 								sum_df.loc[iR, f'ml_theory_theta'] = theta
 								sum_df.loc[iR, f'ml_theory_angle'] = angle
 								sum_df.loc[iR, f'ml_theory_vec_x'] = vector[0]
@@ -838,12 +1102,9 @@ def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 								sum_df.loc[iR, 'angle_ref'] = angle_ref
 
 								#### get measured angles
-								comp_angle_cols = ['angle_mean_otsu', 'angle_mean_li', 'angle_max_avg', 'angle_max_max']
-								comp_length_cols = ['length_mean_otsu', 'length_mean_li', 'length_max', 'length_max']
-
 								cat_angle = 'angle'
 								cat_length = 'length'
-								gc_point, gc_vector, gc_theta, gc_angle = calculate_mutual_repulsion_data(sum_df.loc[iR,:], ch, phi_unit, cat_angle, cat_length, r_type)
+								gc_point, gc_vector, gc_theta, gc_angle = calculate_mutual_repulsion_data(sum_df.loc[iR,:], ch, phi_unit_avg, cat_angle, cat_length, r_type)
 
 								sum_df.loc[iR, f'ml_actual_theta'] = gc_theta
 								sum_df.loc[iR, f'ml_actual_angle'] = gc_angle
@@ -868,8 +1129,8 @@ def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 						sum_df.loc[iR3, 'length_fromheel'] = sum_df.loc[iR3, 'length'] - r3_heel
 						sum_df.loc[iR4, 'length_fromheel'] = sum_df.loc[iR4, 'length'] - r4_heel
 						
-						sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR3, 3, phi_unit)
-						sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR4, 4, phi_unit)
+						sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR3, 3, phi_range_2, phi_unit_theory)
+						sum_df = fill_sum_df_info(sum_df, annots_df_current, rel_pos, num_rcells, bundle_no, iR4, 4, phi_range_1, phi_unit_theory)
 			
 		sum_df_groups = sum_df.groupby(['heel_pos_type', 'type_bundle'])
 		if((3, 'R3R3') in sum_df_groups.groups.keys()):
@@ -886,90 +1147,250 @@ def process_sum_df(sum_df_old, annots_df, rel_poses, is_ml):
 	return sum_df
 
 
-# ================= Mutual Repulsion Regression ================= #
-def mutual_repulsion_regression(sum_df, annots_df):
-	### parameters
+# ================= Figure 3B =================
+### stats of Figure 3B.
+def stats_fig3b(df, hue_name, value_name, pair_list, method):
+	"""
+	Function: get sample size, test for normality, and test for difference between R3 and R4 relative angle measurements.
+	
+	Inputs:
+	- df: dataframe containing grouping and data. 
+	- hue_name: column name of grouping.
+	- value_name: column name of data.
+	- pair_list: groups (R3 vs. R4).
+	- method: test method to use. 'Mann-Whitney'/'Student T'/'Welch'/'KS'
+	
+	Output:print out sample size and stats.
+	"""
+	df_groups = df.groupby(hue_name)
+	for pair in pair_list:
+		a = df_groups.get_group(pair[0]).loc[:,value_name].values
+		b = df_groups.get_group(pair[1]).loc[:,value_name].values
+		t, pa = ss.kstest(a, 'norm')
+		t, pb = ss.kstest(b, 'norm')
+		if(method == 'Mann-Whitney'):
+			t, p = ss.mannwhitneyu(a, b, alternative = 'two-sided')
+		elif(method == 'Student T'):
+			t, p = ss.ttest_ind(a,b)
+		elif(method == 'Welch'):
+			t, p = ss.ttest_ind(a,b, equal_var = False)
+		elif(method == 'KS'):
+			t, p = ss.ks_2samp(a, b, alternative='two-sided', mode='auto')
+		print(f'count: {pair[0]} = {len(a)}, num {pair[1]} = {len(b)}')
+		print(f'KS normality test: pa = {pa}, pb = {pb}')
+		print(f'{method} test: {p}')
+
+# ================= Figure 4 =================
+### Plotting
+def generate_summary_polar_figure(plot_df, pert_info, **kwargs):
+	"""
+	Function: plot polar line plots for relative length and angles for sev>Fz and sev>Nic flies.
+
+	Inputs:
+	- plot_df: dataframe containing relative lengths and angles data for a specific perturbation group (sev>Fz 24hrs, sev>Fz 28hrs, sev>Nic 24hrs, sev>Nic 28 hrs)
+	- pert_info: information about the perturbation group
+		- time_id: age.
+		- pert_cat: genetics. "Fz"/"Nic".
+		- pert_type: which type of perturbed bundle occurs. "R3/R3" or "R4/R4"
+		- pert_rtype. which R-cell-type exist in perturbed bundles. "R3" or "R4"
+	- additional inputs:
+		- is_save: Boolean. Save figures or not. Default = False.
+		- fig_format: extension figure format. Default = "svg".
+		- fig_res: figure resolution. Default = 300.
+
+	Output: Figure.
+	"""
+
+	### unravel params
+	time_id, pert_cat, pert_type, pert_rtype = pert_info
 	paths = settings.paths
+	matching_info = settings.matching_info
+	color_code = matching_info.color_code
 	
-	### regression fitting
-	criteria = (sum_df['symmetry']<=0.5) & (sum_df['TimeID']<=26)
-	sum_df_regression = sum_df.loc[criteria,:]
-	df_regression_results = pd.DataFrame(columns = ['a', 'b', 'r2'])
-	print("Regression result:")
-	for i, r_type in enumerate(["R3", "R4"]):
-		sum_df_r = sum_df_regression.groupby("type_plot").get_group(r_type)
-		df_data = sum_df_r[['ml_x_v1', 'ml_y_v1', 'ml_x_v2', 'ml_y_v2', 'ml_x_vgc', 'ml_y_vgc']].dropna()
-		X, y = generate_regression_data(df_data)
-		model = linear_model.LassoCV(alphas=np.logspace(-6, -3, 7),
-						 max_iter=100000,
-						 cv=5,
-						 fit_intercept=False,
-						 positive=True)
-		reg = model.fit(X,y)
-		
-		print(f"r_type = {r_type}: alpha = {reg.coef_[0]:.2f}, beta = {reg.coef_[1]:.2f}, R^2 = {reg.score(X,y):.2f}")
+	if('is_save' in kwargs.keys()):
+		is_save = kwargs['is_save']
+	else:
+		is_save = False
+	if('fig_format' in kwargs.keys()):
+		fig_format = kwargs['fig_format']
+	else:
+		fig_format = 'svg'
+	if('fig_res' in kwargs.keys()):
+		fig_res = kwargs['fig_res']
+	else:
+		fig_res = 300
 
-		df_tmp = pd.DataFrame(columns = df_regression_results.columns)
-		df_tmp.loc[0, 'type_plot'] = r_type
-		df_tmp.loc[0, 'a'] = reg.coef_[0]
-		df_tmp.loc[0, 'b'] = reg.coef_[1]
-		df_tmp.loc[0, 'r2'] = reg.score(X,y)
-		df_regression_results = df_regression_results.append(df_tmp, ignore_index=True)
 	
-	### calculate regression direction
-	sum_df_ctrl_group = sum_df_regression.groupby(["TimeID", "SampleID"])
-	phi_unit = get_angle_unit_data(annots_df, 
-											  criteria = (annots_df['is_Edge'] == 0) & (annots_df['symmetry'] <= 0.5))
-	print("Regression direction calculation:", end = " ")
-	for gp in sum_df_ctrl_group.groups.keys():
-		time_id, sample_id = gp
-		print(f"{time_id}_hrs_sample_{sample_id}", end = "; ")
+	### get data
+	theta_cat = 'angle_gc_plot'
+	r_cat = 'length_gc'
+	
+	sum_df_grouped = plot_df.groupby('type_plot')
+	
+	ind_r3 = sum_df_grouped.get_group('R3').index
+	ind_r4 = sum_df_grouped.get_group('R4').index
+	if(pert_cat == 'Nic'):
+		ind_pert_r3 = sum_df_grouped.get_group('R4/R4(3)').index
+		ind_pert_r4 = sum_df_grouped.get_group('R4/R4(4)').index
+	elif(pert_cat == 'Fz'):
+		ind_pert_r3 = sum_df_grouped.get_group('R3/R3(3)').index
+		ind_pert_r4 = sum_df_grouped.get_group('R3/R3(4)').index
 
-		sum_df_current = sum_df_ctrl_group.get_group(gp)
-		annots_df_current = annots_df.groupby(["TimeID", "SampleID"]).get_group(gp).set_index('Bundle_No')
+	pos_t3 = np.mean(plot_df.loc[:,'T3c'].values - plot_df.loc[:,'R3'].values)
+	pos_t7 = np.mean(plot_df.loc[:,'T7c'].values - plot_df.loc[:,'R4'].values)
+	pos_t4 = np.mean(plot_df.loc[:,'T4c'].values - plot_df.loc[:,'R4'].values)
 
-		for ind in sum_df_current.index:
-			r_type = int(sum_df_current.loc[ind, 'type_Rcell'])
-			bundle_no = sum_df_current.loc[ind,'bundle_no']
+	phi_unit = get_angle_unit_theory('phi_unit')
 
-			coord_heels = get_heel_coords_sum(bundle_no, annots_df_current)
+	thetas = {
+		'R3':plot_df.loc[ind_r3,theta_cat].values,
+		'R4':plot_df.loc[ind_r4,theta_cat].values,
+		'pert_R3':plot_df.loc[ind_pert_r3,theta_cat].values,
+		'pert_R4':plot_df.loc[ind_pert_r4,theta_cat].values,
+	}
+	rs = {
+		'R3':plot_df.loc[ind_r3,r_cat].values,
+		'R4':plot_df.loc[ind_r4,r_cat].values,
+		'pert_R3':plot_df.loc[ind_pert_r3,r_cat].values,
+		'pert_R4':plot_df.loc[ind_pert_r4,r_cat].values,
+	}
 
-			ori = coord_heels[r_type-1, :]
+	dTiCs = {3:pos_t3, 7:pos_t7, 4: pos_t4}
+	target_grid_polar = get_target_grid_polar_summary(return_type = 'theory', dTiCs = dTiCs)
+	
+   
+	
+	### figure set-up
+	legend = ['R3', 'R4', pert_type]
+	plot_line = {
+		'R3':'-',
+		'R4':'-',
+		'pert_R3':'--',
+		'pert_R4':'--',
+	}
+	plot_color = {
+		'R3':color_code[3],
+		'R4':color_code[4],
+		'pert_R3':color_code[pert_rtype],
+		'pert_R4':color_code[pert_rtype],
+	}
+	
+	SMALL_SIZE = 20
+	MEDIUM_SIZE = 24
+	BIGGER_SIZE = 28
+	plt.rc('font', size=SMALL_SIZE)         # controls default text sizes
+	plt.rc('axes', titlesize=BIGGER_SIZE)   # fontsize of the axes title
+	plt.rc('axes', labelsize=MEDIUM_SIZE)   # fontsize of the x and y labels
+	plt.rc('xtick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
+	plt.rc('ytick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
+	plt.rc('legend', fontsize=MEDIUM_SIZE)  # legend fontsize
+	plt.rc('figure', titlesize=BIGGER_SIZE) # fontsize of the figure title
 
-			if(r_type == 3):
-				v_base = coord_heels[4-1,:] - coord_heels[3-1,:]
-			elif(r_type == 4):
-				v_base = coord_heels[3-1,:] - coord_heels[4-1,:]
+	fig_name = f'Figure4_{pert_cat}_{time_id}hrs_polar.{fig_format}'
+	fig_save_path = os.path.join(paths.output_prefix, fig_name)
+	
+	### plotting
+	fig = plt.figure(figsize=(8,8))
+	ax = fig.add_axes([0.1, 0.1, 0.75, 0.79], polar=True)
 
-			type_plot = sum_df_current.loc[ind, 'type_plot']
-			i_reg = df_regression_results['type_plot'] == type_plot
-			alphas = np.zeros((2))
-			alphas[0] = df_regression_results.loc[i_reg, 'a'].values[0]
-			alphas[1] = df_regression_results.loc[i_reg, 'b'].values[0]
-			
-			v1 = np.array((sum_df_current.loc[ind, 'ml_x_v1'], sum_df_current.loc[ind, 'ml_y_v1']))
-			v2 = np.array((sum_df_current.loc[ind, 'ml_x_v2'], sum_df_current.loc[ind, 'ml_y_v2']))
-			_, v_pred = get_angle_prediction_two_vectors(v1, v2, ori, alphas)
-
-			theta = inner_angle(v_base, v_pred, True)
-			angle = inner_angle(np.array([1,0]), v_pred, True)
-
-			sum_df.loc[ind, 'ml_theory_theta_reg'] = theta
-			sum_df.loc[ind, 'ml_theory_angle_reg'] = angle
-			sum_df.loc[ind, 'ml_theory_vec_x_reg'] = v_pred[0]
-			sum_df.loc[ind, 'ml_theory_vec_y_reg'] = v_pred[1]
-
-	for plot_cat in ['angle', 'theta']:
-		theory_cat = f"ml_theory_{plot_cat}"
-		actual_cat = f"ml_actual_{plot_cat}"
-		sum_df[f"ml_diff_{plot_cat}"] = (sum_df[theory_cat] - sum_df[actual_cat])
-		
-		theory_cat = f"ml_theory_{plot_cat}_reg"
-		actual_cat = f"ml_actual_{plot_cat}"
-		sum_df[f"ml_diff_{plot_cat}_reg"] = (sum_df[theory_cat] - sum_df[actual_cat])
+	# plot data
+	for i in thetas.keys():
+		ax.errorbar(np.mean(thetas[i]), np.mean(rs[i]), xerr = np.std(thetas[i]), 
+					yerr = np.std(rs[i]), color = 'k', elinewidth=1)
+		ax.plot([0,np.mean(thetas[i])], [0,np.mean(rs[i])], linewidth = 1.5, 
+				linestyle = plot_line[i], color = plot_color[i])
 
 
-# ================= Polar Density Plot =================
+	# plot targets
+	for i in [2,3,5]:
+		ax.plot(target_grid_polar[i,0], target_grid_polar[i,1], 'o', 
+				color = color_code[matching_info.index_to_target_id[i]], markersize = 20, mew = 1.5, mfc = 'none')
+
+
+	# Shrink current axis by 20%
+	box = ax.get_position()
+	ax.set_position([box.x0, box.y0, box.width * 8, box.height])
+
+	# axis settings
+	ax.set_thetamin(-35)
+	ax.set_thetamax(35)
+	ax.set_rlim(0, 1.8)
+	ax.tick_params(axis = 'x', labelbottom = True)
+	ax.tick_params(axis = 'y', labelleft = True)
+
+	plt.yticks(ticks = [0, 0.4, 0.8, 1.2, 1.6])
+	plt.xticks(ticks = [-phi_unit, 0, phi_unit], labels = [-1, 0, 1])
+	ax.set_xlabel("Relative Length (a.u.)")
+	ax.yaxis.set_label_position("right")
+	plt.ylabel("Relative Angle (a.u.)", labelpad=35)
+	plt.title(f"sev>{pert_cat}, {time_id} hrs")
+
+
+	ax.grid(axis = 'y', linestyle = '--', which = 'major', linewidth=0.8)
+	ax.grid(axis = 'x', linestyle = '--', which = 'major', linewidth=0.8)
+	ax.grid(True)
+
+	if(is_save):
+		plt.savefig(fig_save_path, dpi=300, bbox_inches='tight', format = fig_format)
+	plt.show()
+
+
+### stats.
+def stats_fig4(df_current, x_cat, pert_cat, time_id, which_ycat):
+	"""
+	Function: get sample size and p-values for relative length and angle data for sev>Fz and sev>Nic flies.
+
+	Inputs:
+	- df_current: dataframe containing grouping and data.
+	- x_cat: column name of grouping.
+	- pert_cat: genetics. "Fz"/"Nic".
+	- time_id: age. 24/28.
+	- which_ycat: "count"/"angle"/"length", indicate whether to print sample size or do comparison on relative angle/length data.
+
+	Output: print out sample size and stats.
+	"""
+
+	### initialization
+	if(pert_cat == 'Fz'):
+		pert_type = 'R3/R3'
+	elif(pert_cat == 'Nic'):
+		pert_type = 'R4/R4'
+
+	if(which_ycat == 'count'):
+		df_count = df_current.groupby(x_cat).count()
+		y_cat = 'bundle_no'
+	elif(which_ycat == 'angle'):
+		y_cat = 'angle_gc_mrr'
+		inds = ['R3', f'{pert_type}(3)', 'R3', 'R4']
+		cols = ['R4', f'{pert_type}(4)', f'{pert_type}(3)', f'{pert_type}(4)']
+	elif(which_ycat == 'length'):
+		y_cat = 'length_gc'
+		if(pert_cat == 'Fz'):
+			inds = ['R3', f'{pert_type}(3)', 'R3', 'R3']
+		elif(pert_cat == 'Nic'):
+			inds = ['R3', f'{pert_type}(3)', 'R4', 'R4']
+		cols = ['R4', f'{pert_type}(4)', f'{pert_type}(3)', f'{pert_type}(4)']
+	
+	### calculate p-values
+	data = [df_current.loc[ids, y_cat].values for ids in df_current.groupby(x_cat).groups.values()]
+	H, p = ss.kruskal(*data)
+	df_stat = sp.posthoc_mannwhitney(df_current, val_col=y_cat, group_col=x_cat, p_adjust = 'holm')
+
+	### printing.
+	if(which_ycat == 'count'):
+		print(f"==={pert_cat}_{time_id}hrs_count===")
+		for i in range(len(df_count)):
+			print(f"{df_count.index[i]}: {df_count.iloc[i]['bundle_no']}")
+	elif(which_ycat == 'length'):
+		print(f"==={pert_cat}_{time_id}hrs_length===")
+		for i in range(len(inds)):
+			print(f"{inds[i]} vs {cols[i]}: {df_stat.loc[inds[i], cols[i]]}")
+	elif(which_ycat == 'angle'):
+		print(f"==={pert_cat}_{time_id}hrs_angle===")
+		for i in range(len(inds)):
+			print(f"{inds[i]} vs {cols[i]}: {df_stat.loc[inds[i], cols[i]]}")
+
+# ================= Polar Density Plot: Fig S2 & S5 =================
 ### Angle slicing
 def get_phis(phi_start, phi_end, num_of_slices):
 	"""
@@ -991,7 +1412,6 @@ def get_phis(phi_start, phi_end, num_of_slices):
 		phis = np.flip(phis, axis = 0)
 	phis = angle_normalization(phis)
 	return phis
-
 
 ### get slicing information for polar plot.
 def get_slice_params_for_polar_plot(analysis_params, slicing_params):
@@ -1036,7 +1456,6 @@ def get_slice_params_for_polar_plot(analysis_params, slicing_params):
 	rs = np.linspace(0, radius_expanse_ratio, num_x_section + 2)
 	
 	return rs, phis
-
 
 ### get polar or cartasian coordinates of targets
 def get_target_grid(return_type, **kwargs):
@@ -1132,7 +1551,6 @@ def get_target_grid(return_type, **kwargs):
 			target_grid_polar[t] = np.stack((T0, T2, T3, T4, T5, T3_, C0), axis = 0)
 
 		return target_grid_polar
-
 
 ### get values for polar density plot
 def get_polar_plot_values(analysis_params, channel_no, matrix, cmap, rel_points):
@@ -1236,19 +1654,19 @@ def plot_polar_density(matrix, channel_no, rel_points, analysis_params, **kwargs
 	## plot angle reference
 	ax2.plot([0, target_grid_polar['c'][matching_info.target_id_to_index[3],0]], 
 			 [0, rlim[1]], 
-			 '--', color = 'lightgray', linewidth = 5)
+			 '--', color = 'lightgray', linewidth = 1)
 	ax2.plot([0, target_grid_polar['c'][matching_info.target_id_to_index[4],0]], 
 			 [0, rlim[1]], 
-			 '--', color = 'lightgray', linewidth = 5)
+			 '--', color = 'lightgray', linewidth = 1)
 	ax2.plot([0, target_grid_polar['c'][matching_info.target_id_to_index[7],0]], 
 			 [0, rlim[1]], 
-			 '--', color = 'lightgray', linewidth = 5)
+			 '--', color = 'lightgray', linewidth = 1)
 	
 	## plot target position
 	for i in [0,2,3,5]:
 		ax2.plot(target_grid_polar['c'][i,0], target_grid_polar['c'][i,1], 'o', 
 				 color = matching_info.color_code[matching_info.index_to_target_id[i]], 
-				 markersize = 30, mew = 5, mfc = 'none')
+				 markersize = 30, mew = 2, mfc = 'none')
 
 
 	## set polar to pie
@@ -1264,7 +1682,7 @@ def plot_polar_density(matrix, channel_no, rel_points, analysis_params, **kwargs
 		ax2.set_xticks(kwargs['theta_tick'])
 	else:
 		ax2.set_xticks(ticks = [-phi_unit, 0, phi_unit])
-		ax2.set_xticklabels(labels = [1, 0, -1])
+		ax2.set_xticklabels(labels = [-1, 0, 1])
 	if(channel_no == 0):
 		ax2.set_title('R3 or R4', fontsize = 30)
 	elif(channel_no == 1):
@@ -1282,8 +1700,28 @@ def plot_polar_density(matrix, channel_no, rel_points, analysis_params, **kwargs
 	
 	return fig
 
-### generate figure.
+### generate figure
 def generate_density_plot_figure(output_data, **kwargs):
+	"""
+	Function: plot density plots of a specific bundle.
+
+	Inputs:
+	- output_data: Dictionaries with intensity matrix and parameters of representative bundles.
+		- keys = 'figure_ID', 'time_ID', 'bundle_type', 'category_ID', 'parameter', 'relative_positions', 'intensity_matrix', 'analysis_params_general'
+		- 'figure_ID', 'time_ID', 'category_ID', 'bundle_type': general information about this particular bundle.
+		- 'relative_positions': dictionary. relative positions of targets and heels of this particular bundle.
+		- 'intensity_matrix': numpy array. GFP and RFP density map of this particular bundle.
+		- 'analysis_params_general': class of settings.GeneralParams. parameters used when doing image quantification
+	- Additional inputs:
+		- is_save: Boolean. Save figures or not. Default = False.
+		- channels: Which channel (or channels) to plot. Default = ["GFP", "RFP"]
+		- fig_format: extension figure format. Default = "svg".
+		- fig_res: figure resolution. Default = 300.
+		- fig_name: name of the figure.
+
+	Output: Figure.
+	"""
+
 	### unravel params
 	paths = settings.paths
 
@@ -1372,55 +1810,24 @@ def generate_density_plot_figure(output_data, **kwargs):
 			plt.savefig(fig_save_path, dpi = fig_res, bbox_inches = 'tight', format = fig_format)
 		plt.show()
 
+# ================= S3 Fig ================= #
+### S3B Fig. 
+def plot_sample_variation_raw_measurements(annots_df_group, **kwargs):
+	"""
+	Function: plot raw coordinate measurements of heel and target positions of wild-type flies of a specific age. bundles from one sample are plotted together on the same subplot.
 
-# ================= Figure 3B =================
-def fit_linear(x, y):
-	popt = np.polyfit(x,y,1)
-	pred = x * popt[0] + popt[1]
-	r2 = get_r_squared(x, y, popt)
-	print(f'k = {popt[0]:.2f}, R^2 = {r2:.2f}')
-	return popt, pred, r2
+	Inputs:
+	- annots_df_group: DataFrame group. Processed annotation information of a specific age, grouped by sample number.
+	- Additional inputs:
+		- is_save: Boolean. Save figures or not. Default = False.
+		- fig_format: extension figure format. Default = "svg".
+		- fig_res: figure resolution. Default = 300.
 
-def get_r_squared(x, y, popt):
-	y_fit = popt[0]*x + popt[1]
-	residuals = y - y_fit
-	ss_res = np.sum(residuals**2)
-	ss_tot = np.sum((y-np.mean(y))**2)
-	# print(x, y, ss_res, ss_tot)
-	r_squared = 1 - (ss_res / ss_tot)
-	return r_squared
+	Output: Figure.
+	"""
 
 
-# ================= Figure 3C =================
-def p_value_fig3c(df, hue_name, value_name, pair_list, print_pair, method):
-	df_groups = df.groupby(hue_name)
-	for pair in pair_list:
-		if(print_pair):
-			print(f'==={pair}===')
-		a = df_groups.get_group(pair[0]).loc[:,value_name].values
-		b = df_groups.get_group(pair[1]).loc[:,value_name].values
-		t, pa = ss.kstest(a, 'norm')
-		t, pb = ss.kstest(b, 'norm')
-		if(method == 'Mann-Whitney'):
-			t, p = ss.mannwhitneyu(a, b, alternative = 'two-sided')
-		elif(method == 'Student T'):
-			t, p = ss.ttest_ind(a,b)
-		elif(method == 'Welch'):
-			t, p = ss.ttest_ind(a,b, equal_var = False)
-		elif(method == 'KS'):
-			t, p = ss.ks_2samp(a, b, alternative='two-sided', mode='auto')
-		print(f'count: {pair[0]} = {len(a)}, num {pair[1]} = {len(b)}')
-		print(f'KS normality test: pa = {pa}, pb = {pb}')
-		print(f'{method} test: {p}')
-
-# ================= Figure 4 =================
-def generate_summary_polar_figure(plot_df, pert_info, **kwargs):
-	### unravel params
-	time_id, pert_cat, pert_type, pert_rtype = pert_info
-	paths = settings.paths
-	matching_info = settings.matching_info
-	color_code = matching_info.color_code
-	
+	### parameters
 	if('is_save' in kwargs.keys()):
 		is_save = kwargs['is_save']
 	else:
@@ -1434,152 +1841,504 @@ def generate_summary_polar_figure(plot_df, pert_info, **kwargs):
 	else:
 		fig_res = 300
 
-	
-	### get data
-	theta_cat = 'angle_gc'
-	r_cat = 'length_gc'
-	
-	sum_df_grouped = plot_df.groupby('type_plot')
-	
-	ind_r3 = sum_df_grouped.get_group('R3').index
-	ind_r4 = sum_df_grouped.get_group('R4').index
-	if(pert_cat == 'Nic'):
-		ind_pert_r3 = sum_df_grouped.get_group('R4/R4(3)').index
-		ind_pert_r4 = sum_df_grouped.get_group('R4/R4(4)').index
-	elif(pert_cat == 'Fz'):
-		ind_pert_r3 = sum_df_grouped.get_group('R3/R3(3)').index
-		ind_pert_r4 = sum_df_grouped.get_group('R3/R3(4)').index
+	paths = settings.paths
+	index_to_target_id = settings.matching_info.index_to_target_id
+	color_code =  settings.matching_info.color_code
 
-	pos_t3 = np.mean(plot_df.loc[:,'T3c'].values - plot_df.loc[:,'R3'].values)
-	pos_t7 = np.mean(plot_df.loc[:,'T7c'].values - plot_df.loc[:,'R4'].values)
-	pos_t4 = np.mean(plot_df.loc[:,'T4c'].values - plot_df.loc[:,'R4'].values)
 
+	### create figure.
+	num_subplots = len(annots_df_group)
+	fig, axes = plt.subplots(num_subplots, 1, figsize = (50, 10))
+	fig.tight_layout()
+
+	heel_coords = {}
+	target_coords = {}
+
+	### loop through samples.
+	for i_fig in range(num_subplots):
+		i_sample = i_fig
+		print(f"Sample No.{i_sample+1}: ", end = "")
+		
+		### calculating
+		sample_id = list(annots_df_group.groups.keys())[i_sample]
+		annots_df_current = annots_df_group.get_group(sample_id).reset_index(drop = True)
+		annots_df_current.set_index('bundle_no', drop = True, inplace = True)
+		
+		heel_coords[i_fig] = np.zeros((6,2, len(annots_df_current)))
+		target_coords[i_fig] = np.zeros((6,2, len(annots_df_current)))
+
+		
+		for ind, bundle_no in enumerate(annots_df_current.index):
+			print(f"{bundle_no}-", end = "")
+			ch = get_heel_coords_sum(bundle_no, annots_df_current)
+			ct = get_target_coords_sum(bundle_no, annots_df_current, is_converted = True)
+			heel_coords[i_fig][:,:,ind] = ch
+			target_coords[i_fig][:,:,ind] = ct
+					
+		### Plotting
+		ax = axes.ravel()[i_fig]
+
+		#### plot x axis 
+		ax.plot([-5, 20], [0,0], '--', color = 'gray')
+		
+		#### plot dots
+		for i in range(heel_coords[i_fig].shape[2]):
+			for j in range(6):
+				#### R cells
+				ax.plot(heel_coords[i_fig][j,0,i], heel_coords[i_fig][j,1,i], 
+						'o', color = color_code[j+1], markersize = 5, alpha = 0.5)
+				
+				#### L cells
+				ax.plot(target_coords[i_fig][j,0,i], target_coords[i_fig][j,1,i], 
+						'o', mec = color_code[index_to_target_id[j]], markersize = 15, mew = 1, alpha = 0.8, mfc = 'none')
+			ax.plot(0,0,'o', color = 'gray', markersize = 10)
+
+		#### plot center.
+		ax.plot(0, 0, 'o', color = 'k', markersize = 5)
+		ax.text(0.3, -1, "C")
+		
+		#### axis
+		ax.set_xlim([-5, 20])
+		ax.set_ylim([-6, 6])
+		ax.set_aspect(aspect=1)
+		ax.set_yticks([-5, 0, 5])
+
+		if(i_fig != num_subplots-1): ### last sub-figure
+			ax.tick_params(axis = 'x', labelbottom = [])
+		else:
+			ax.tick_params(axis = 'x', labelbottom = [-5, 0, 5, 10, 15, 20])
+			ax.set_xlabel('X (um)')
+
+		if(i_fig == round(num_subplots/2)-1): ### middle sub-figure.
+			ax.set_ylabel(f"Sample No. {i_sample+1}\nY (um)")
+		else:
+			ax.set_ylabel(f"Sample No. {i_sample+1}\n")
+
+
+		print("")
+	
+	### saving
+	fig_name = f'S3B_Fig.{fig_format}'
+	fig_save_path = os.path.join(paths.output_prefix, fig_name)
+	if(is_save):
+		plt.savefig(fig_save_path, dpi=fig_res, bbox_inches='tight', format = fig_format, transparent=False)
+	plt.show()
+
+	return heel_coords, target_coords
+
+### S3C Fig.
+def plot_sample_variation_polar(annots_df_group, **kwargs):
+	"""
+	Function: plot polar coordinate values of R3, R4, T3, T4, T3' positions of wild-type flies of a specific age. bundles from one sample are plotted together on the same subplot.
+
+	Inputs:
+	- annots_df_group: DataFrame group. Processed annotation information of a specific age, grouped by sample number.
+	- Additional inputs:
+		- is_save: Boolean. Save figures or not. Default = False.
+		- fig_format: extension figure format. Default = "svg".
+		- fig_res: figure resolution. Default = 300.
+
+	Output: 
+	- Figure.
+	- sum_coords: summary of polar coordinates.
+	"""
+
+
+	### parameters
+	if('is_save' in kwargs.keys()):
+		is_save = kwargs['is_save']
+	else:
+		is_save = False
+	if('fig_format' in kwargs.keys()):
+		fig_format = kwargs['fig_format']
+	else:
+		fig_format = 'svg'
+	if('fig_res' in kwargs.keys()):
+		fig_res = kwargs['fig_res']
+	else:
+		fig_res = 300
+
+	### Params
+	paths = settings.paths
 	phi_unit = get_angle_unit_theory('phi_unit')
-
-	thetas = {
-		'R3':plot_df.loc[ind_r3,theta_cat].values,
-		'R4':plot_df.loc[ind_r4,theta_cat].values,
-		'pert_R3':plot_df.loc[ind_pert_r3,theta_cat].values,
-		'pert_R4':plot_df.loc[ind_pert_r4,theta_cat].values,
-	}
-	rs = {
-		'R3':plot_df.loc[ind_r3,r_cat].values,
-		'R4':plot_df.loc[ind_r4,r_cat].values,
-		'pert_R3':plot_df.loc[ind_pert_r3,r_cat].values,
-		'pert_R4':plot_df.loc[ind_pert_r4,r_cat].values,
-	}
-
-	dTiCs = {3:pos_t3, 7:pos_t7, 4: pos_t4}
-	target_grid_polar = get_target_grid_polar_summary(return_type = 'theory', dTiCs = dTiCs)
-	
-   
-	
-	### figure set-up
-	legend = ['R3', 'R4', pert_type]
-	plot_line = {
-		'R3':'-',
-		'R4':'-',
-		'pert_R3':'--',
-		'pert_R4':'--',
-	}
+	color_code =  settings.matching_info.color_code
 	plot_color = {
 		'R3':color_code[3],
 		'R4':color_code[4],
-		'pert_R3':color_code[pert_rtype],
-		'pert_R4':color_code[pert_rtype],
+		'T4':color_code[4],
+		'T3':color_code[3],
+		'T7':color_code[7],
 	}
-	
-	SMALL_SIZE = 20
-	MEDIUM_SIZE = 24
-	BIGGER_SIZE = 28
-	plt.rc('font', size=SMALL_SIZE)         # controls default text sizes
-	plt.rc('axes', titlesize=BIGGER_SIZE)   # fontsize of the axes title
-	plt.rc('axes', labelsize=MEDIUM_SIZE)   # fontsize of the x and y labels
-	plt.rc('xtick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
-	plt.rc('ytick', labelsize=MEDIUM_SIZE)  # fontsize of the tick labels
-	plt.rc('legend', fontsize=MEDIUM_SIZE)  # legend fontsize
-	plt.rc('figure', titlesize=BIGGER_SIZE) # fontsize of the figure title
+	num_subplots = len(annots_df_group)
 
-	fig_name = f'Figure4_{pert_cat}_{time_id}hrs_polar.{fig_format}'
+	### Figure set-up
+	fig, axes = plt.subplots(num_subplots, 1, figsize = (30, 15), subplot_kw={'projection': 'polar'})
+	fig.tight_layout()
+
+	sum_coords = {}
+	coords = {}
+	for i in plot_color.keys():
+		sum_coords[i] = np.zeros((2, num_subplots))
+
+	for i_fig in range(num_subplots):
+		i_sample = i_fig
+		
+		### calculating
+		sample_id = list(annots_df_group.groups.keys())[i_sample]
+		annots_df_current = annots_df_group.get_group(sample_id).reset_index(drop = True)
+		annots_df_current.set_index('bundle_no', drop = True, inplace = True)
+		
+		### initialization
+		coords[i_fig] = {}
+		for i in plot_color.keys():
+			coords[i_fig][i] = np.zeros((2, len(annots_df_current)))
+		
+		### loop through bundle
+		for ind, bundle_no in enumerate(annots_df_current.index):
+			pos_t3 = annots_df_current.loc[bundle_no, 'T3c']
+			pos_t4 = 1
+			pos_t7 = annots_df_current.loc[bundle_no, 'T7c']
+			dTiCs = {3:pos_t3, 7:pos_t7, 4: pos_t4}
+			target_grid_polar = get_target_grid_polar_summary(return_type = 'theory', dTiCs = dTiCs)
+			coords[i_fig]['R3'][0, ind] = target_grid_polar[2,0]
+			coords[i_fig]['R3'][1, ind] = annots_df_current.loc[bundle_no, 'R3']
+			coords[i_fig]['R4'][0, ind] = target_grid_polar[5,0]
+			coords[i_fig]['R4'][1, ind] = annots_df_current.loc[bundle_no, 'R4']
+			coords[i_fig]['T3'][0, ind] = target_grid_polar[2,0]
+			coords[i_fig]['T3'][1, ind] = annots_df_current.loc[bundle_no, 'T3c']
+			coords[i_fig]['T7'][0, ind] = target_grid_polar[5,0]
+			coords[i_fig]['T7'][1, ind] = annots_df_current.loc[bundle_no, 'T7c']
+			coords[i_fig]['T4'][0, ind] = 0
+			coords[i_fig]['T4'][1, ind] = 1
+			
+		### get centroids
+		for t in coords[i_fig].keys():
+			sum_coords[t][:, i_sample] = np.mean(coords[i_fig][t], axis = 1)
+		
+		### Plotting
+		ax = axes.ravel()[i_fig]
+		
+		### references
+		ax.plot([0,0], [0,2.5], '--', color = "0.8", linewidth = 0.5)
+		ax.plot([0,target_grid_polar[2,0]], [0,2.5], '--', color = "0.8", linewidth = 0.5)
+		ax.plot([0,target_grid_polar[5,0]], [0,2.5], '--', color = "0.8", linewidth = 0.5)
+
+		### individual dots
+		for ind in range(len(annots_df_current)):
+			for t in ['R3', 'R4']:
+				ax.plot(coords[i_fig][t][0, ind], coords[i_fig][t][1, ind], 
+					 'o', color = plot_color[t], markersize = 10, alpha = 0.5)
+			for t in ['T3', 'T4', 'T7']:
+				ax.plot(coords[i_fig][t][0, ind], coords[i_fig][t][1, ind], 
+					 'o', mec = plot_color[t], markersize = 25, mew = 1.0, mfc = 'none', alpha = 0.8)
+		ax.plot(0, 0, 'o', color = 'k', markersize = 5)
+		ax.text(0.3, -1, "C")
+		
+		### axis
+		ax.set_thetamin(-30)
+		ax.set_thetamax(30)
+		ax.set_rlim(0, 2.5)
+		ax.set_yticks([0, 0.5, 1.0, 1.5, 2.0])
+		ax.set_xticks([-phi_unit, 0, phi_unit])
+		ax.set_xticklabels([1, 0, -1])
+		ax.grid(axis = 'y', linestyle = '--', which = 'major', linewidth = 0.5)
+		ax.grid(axis = 'x', linestyle = '--', which = 'major', linewidth = 0.5)
+		
+		ax.tick_params()
+		
+		if(i_fig == num_subplots-1): ### last sub-figure
+			ax.set_xlabel('Relative Length (a.u.)')
+		if(i_fig == round(num_subplots/2)-1): ### middle sub-figure.
+			ax.set_ylabel("\nRelative Angle (a.u.)")
+			ax.yaxis.set_label_position("right")
+
+	### saving
+	fig_format = 'svg'
+	fig_name = f'S3C_Fig.{fig_format}'
 	fig_save_path = os.path.join(paths.output_prefix, fig_name)
-	
-	### plotting
-	fig = plt.figure(figsize=(8,8))
+	if(is_save):
+		plt.savefig(fig_save_path, dpi=fig_res, bbox_inches='tight', format = fig_format)
+	plt.show()
+
+	return coords, sum_coords
+
+### S3D Fig
+def plot_sample_variation_polar_centroids(sum_coords, **kwargs):
+	"""
+	Function: plot polar coordinate values of R3, R4, T3, T4, T3' positions of wild-type flies of a specific age. bundles from one sample are plotted together on the same subplot.
+
+	Inputs:
+	- sum_coords: summary of polar coordinates.
+	- Additional inputs:
+		- is_save: Boolean. Save figures or not. Default = False.
+		- fig_format: extension figure format. Default = "svg".
+		- fig_res: figure resolution. Default = 300.
+
+	Output: Figure.
+	"""
+
+	### params
+	if('is_save' in kwargs.keys()):
+		is_save = kwargs['is_save']
+	else:
+		is_save = False
+	if('fig_format' in kwargs.keys()):
+		fig_format = kwargs['fig_format']
+	else:
+		fig_format = 'svg'
+	if('fig_res' in kwargs.keys()):
+		fig_res = kwargs['fig_res']
+	else:
+		fig_res = 300
+
+
+	num_subplots = sum_coords['R3'].shape[1]
+	paths = settings.paths
+	color_code =  settings.matching_info.color_code
+	phi_unit = get_angle_unit_theory('phi_unit')
+	plot_color = {
+		'R3':color_code[3],
+		'R4':color_code[4],
+		'T4':color_code[4],
+		'T3':color_code[3],
+		'T7':color_code[7],
+	}
+
+	### set-up figure
+	fig = plt.figure(figsize=(5, 5))
 	ax = fig.add_axes([0.1, 0.1, 0.75, 0.79], polar=True)
 
-	# plot data
-	for i in thetas.keys():
-		ax.errorbar(np.mean(thetas[i]), np.mean(rs[i]), xerr = np.std(thetas[i]), 
-					yerr = np.std(rs[i]), color = 'k', elinewidth=1)
-		ax.plot([0,np.mean(thetas[i])], [0,np.mean(rs[i])], linewidth = 1.5, 
-				linestyle = plot_line[i], color = plot_color[i])
+	### plot references
+	ax.plot([0, 0], [0,2.5], '--', color = "0.8", linewidth = 0.5)
+	ax.plot([0, sum_coords["T3"][0,0]], [0,2.5], '--', color = "0.8", linewidth = 0.5)
+	ax.plot([0, sum_coords["T7"][0,0]], [0,2.5], '--', color = "0.8", linewidth = 0.5)
 
 
-	# plot reference line
-	ax.plot([0,0], [0,2.5], '--', color = 'gray', linewidth = 1)
-	ax.plot([0,target_grid_polar[2,0]], [0,2.5], '--', color = 'gray', linewidth = 1)
-	ax.plot([0,target_grid_polar[5,0]], [0,2.5], '--', color = 'gray', linewidth = 1)
+	### plot summary dots
+	for i_smp in range(3):
+		for t in ['R3', 'R4']:
+			#### dot
+			ax.plot(sum_coords[t][0, i_smp], sum_coords[t][1, i_smp], 
+				 'o', color = plot_color[t], markersize = 10, alpha = 0.5)
 
-	# plot targets
-	for i in [0,2,3,5]:
-		ax.plot(target_grid_polar[i,0], target_grid_polar[i,1], 'o', 
-				color = color_code[matching_info.index_to_target_id[i]], markersize = 20, mew = 1.5, mfc = 'none')
+			#### text
+			x = sum_coords[t][0, i_smp]
+			y = sum_coords[t][1, i_smp]
+			if(i_smp == 0):
+				y -= 0.05
+			elif(i_smp == 1):
+				y += 0.05
+			if(t == 'R3'):
+				x *= 1.5
+			ax.text(x, y, i_smp + 1, fontsize = 15)
+			
+		for t in ['T3', 'T4', 'T7']:
+			#### dot
+			ax.plot(sum_coords[t][0, i_smp], sum_coords[t][1, i_smp], 
+				 'o', mec = plot_color[t], markersize = 25, mew = 1.0, mfc = 'none', alpha = 0.8)
 
-
-	# Shrink current axis by 20%
+			#### text
+			if(t != 'T4'):
+				if((t == 'T3') & (i_smp == 2)):
+					ax.text(sum_coords[t][0, i_smp]*1.4, sum_coords[t][1, i_smp]+0.1, i_smp+1, fontsize=15)
+				else:
+					ax.text(sum_coords[t][0, i_smp]*1.4, sum_coords[t][1, i_smp], i_smp+1,fontsize=15)
+		
+	#### Shrink current axis by 20%
 	box = ax.get_position()
 	ax.set_position([box.x0, box.y0, box.width * 8, box.height])
 
-	# axis settings
+	#### axis
 	ax.set_thetamin(-30)
 	ax.set_thetamax(30)
-	ax.set_rlim(0, 1.8)
-	ax.tick_params(axis = 'x', labelbottom = True)
-	ax.tick_params(axis = 'y', labelleft = True)
+	ax.set_rlim(0, 2.5)
+	ax.set_yticks([0, 0.5, 1.0, 1.5, 2.0])
+	ax.set_xticks([-phi_unit, 0, phi_unit])
+	ax.set_xticklabels([1, 0, -1])
+	ax.grid(axis = 'y', linestyle = '--', which = 'major', linewidth = 0.5)
+	ax.grid(axis = 'x', linestyle = '--', which = 'major', linewidth = 0.5)
 
-	plt.yticks(ticks = [0, 0.4, 0.8, 1.2, 1.6])
-	plt.xticks(ticks = [-phi_unit, 0, phi_unit], labels = [1, 0, -1])
 	ax.set_xlabel("Relative Length (a.u.)")
 	ax.yaxis.set_label_position("right")
 	plt.ylabel("Relative Angle (a.u.)", labelpad=35)
-	plt.title(f"sev>{pert_cat}, {time_id} hrs")
 
-	ax.grid(True)
-
+	#### saving
+	fig_name = f'S3D_Fig.{fig_format}'
+	fig_save_path = os.path.join(paths.output_prefix, fig_name)
 	if(is_save):
-		plt.savefig(fig_save_path, dpi=300, bbox_inches='tight', format = fig_format)
+		plt.savefig(fig_save_path, dpi=fig_res, bbox_inches='tight', format = fig_format)
+	
 	plt.show()
 
-def p_value_fig4(df_current, x_cat, y_cat, pert_cat, time_id):
-	if(pert_cat == 'Fz'):
-		pert_type = 'R3/R3'
-	elif(pert_cat == 'Nic'):
-		pert_type = 'R4/R4'
-		
-	if('angle' in y_cat):
-		inds = ['R3', f'{pert_type}(3)', 'R3', 'R4']
-		cols = ['R4', f'{pert_type}(4)', f'{pert_type}(3)', f'{pert_type}(4)']
-	elif('length' in y_cat):
-		if(pert_cat == 'Fz'):
-			inds = ['R3', f'{pert_type}(3)', 'R3', 'R3']
-		elif(pert_cat == 'Nic'):
-			inds = ['R3', f'{pert_type}(4)', 'R4', 'R4']
-		cols = ['R4', f'{pert_type}(4)', f'{pert_type}(3)', f'{pert_type}(4)']
-	
-	data = [df_current.loc[ids, y_cat].values for ids in df_current.groupby(x_cat).groups.values()]
-	H, p = ss.kruskal(*data)
-	df_stat = sp.posthoc_mannwhitney(df_current, val_col=y_cat, group_col=x_cat, p_adjust = 'bonferroni')
-	if('length' in y_cat):
-		print(f"==={pert_cat}_{time_id}hrs_length===")
-		for i in range(len(inds)):
-			print(f"{inds[i]} vs {cols[i]}: {df_stat.loc[inds[i], cols[i]]}")
-	elif('angle' in y_cat):
-		print(f"==={pert_cat}_{time_id}hrs_angle===")
-		for i in range(len(inds)):
-			print(f"{inds[i]} vs {cols[i]}: {df_stat.loc[inds[i], cols[i]]}")
+# ================= S4 Fig ================= #
+### S4A Fig
+def plot_time_variation_raw_centroids(annots_df, **kwargs):
+	"""
+	Function: plot centroids of heel/target coordinates from all bundles of a given time point.
 
-# ================= Figure S4 =================
+	Inputs:
+	- annots_df: Dataframe. Processed annotations files.
+	- Additional inputs:
+		- is_save: Boolean. Save figures or not. Default = False.
+		- fig_format: extension figure format. Default = "svg".
+		- fig_res: figure resolution. Default = 300.
+
+	Output:
+	- Figure
+	- heel_centroid_sum, target_centroid_sum: raw coordinate centroids of each time point.
+	- coords_sum: standardized coordinates of each time point.
+	"""
+
+		### params
+	if('is_save' in kwargs.keys()):
+		is_save = kwargs['is_save']
+	else:
+		is_save = False
+	if('fig_format' in kwargs.keys()):
+		fig_format = kwargs['fig_format']
+	else:
+		fig_format = 'svg'
+	if('fig_res' in kwargs.keys()):
+		fig_res = kwargs['fig_res']
+	else:
+		fig_res = 300
+
+	paths = settings.paths
+	color_code =  settings.matching_info.color_code
+	index_to_target_id = settings.matching_info.index_to_target_id
+	plot_color = {
+		'R3':color_code[3],
+		'R4':color_code[4],
+		'T4':color_code[4],
+		'T3':color_code[3],
+		'T7':color_code[7],
+	}
+
+	### group by age
+	annots_df_time_gp = annots_df.groupby(['time_id'])
+
+	### initialization
+	#### raw centroids
+	heel_centroid_sum = np.zeros((6,2,len(annots_df_time_gp)))
+	target_centroid_sum = np.zeros((6,2,len(annots_df_time_gp)))
+	#### standardized centroids
+	coords_sum = {}
+
+	### figure set-up
+	sns.set_style("whitegrid", {'axes.grid' : False})
+	fig, axes = plt.subplots(4,2, figsize = (15, 20))
+
+	### loop through time points
+	for i_fig, time_id in enumerate(annots_df_time_gp.groups.keys()):
+		print(f'{time_id} hrs: ', end = "")
+		
+		annots_df_time = annots_df_time_gp.get_group(time_id)
+		annots_df_smp_gp = annots_df_time.groupby('sample_no')
+		
+		### initialize for coordinates of each time point
+		heel_coords = np.zeros((6,2, len(annots_df_time)))
+		target_coords = np.zeros((6,2, len(annots_df_time)))
+		coords_sum[time_id] = {}
+		for t in plot_color.keys():
+			coords_sum[time_id][t] = np.zeros((2, len(annots_df_time)))
+		
+		### loop through sample
+		ind = 0
+		for sample_id in annots_df_smp_gp.groups.keys():
+			print(sample_id, end = ", ")
+			annots_df_current = annots_df_smp_gp.get_group(sample_id).reset_index(drop = True)
+			annots_df_current.set_index('bundle_no', drop = True, inplace = True)
+			
+			### loop through bundle
+			for bundle_no in annots_df_current.index:
+				
+				#### raw coordinates
+				ch = get_heel_coords_sum(bundle_no, annots_df_current)
+				ct = get_target_coords_sum(bundle_no, annots_df_current, is_converted = True)
+				heel_coords[:,:,ind] = ch
+				target_coords[:,:,ind] = ct
+				
+				#### standardized coordinates
+				pos_t3 = annots_df_current.loc[bundle_no, 'T3c']
+				pos_t4 = 1
+				pos_t7 = annots_df_current.loc[bundle_no, 'T7c']
+				dTiCs = {3:pos_t3, 7:pos_t7, 4: pos_t4}
+				target_grid_polar = get_target_grid_polar_summary(return_type = 'theory', dTiCs = dTiCs)
+				coords_sum[time_id]['R3'][0, ind] = target_grid_polar[2,0]
+				coords_sum[time_id]['R3'][1, ind] = annots_df_current.loc[bundle_no, 'R3']
+				coords_sum[time_id]['R4'][0, ind] = target_grid_polar[5,0]
+				coords_sum[time_id]['R4'][1, ind] = annots_df_current.loc[bundle_no, 'R4']
+				coords_sum[time_id]['T3'][0, ind] = target_grid_polar[2,0]
+				coords_sum[time_id]['T3'][1, ind] = annots_df_current.loc[bundle_no, 'T3c']
+				coords_sum[time_id]['T7'][0, ind] = target_grid_polar[5,0]
+				coords_sum[time_id]['T7'][1, ind] = annots_df_current.loc[bundle_no, 'T7c']
+				coords_sum[time_id]['T4'][0, ind] = 0
+				coords_sum[time_id]['T4'][1, ind] = 1            
+				ind += 1
+		
+		### get centroids
+		heels_centroid = get_centroid(heel_coords)
+		heel_centroid_sum[:,:,i_fig] = heels_centroid
+		target_centroid = get_centroid(target_coords)
+		target_centroid_sum[:,:,i_fig] = target_centroid
+			
+		### plotting
+		ax = axes.ravel()[i_fig]
+		#### R cells and l cells
+		for j in range(6):
+			#### R cells
+			ax.plot(heels_centroid[j,0], heels_centroid[j,1], 'o', color = color_code[j+1], markersize = 10)
+			#### Targets
+			ax.plot(target_centroid[j,0], target_centroid[j,1], 'o', mec = color_code[index_to_target_id[j]], markersize = 30, mew = 2, mfc = 'none')
+		
+		#### reference lines
+		ax.plot([0, target_centroid[2,0]], [0, target_centroid[2,1]], '--', color = 'gray', linewidth = 1)
+		ax.plot([0, target_centroid[5,0]], [0, target_centroid[5,1]], '--', color = 'gray', linewidth = 1)
+		ax.plot([-5, 20], [0,0], '--', color = 'gray')
+		
+		#### center
+		ax.plot(0, 0, 'o', color = 'k', markersize = 10)
+		ax.text(0.3, -1, "C")
+		
+		#### axis
+		ax.set_xlim([-4, 16])
+		ax.set_ylim([-5, 5])
+		ax.set_aspect(aspect=1)
+		ax.set_title(f'{time_id} hrs')
+		print("")
+
+	fig_name = f'S4A_Fig.{fig_format}'
+	fig_save_path = os.path.join(paths.output_prefix, fig_name)
+	if(is_save):
+		plt.savefig(fig_save_path, dpi=fig_res, bbox_inches='tight', format = fig_format)
+
+	plt.show()
+
+	return heel_centroid_sum, target_centroid_sum, coords_sum
+
+### S4B Fig.
+
+
+### S4D Fig.
+
+# ================= S6 Fig ================= #
 def mutual_repulsion_regression_plot(sum_df, **kwargs):
+	"""
+	Function: countour plot of regression result vs. actual data for equal and weighted regureesion.
+
+	Inputs:
+	- sum_df: DataFrame. processed DataFrame that contains both bundle heel and target info and growth cone length and angle info.
+	- Additional inputs:
+		- is_save: Boolean. Save figures or not. Default = False.
+		- channels: Which channel (or channels) to plot. Default = ["GFP", "RFP"]
+		- fig_format: extension figure format. Default = "svg".
+		- fig_res: figure resolution. Default = 300.
+		- fig_name: name of the figure.
+
+	Output: Figure.
+	"""
+
+
 	### parameters
 	if('is_save' in kwargs.keys()):
 		is_save = kwargs['is_save']
@@ -1606,10 +2365,10 @@ def mutual_repulsion_regression_plot(sum_df, **kwargs):
 	diff_cols = ['ml_diff_theta', 'ml_diff_theta_reg']
 	hue = "type_plot"
 	
-	criteria = (sum_df["TimeID"] <= 26) & (sum_df["symmetry"] <= 0.5)
-	plot_df_sum = sum_df.loc[criteria, [hue, "TimeID"] + diff_cols]
+	criteria = (sum_df["time_id"] <= 26) & (sum_df["symmetry"] <= 0.5)
+	plot_df_sum = sum_df.loc[criteria, [hue, "time_id"] + diff_cols]
 	plot_df_sum[diff_cols] = np.degrees(plot_df_sum[diff_cols])
-	plot_df_group = plot_df_sum.groupby("TimeID")
+	plot_df_group = plot_df_sum.groupby("time_id")
 	groups = list(plot_df_group.groups.keys())
 	
 	### figure
@@ -1623,14 +2382,23 @@ def mutual_repulsion_regression_plot(sum_df, **kwargs):
 			diff_col = diff_cols[0]
 		elif(i in [3,4,5]):
 			diff_col = diff_cols[1]
+
+		### get each timepoint
 		pp = plot_df_group.get_group(groups[i%3])
+
+		### R3
 		sns.distplot(pp.groupby('type_plot').get_group("R3")[diff_col].dropna(), ax = ax,
 					 kde_kws={"color": color_code[3], "ls": '-', 'lw':1.5}, hist = False)
+		### R4
 		sns.distplot(pp.groupby('type_plot').get_group("R4")[diff_col].dropna(), ax = ax, 
 					 kde_kws={"color": color_code[4], "ls": '-', 'lw':1.5}, hist = False)
+		### mean
 		r3_mean = pp.groupby('type_plot').get_group("R3")[diff_col].mean()
 		r4_mean = pp.groupby('type_plot').get_group("R4")[diff_col].mean()
+		### reference
 		ax.plot([0,0], [0,8], '--', linewidth = 1,color = 'gray', label = '_nolegend_')
+
+		### axis
 		ax.set_xlabel("")
 		ax.set_ylim([0, 0.05])
 		if(i in [0,1,2]):
@@ -1657,3 +2425,4 @@ def mutual_repulsion_regression_plot(sum_df, **kwargs):
 	if(is_save):
 		plt.savefig(fig_save_path, dpi=fig_res, bbox_inches='tight', format = fig_format, transparent=False)
 
+	plt.show()
