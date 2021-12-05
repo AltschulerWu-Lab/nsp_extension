@@ -1,4 +1,0 @@
-Image_Name,ROI_Name,CategoryID,TimeID,SampleID,RegionID,imgX_pixel,imgY_pixel,imgX_um,imgY_um,Bundle_No,T0,T2,T5,T4,T3,T7,Orientation_DV,Orientation_AP,is_Edge,is_Irregular,is_Mirror_Symmetry,is_Crowded,is_Heel_Issues,is_symFate
-ctrl_26hrs_example1.tif,ctrl_26hrs_example1_ROI.csv,Ctrl,26,1,1,451,240,40.53,21.57,1,4,5,7,6,8,9,R,A,0,0,0,0,0,0
-ctrl_26hrs_example1.tif,ctrl_26hrs_example1_ROI.csv,Ctrl,26,1,1,451,240,40.53,21.57,2,10,11,4,5,12,6,R,A,0,0,0,0,0,0
-ctrl_26hrs_example1.tif,ctrl_26hrs_example1_ROI.csv,Ctrl,26,1,1,451,240,40.53,21.57,3,13,14,15,10,11,4,R,A,0,0,0,0,0,0
