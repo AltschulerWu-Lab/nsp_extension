@@ -2,7 +2,7 @@
 # @Author: Weiyue Ji
 # @Date:   2018-10-19 00:59:49
 # @Last Modified by:   Weiyue Ji
-# @Last Modified time: 2020-10-04 07:05:09
+# @Last Modified time: 2021-12-04 18:04:19
 
 
 import os, math, matplotlib
@@ -364,8 +364,10 @@ def plot_angles(phis, phi_edges, img_name, bundle_no, **kwargs):
 	cmap = plt.get_cmap('PuBu')
 	colors = [cmap(i) for i in np.linspace(0, 1, number)]
 
+
 	### figure
 	fig = plt.figure(figsize = (6,6))
+	ax = fig.add_subplot(111, projection='polar')
 	sns.set_style("white")
 
 	## set-up font sizes
@@ -381,16 +383,16 @@ def plot_angles(phis, phi_edges, img_name, bundle_no, **kwargs):
 	plt.rc('figure', titlesize=BIGGER_SIZE) # fontsize of the figure title
 
 	for i, color in enumerate(colors, start=0):
-		plt.polar(phis[i], 1, 'o', color = color)
-	plt.polar([0, phis[0]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[7])
-	plt.polar([0, phis[-1]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[3])
+		ax.plot(phis[i], 1, 'o', color = color)
+	ax.plot([0, phis[0]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[7])
+	ax.plot([0, phis[-1]], [0,1], '--', linewidth = 4.0, color = matching_info.color_code[3])
 	if(len(phi_edges) == 2):
-		plt.polar([0,phi_edges[0]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[7])
-		plt.polar([0,phi_edges[1]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[3])
+		ax.plot([0,phi_edges[0]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[7])
+		ax.plot([0,phi_edges[1]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[3])
 	elif(len(phi_edges) == 3):
-		plt.polar([0,phi_edges[0]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[7])
-		plt.polar([0,phi_edges[1]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[4])
-		plt.polar([0,phi_edges[2]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[3])
+		ax.plot([0,phi_edges[0]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[7])
+		ax.plot([0,phi_edges[1]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[4])
+		ax.plot([0,phi_edges[2]], [0,1], '-', linewidth = 4.0, color = matching_info.color_code[3])
 	
 	plt.title(f'Bundle_No {bundle_no}: s{analysis_params_general.slice_type}')
 
@@ -455,8 +457,11 @@ def plot_bundle_vs_matrix(bundle_no, bundles_df, image, intensity_matrix, fig_pa
 		x_ticks = ori_x_ticks
 	else:
 		x_ticks = np.arange(intensity_matrix.shape[1])
-	x_ticks = get_tick_list(2, x_ticks, np.floor(x_ticks/2))
-	y_ticks = ori_y_ticks
+
+	x_ticks = get_tick_list(1, x_ticks, len(x_ticks)//3)
+	y_ticks = get_tick_list(1, ori_y_ticks, len(ori_y_ticks)//5)
+
+	# print(x_ticks, y_ticks)
 	
 
 	### R heels info
